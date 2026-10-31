@@ -95,4 +95,26 @@ export const workAssignmentService = {
     });
     return response.data.data;
   },
+
+  // Stage 6 Dependency & Conflict Engine Endpoints
+  validateAssignment: async (
+    payload: import('../types/workAssignment').AssignmentValidationPayload
+  ): Promise<import('../types/workAssignment').ValidationResultResponse> => {
+    const response = await backendClient.post<ApiResponse<import('../types/workAssignment').ValidationResultResponse>>(
+      '/v1/work-assignments/validate',
+      payload
+    );
+    return response.data.data;
+  },
+
+  releasePrerequisite: async (
+    id: string,
+    payload: import('../types/workAssignment').PrerequisiteReleasePayload
+  ): Promise<WorkAssignmentItem> => {
+    const response = await backendClient.post<ApiResponse<WorkAssignmentItem>>(
+      `/v1/work-assignments/${id}/release`,
+      payload
+    );
+    return response.data.data;
+  },
 };

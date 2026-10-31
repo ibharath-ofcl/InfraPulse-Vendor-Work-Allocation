@@ -17,14 +17,16 @@ import {
   FileCheck2,
   Landmark,
   Sparkles,
-  Info
+  Info,
+  ShieldCheck,
+  UserCheck
 } from 'lucide-react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { StatusBadge } from '../components/common/StatusBadge';
 import { Modal } from '../components/common/Modal';
 import { workAssignmentService } from '../services/workAssignmentService';
 import { useAuth } from '../auth/useAuth';
-import { WorkAssignmentItem, AssignmentStatusEnum } from '../types/workAssignment';
+import { WorkAssignmentItem, AssignmentStatusEnum, ReleaseStatusEnum } from '../types/workAssignment';
 
 export const WorkAssignmentDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -41,6 +43,13 @@ export const WorkAssignmentDetailPage: React.FC = () => {
   const [actionReason, setActionReason] = useState('');
   const [actionSubmitting, setActionSubmitting] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  // Stage 6 Prerequisite Release Modal State
+  const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false);
+  const [releaseDecision, setReleaseDecision] = useState<ReleaseStatusEnum>('RELEASED');
+  const [releaseNotes, setReleaseNotes] = useState('');
+  const [releaseSubmitting, setReleaseSubmitting] = useState(false);
+  const [releaseError, setReleaseError] = useState<string | null>(null);
 
   const fetchAssignment = useCallback(async () => {
     if (!id) return;
@@ -81,6 +90,30 @@ export const WorkAssignmentDetailPage: React.FC = () => {
     }
   };
 
+  // Stage 6: Prerequisite Release Action
+  const handlePrerequisiteRelease = async () => {
+    if (!id) return;
+    if (!releaseNotes.trim()) {
+      setReleaseError('A mandatory review note is required to record this operational release decision.');
+      return;
+    }
+    try {
+      setReleaseSubmitting(true);
+      setReleaseError(null);
+      await workAssignmentService.releasePrerequisite(id, {
+        decision: releaseDecision,
+        notes: releaseNotes.trim(),
+      });
+      setIsReleaseModalOpen(false);
+      setReleaseNotes('');
+      await fetchAssignment();
+    } catch (err: any) {
+      setReleaseError(err?.response?.data?.message || 'Failed to record prerequisite release decision.');
+    } finally {
+      setReleaseSubmitting(false);
+    }
+  };
+
   const getPriorityBadgeClass = (priority: string) => {
     switch (priority) {
       case 'CRITICAL':
@@ -98,6 +131,12 @@ export const WorkAssignmentDetailPage: React.FC = () => {
   const isTerminal = assignment?.status === 'COMPLETED' || assignment?.status === 'CANCELLED';
   const isVendor = user?.role === 'VENDOR';
   const canCancel = (hasPermission('WORK_ASSIGNMENT_CANCEL') || user?.role === 'PLATFORM_ADMIN' || user?.role === 'PROJECT_MANAGER') && !isTerminal;
+  const canRelease = !isVendor && (
+    user?.role === 'PLATFORM_ADMIN' ||
+    user?.role === 'PROJECT_MANAGER' ||
+    user?.role === 'FIELD_ENGINEER' ||
+    hasPermission('WORK_ASSIGNMENT_RELEASE')
+  );
 
   if (loading) {
     return (
@@ -179,6 +218,32 @@ export const WorkAssignmentDetailPage: React.FC = () => {
             </button>
           )}
 
+          {/* Vendor Submit Completion */}
+          {isVendor && assignment.status === 'IN_PROGRESS' && (
+            <button
+              onClick={() => handleStatusTransition('COMPLETED', 'Vendor completed work and submitted for prerequisite release review')}
+              disabled={actionSubmitting}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium shadow-sm transition-colors"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              Complete & Submit Work
+            </button>
+          )}
+
+          {/* Authorized Operational Clearance Release */}
+          {canRelease && (
+            <button
+              onClick={() => {
+                setReleaseDecision(assignment.releaseStatus === 'REJECTED' ? 'RELEASED' : (assignment.releaseStatus || 'RELEASED'));
+                setIsReleaseModalOpen(true);
+              }}
+              className="inline-flex items-center gap-2 px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors"
+            >
+              <ShieldCheck className="w-4 h-4" />
+              Review Prerequisite Release
+            </button>
+          )}
+
           {/* Admin / PM Cancel */}
           {canCancel && (
             <button
@@ -210,6 +275,17 @@ export const WorkAssignmentDetailPage: React.FC = () => {
               <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200">
                 {assignment.workTypeDisplayName}
               </span>
+              {assignment.releaseStatus && (
+                <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${
+                  assignment.releaseStatus === 'RELEASED'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : assignment.releaseStatus === 'PENDING_RELEASE'
+                    ? 'bg-amber-50 text-amber-700 border-amber-200'
+                    : 'bg-rose-50 text-rose-700 border-rose-200'
+                }`}>
+                  PREREQUISITE: {assignment.releaseStatus}
+                </span>
+              )}
             </div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{assignment.title}</h1>
             <p className="text-sm text-slate-500 mt-1 max-w-3xl">
@@ -318,6 +394,93 @@ export const WorkAssignmentDetailPage: React.FC = () => {
             </div>
           )}
 
+          {/* Stage 6: Prerequisite Release & Work Dependency Governance */}
+          <div className="bg-white rounded-xl border border-surface-border p-5 shadow-card">
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-surface-border">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-teal-600" />
+                <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                  Prerequisite Release & Dependency Governance
+                </h2>
+              </div>
+              <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${
+                assignment.releaseStatus === 'RELEASED'
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : assignment.releaseStatus === 'PENDING_RELEASE'
+                  ? 'bg-amber-50 text-amber-700 border-amber-200'
+                  : 'bg-rose-50 text-rose-700 border-rose-200'
+              }`}>
+                {assignment.releaseStatus || 'PENDING_RELEASE'}
+              </span>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <span className="text-slate-500 font-medium block">Prerequisite Clearance State</span>
+                    <span className="text-sm font-bold text-slate-900 mt-0.5 block">
+                      {assignment.releaseStatus === 'RELEASED'
+                        ? 'Authorized Operational Clearance Granted'
+                        : assignment.releaseStatus === 'REJECTED'
+                        ? 'Prerequisite Clearance Denied (Remediation Required)'
+                        : 'Awaiting Authorized Field Review & Release'}
+                    </span>
+                  </div>
+                  {assignment.releaseStatus === 'RELEASED' ? (
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                  ) : assignment.releaseStatus === 'REJECTED' ? (
+                    <XCircle className="w-5 h-5 text-rose-600 shrink-0" />
+                  ) : (
+                    <Clock className="w-5 h-5 text-amber-600 shrink-0" />
+                  )}
+                </div>
+
+                {assignment.releasedBy && (
+                  <div className="mt-3 pt-3 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                    <div>
+                      <span className="text-slate-500">Authorized Reviewer:</span>{' '}
+                      <strong className="text-slate-800">{assignment.releasedBy.fullName}</strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-500">Decision Recorded:</span>{' '}
+                      <span className="font-mono text-slate-700">{assignment.releasedAt}</span>
+                    </div>
+                  </div>
+                )}
+
+                {assignment.releaseNotes && (
+                  <div className="mt-2.5 p-2.5 rounded bg-white border border-slate-200 text-xs text-slate-700">
+                    <span className="font-semibold text-slate-900 block mb-0.5">Authorization Review Note:</span>
+                    <p className="italic text-slate-600">{assignment.releaseNotes}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-3 bg-teal-50/50 border border-teal-200/70 rounded-lg text-teal-900 flex items-start gap-2.5">
+                <Info className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
+                <div className="text-[11px] leading-relaxed">
+                  <strong>Backend Dependency Rule:</strong> Dependent infrastructure activities in work zone <strong>{assignment.zoneName}</strong> (such as Backfilling or Road Resurfacing) remain strictly blocked until this prerequisite work package has been completed and authorized for release.
+                </div>
+              </div>
+
+              {canRelease && (
+                <div className="pt-2 flex justify-end">
+                  <button
+                    onClick={() => {
+                      setReleaseDecision(assignment.releaseStatus === 'REJECTED' ? 'RELEASED' : (assignment.releaseStatus || 'RELEASED'));
+                      setIsReleaseModalOpen(true);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-navy-900 hover:bg-navy-800 text-white rounded-lg font-semibold text-xs transition-colors shadow-sm"
+                  >
+                    <UserCheck className="w-3.5 h-3.5 text-teal-400" />
+                    <span>Record Prerequisite Release Decision</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Stage 6 & Future Stages Placeholders */}
           <div className="bg-gradient-to-br from-slate-900 to-navy-900 rounded-xl p-6 text-white shadow-card">
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-navy-800">
@@ -331,13 +494,18 @@ export const WorkAssignmentDetailPage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="p-3 rounded-lg bg-navy-800/60 border border-navy-700/60">
-                <div className="flex items-center gap-2 text-xs font-bold text-teal-300 mb-1">
-                  <Layers className="w-3.5 h-3.5" />
-                  Stage 6: Dependency Engine
+              <div className="p-3 rounded-lg bg-teal-950/60 border border-teal-500/40">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2 text-xs font-bold text-teal-300">
+                    <Layers className="w-3.5 h-3.5" />
+                    Stage 6: Dependency Engine
+                  </div>
+                  <span className="text-[9px] font-bold text-teal-400 bg-teal-900/60 px-1.5 py-0.2 rounded border border-teal-500/30">
+                    LIVE ACTIVE
+                  </span>
                 </div>
-                <p className="text-[11px] text-slate-400 leading-tight">
-                  Predecessor verification ensures road resurfacing follows completed trenching without overlapping conflicts.
+                <p className="text-[11px] text-teal-100/70 leading-tight">
+                  Sequential activity gating, transactional work zone locking, and authorized operational clearance verification.
                 </p>
               </div>
 
@@ -470,6 +638,27 @@ export const WorkAssignmentDetailPage: React.FC = () => {
                   <div className="text-[10px] font-mono text-slate-400 mt-0.5">{assignment.updatedAt}</div>
                 </div>
               )}
+
+              {/* Event 6: Stage 6 Prerequisite Release Decision */}
+              {assignment.releaseStatus && assignment.releaseStatus !== 'PENDING_RELEASE' && (
+                <div className="relative">
+                  <span className={`absolute -left-6 top-0.5 w-3 h-3 rounded-full border-2 border-white ring-2 ${
+                    assignment.releaseStatus === 'RELEASED' ? 'bg-emerald-500 ring-emerald-100' : 'bg-rose-500 ring-rose-100'
+                  }`} />
+                  <div className="font-semibold text-slate-900">
+                    Prerequisite Release {assignment.releaseStatus === 'RELEASED' ? 'Approved' : 'Rejected'}
+                  </div>
+                  <div className="text-[11px] text-slate-500">
+                    By {assignment.releasedBy?.fullName || 'Authorized Field Engineer'} ({assignment.releasedBy?.email || 'System'})
+                  </div>
+                  {assignment.releaseNotes && (
+                    <div className="text-[11px] text-slate-700 bg-slate-50 p-2 rounded mt-1 border border-slate-200">
+                      <strong>Review Note:</strong> {assignment.releaseNotes}
+                    </div>
+                  )}
+                  <div className="text-[10px] font-mono text-slate-400 mt-0.5">{assignment.releasedAt || assignment.updatedAt}</div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -534,6 +723,109 @@ export const WorkAssignmentDetailPage: React.FC = () => {
               className="px-4 py-2 text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white rounded-lg disabled:opacity-50"
             >
               {actionSubmitting ? 'Processing...' : actionType === 'CANCEL' ? 'Confirm Cancellation' : 'Confirm Rejection'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Stage 6: Prerequisite Release Decision Modal */}
+      <Modal
+        isOpen={isReleaseModalOpen}
+        onClose={() => {
+          setIsReleaseModalOpen(false);
+          setReleaseNotes('');
+          setReleaseError(null);
+        }}
+        title="Authorized Prerequisite Release Clearance"
+      >
+        <div className="space-y-4">
+          <div className="p-3 bg-teal-50 border border-teal-200 rounded-lg text-xs text-teal-900 leading-relaxed">
+            <span className="font-semibold block mb-0.5">Operational Release Directive</span>
+            Record an authorized operational clearance decision for <strong>{assignment.workTypeDisplayName}</strong> ({assignment.assignmentCode}) in work zone <strong>{assignment.zoneName}</strong>. Only released activities allow successor infrastructure work to proceed.
+          </div>
+
+          {releaseError && (
+            <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-700">
+              {releaseError}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Clearance Decision <span className="text-rose-500">*</span>
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setReleaseDecision('RELEASED')}
+                className={`p-3 rounded-lg border text-left flex flex-col gap-1 transition-all ${
+                  releaseDecision === 'RELEASED'
+                    ? 'border-emerald-500 bg-emerald-50/50 text-emerald-950 ring-1 ring-emerald-500'
+                    : 'border-slate-200 hover:bg-slate-50 text-slate-700'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 font-bold text-xs text-emerald-800">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <span>RELEASED</span>
+                </div>
+                <span className="text-[11px] text-slate-600">
+                  Grant operational clearance. Authorize dependent activities.
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setReleaseDecision('REJECTED')}
+                className={`p-3 rounded-lg border text-left flex flex-col gap-1 transition-all ${
+                  releaseDecision === 'REJECTED'
+                    ? 'border-rose-500 bg-rose-50/50 text-rose-950 ring-1 ring-rose-500'
+                    : 'border-slate-200 hover:bg-slate-50 text-slate-700'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 font-bold text-xs text-rose-800">
+                  <XCircle className="w-4 h-4 text-rose-600" />
+                  <span>REJECTED</span>
+                </div>
+                <span className="text-[11px] text-slate-600">
+                  Deny clearance. Block dependent work until remediated.
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Mandatory Review Note / Field Verification Log <span className="text-rose-500">*</span>
+            </label>
+            <textarea
+              rows={3}
+              value={releaseNotes}
+              onChange={(e) => setReleaseNotes(e.target.value)}
+              placeholder="Record physical trenching inspection observations, municipal depth verification, clearance reference numbers..."
+              className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-3 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => setIsReleaseModalOpen(false)}
+              disabled={releaseSubmitting}
+              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handlePrerequisiteRelease}
+              disabled={releaseSubmitting || !releaseNotes.trim()}
+              className={`px-4 py-2 text-xs font-semibold rounded-lg text-white shadow-sm transition-colors ${
+                releaseDecision === 'RELEASED'
+                  ? 'bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50'
+                  : 'bg-rose-600 hover:bg-rose-700 disabled:opacity-50'
+              }`}
+            >
+              {releaseSubmitting ? 'Recording Clearance...' : releaseDecision === 'RELEASED' ? 'Confirm Release Clearance' : 'Reject Prerequisite Clearance'}
             </button>
           </div>
         </div>

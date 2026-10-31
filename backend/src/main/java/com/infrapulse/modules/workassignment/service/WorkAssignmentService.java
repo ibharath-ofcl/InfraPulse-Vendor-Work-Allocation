@@ -17,8 +17,12 @@ import com.infrapulse.modules.workassignment.dto.WorkAssignmentResponse;
 import com.infrapulse.modules.workassignment.entity.WorkAssignment;
 import com.infrapulse.modules.workassignment.enums.AssignmentPriority;
 import com.infrapulse.modules.workassignment.enums.AssignmentStatus;
+import com.infrapulse.modules.workassignment.enums.ReleaseStatus;
 import com.infrapulse.modules.workassignment.enums.WorkType;
 import com.infrapulse.modules.workassignment.repository.WorkAssignmentRepository;
+import com.infrapulse.modules.workdependency.dto.AssignmentValidationRequest;
+import com.infrapulse.modules.workdependency.dto.PrerequisiteReleaseRequest;
+import com.infrapulse.modules.workdependency.dto.ValidationResultResponse;
 import com.infrapulse.modules.workzone.entity.WorkZone;
 import com.infrapulse.modules.workzone.enums.ZoneStatus;
 import com.infrapulse.modules.workzone.repository.WorkZoneRepository;
@@ -30,6 +34,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Year;
 import java.util.*;
@@ -71,7 +76,8 @@ public class WorkAssignmentService {
 
         validationService.validateProjectAccess(project, currentUser);
 
-        WorkZone workZone = workZoneRepository.findById(request.workZoneId())
+        // Stage 6 Concurrency Protection: Acquire pessimistic row lock on WorkZone to serialize concurrent allocations
+        WorkZone workZone = workZoneRepository.findByIdWithLock(request.workZoneId())
             .orElseThrow(() -> new ApiException(
                 HttpStatus.NOT_FOUND,
                 "Work zone not found with ID: " + request.workZoneId(),
@@ -89,7 +95,10 @@ public class WorkAssignmentService {
 
         validationService.validateVendorEligibility(vendor, project, request.workType());
         validationService.validateSchedule(request.plannedStartDate(), request.targetEndDate());
+
+        // Stage 6: Central Dependency & Conflict Validations executed within the serialized locked transaction
         validationService.validateAssignmentDependencies(project, workZone, request.workType());
+        validationService.validateConflicts(project, workZone, request.workType(), request.plannedStartDate(), request.targetEndDate(), null);
 
         // Concurrency-safe assignment code generation
         String assignmentCode = generateAssignmentCode();
@@ -110,6 +119,7 @@ public class WorkAssignmentService {
             request.instructions(),
             currentUser
         );
+        assignment.setReleaseStatus(ReleaseStatus.PENDING_RELEASE);
 
         WorkAssignment saved = workAssignmentRepository.save(assignment);
 
@@ -125,11 +135,12 @@ public class WorkAssignmentService {
             "WORK_ASSIGNMENT",
             saved.getId(),
             "Allocated " + saved.getWorkType().getDisplayName() + " (" + saved.getAssignmentCode() + ") to " + vendor.getCompanyName() + " in zone " + workZone.getZoneCode(),
-            null
+            "Passed all dependency and conflict validations"
         );
 
         return mapToResponse(saved);
     }
+
 
     @Transactional(readOnly = true)
     public Page<WorkAssignmentResponse> getAssignments(
@@ -318,10 +329,16 @@ public class WorkAssignmentService {
                     throw new ApiException(HttpStatus.BAD_REQUEST, "Work can only be started on an accepted assignment.", Map.of("status", "Assignment is not in ACCEPTED status"));
                 }
                 assignment.setActualStartDate(LocalDate.now());
+            } else if (targetStatus == AssignmentStatus.SUBMITTED_FOR_REVIEW) {
+                if (currentStatus != AssignmentStatus.IN_PROGRESS) {
+                    throw new ApiException(HttpStatus.BAD_REQUEST, "Only work currently in progress can be submitted for completion review.", Map.of("status", "Current status is " + currentStatus));
+                }
+                assignment.setActualEndDate(LocalDate.now());
+                assignment.setReleaseStatus(ReleaseStatus.PENDING_RELEASE);
             } else {
                 throw new ApiException(
                     HttpStatus.FORBIDDEN,
-                    "Vendors cannot directly set assignment status to " + targetStatus + ". Please use the quality review workflow in Stage 7.",
+                    "Vendors cannot directly set assignment status to " + targetStatus + ". Please use the completion review workflow.",
                     Map.of("status", "Unauthorized status change for vendor")
                 );
             }
@@ -343,6 +360,7 @@ public class WorkAssignmentService {
             case ACCEPTED -> "VENDOR_ACCEPTED_ASSIGNMENT";
             case REJECTED -> "VENDOR_REJECTED_ASSIGNMENT";
             case IN_PROGRESS -> "WORK_STARTED";
+            case SUBMITTED_FOR_REVIEW -> "PREREQUISITE_WORK_SUBMITTED_FOR_COMPLETION";
             default -> "WORK_ASSIGNMENT_STATUS_CHANGED";
         };
 
@@ -412,6 +430,125 @@ public class WorkAssignmentService {
         return workAssignmentRepository.findAll(spec, pageable).map(this::mapToResponse);
     }
 
+    @Transactional(readOnly = true)
+    public ValidationResultResponse validateAssignment(AssignmentValidationRequest request, User currentUser) {
+        Project project = projectRepository.findById(request.projectId())
+            .orElseThrow(() -> new ApiException(
+                HttpStatus.NOT_FOUND,
+                "Project not found with ID: " + request.projectId(),
+                Map.of("projectId", "Project does not exist")
+            ));
+
+        validationService.validateProjectAccess(project, currentUser);
+
+        WorkZone workZone = workZoneRepository.findById(request.workZoneId())
+            .orElseThrow(() -> new ApiException(
+                HttpStatus.NOT_FOUND,
+                "Work zone not found with ID: " + request.workZoneId(),
+                Map.of("workZoneId", "Work zone does not exist")
+            ));
+
+        validationService.validateWorkZone(workZone, project);
+
+        return validationService.validateAssignmentEligibility(
+            project,
+            workZone,
+            request.workType(),
+            request.plannedStartDate(),
+            request.targetEndDate(),
+            null
+        );
+    }
+
+    @Transactional
+    public WorkAssignmentResponse releasePrerequisite(String id, PrerequisiteReleaseRequest request, User currentUser) {
+        WorkAssignment assignment = workAssignmentRepository.findById(id)
+            .orElseThrow(() -> new ApiException(
+                HttpStatus.NOT_FOUND,
+                "Work assignment not found with ID: " + id,
+                Map.of("id", "Assignment does not exist")
+            ));
+
+        // 1. Vendors cannot approve or release prerequisite work
+        if (currentUser.getRole() == UserRole.VENDOR) {
+            throw new ApiException(
+                HttpStatus.FORBIDDEN,
+                "Access denied: Vendors are strictly forbidden from approving or releasing prerequisite work.",
+                Map.of("role", "Vendors cannot release prerequisite work")
+            );
+        }
+
+        // 2. Prevent vendor self-release if user is linked to vendor
+        if (assignment.getVendor() != null && assignment.getVendor().getUser() != null &&
+            assignment.getVendor().getUser().getId().equals(currentUser.getId())) {
+            throw new ApiException(
+                HttpStatus.FORBIDDEN,
+                "Access denied: Operational clearance cannot be granted by the executing vendor.",
+                Map.of("vendor", "Vendor cannot self-approve work")
+            );
+        }
+
+        // 3. Project scope check (prevent IDOR)
+        if (currentUser.getRole() == UserRole.PROJECT_MANAGER) {
+            if (assignment.getProject().getProjectManager() == null ||
+                !assignment.getProject().getProjectManager().getId().equals(currentUser.getId())) {
+                throw new ApiException(
+                    HttpStatus.FORBIDDEN,
+                    "Access denied: You are not the assigned Project Manager for this project.",
+                    Map.of("projectId", "Cannot release assignments in unauthorized projects")
+                );
+            }
+        }
+
+        if (request.notes() == null || request.notes().trim().isBlank()) {
+            throw new ApiException(
+                HttpStatus.BAD_REQUEST,
+                "A mandatory review note or justification is required to record a prerequisite release decision.",
+                Map.of("notes", "Review notes cannot be empty")
+            );
+        }
+
+        ReleaseStatus decision = request.decision();
+        if (decision == null || decision == ReleaseStatus.PENDING_RELEASE) {
+            throw new ApiException(
+                HttpStatus.BAD_REQUEST,
+                "Release decision must be either RELEASED or REJECTED.",
+                Map.of("decision", "Invalid release decision")
+            );
+        }
+
+        assignment.setReleaseStatus(decision);
+        assignment.setReleasedBy(currentUser);
+        assignment.setReleasedAt(Instant.now());
+        assignment.setReleaseNotes(request.notes().trim());
+
+        if (decision == ReleaseStatus.RELEASED) {
+            if (assignment.getStatus() != AssignmentStatus.COMPLETED) {
+                assignment.setStatus(AssignmentStatus.COMPLETED);
+                if (assignment.getActualEndDate() == null) {
+                    assignment.setActualEndDate(LocalDate.now());
+                }
+            }
+        }
+
+        WorkAssignment saved = workAssignmentRepository.save(assignment);
+
+        String eventType = decision == ReleaseStatus.RELEASED
+            ? "PREREQUISITE_RELEASE_APPROVED"
+            : "PREREQUISITE_RELEASE_REJECTED";
+
+        auditService.logEvent(
+            currentUser,
+            eventType,
+            "WORK_ASSIGNMENT",
+            saved.getId(),
+            "Prerequisite release decision: " + decision + " for " + saved.getAssignmentCode() + " (" + saved.getWorkType().getDisplayName() + ")",
+            request.notes().trim()
+        );
+
+        return mapToResponse(saved);
+    }
+
     private void validateAssignmentAccess(WorkAssignment assignment, User currentUser) {
         if (currentUser.getRole() == UserRole.PLATFORM_ADMIN) {
             return;
@@ -462,6 +599,13 @@ public class WorkAssignmentService {
             asn.getCreatedBy().getRole().name()
         );
 
+        UserSummaryDto releaserDto = asn.getReleasedBy() != null ? new UserSummaryDto(
+            asn.getReleasedBy().getId(),
+            asn.getReleasedBy().getFullName(),
+            asn.getReleasedBy().getEmail(),
+            asn.getReleasedBy().getRole().name()
+        ) : null;
+
         return new WorkAssignmentResponse(
             asn.getId(),
             asn.getAssignmentCode(),
@@ -489,9 +633,14 @@ public class WorkAssignmentService {
             asn.getInstructions(),
             asn.getCancellationReason(),
             asn.getRejectionReason(),
+            asn.getReleaseStatus(),
+            releaserDto,
+            asn.getReleasedAt(),
+            asn.getReleaseNotes(),
             creatorDto,
             asn.getCreatedAt(),
             asn.getUpdatedAt()
         );
     }
 }
+

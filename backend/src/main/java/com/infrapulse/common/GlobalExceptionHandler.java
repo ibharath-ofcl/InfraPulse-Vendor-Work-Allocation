@@ -16,6 +16,18 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(com.infrapulse.common.exception.DependencyValidationException.class)
+    public ResponseEntity<Map<String, Object>> handleDependencyValidationException(com.infrapulse.common.exception.DependencyValidationException ex) {
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("success", false);
+        body.put("code", ex.getCode());
+        body.put("message", ex.getMessage());
+        body.put("blockedDependencies", ex.getBlockedDependencies());
+        body.put("schedulingConflicts", ex.getSchedulingConflicts());
+        body.put("timestamp", java.time.Instant.now());
+        return ResponseEntity.status(ex.getStatus()).body(body);
+    }
+
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ApiResponse<Map<String, String>>> handleApiException(ApiException ex) {
         if (ex.getErrors() != null && !ex.getErrors().isEmpty()) {
@@ -25,6 +37,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(ex.getStatus())
                 .body(ApiResponse.error(ex.getMessage()));
     }
+
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationExceptions(MethodArgumentNotValidException ex) {

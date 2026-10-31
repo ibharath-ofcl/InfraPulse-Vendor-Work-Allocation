@@ -25,7 +25,8 @@ import {
   WorkAssignmentItem, 
   WorkTypeEnum, 
   AssignmentPriorityEnum, 
-  AssignmentStatusEnum 
+  AssignmentStatusEnum,
+  ValidationResultResponse
 } from '../types/workAssignment';
 import { useAuth } from '../auth/useAuth';
 
@@ -63,6 +64,10 @@ export const WorkAllocationPage: React.FC = () => {
   const [formEndDate, setFormEndDate] = useState<string>('');
   const [formPriority, setFormPriority] = useState<AssignmentPriorityEnum>('HIGH');
   const [formInstructions, setFormInstructions] = useState<string>('');
+
+  // Stage 6 Live Dependency & Conflict Validation State
+  const [validationResult, setValidationResult] = useState<ValidationResultResponse | null>(null);
+  const [validating, setValidating] = useState<boolean>(false);
 
   // Allocation UI State
   const [submitting, setSubmitting] = useState(false);
@@ -182,6 +187,35 @@ export const WorkAllocationPage: React.FC = () => {
     }
   }, [eligibleVendors, formWorkType]);
 
+  // Stage 6: Live Pre-Submission Dependency & Conflict Validation
+  useEffect(() => {
+    if (!formProjectId || !formZoneId || !formWorkType) {
+      setValidationResult(null);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        setValidating(true);
+        const res = await workAssignmentService.validateAssignment({
+          projectId: formProjectId,
+          workZoneId: formZoneId,
+          workType: formWorkType,
+          vendorId: formVendorId || undefined,
+          plannedStartDate: formStartDate || undefined,
+          targetEndDate: formEndDate || undefined,
+        });
+        setValidationResult(res);
+      } catch (err: any) {
+        console.error('Validation check failed', err);
+      } finally {
+        setValidating(false);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [formProjectId, formZoneId, formWorkType, formVendorId, formStartDate, formEndDate]);
+
   // 4. Fetch assignments ledger from backend
   const fetchAssignments = useCallback(async () => {
     try {
@@ -241,6 +275,11 @@ export const WorkAllocationPage: React.FC = () => {
       return;
     }
 
+    if (validationResult && !validationResult.eligible) {
+      setFormError(validationResult.message || 'Cannot proceed: assignment is blocked by the dependency or conflict engine.');
+      return;
+    }
+
     setShowConfirmModal(true);
   };
 
@@ -282,8 +321,14 @@ export const WorkAllocationPage: React.FC = () => {
 
       setTimeout(() => setSuccessToast(null), 6000);
     } catch (err: any) {
-      const backendMsg = err.response?.data?.message || err.message || 'Work assignment creation failed';
-      setFormError(backendMsg);
+      const respData = err.response?.data;
+      if (respData?.code === 'DEPENDENCY_NOT_SATISFIED' && respData?.blockedDependencies?.length > 0) {
+        const reasons = respData.blockedDependencies.map((b: any) => `${b.predecessorWorkType}: ${b.reason}`).join('; ');
+        setFormError(`${respData.message} [${reasons}]`);
+      } else {
+        const backendMsg = respData?.message || err.message || 'Work assignment creation failed';
+        setFormError(backendMsg);
+      }
       setShowConfirmModal(false);
     } finally {
       setSubmitting(false);
@@ -584,6 +629,98 @@ export const WorkAllocationPage: React.FC = () => {
               />
             </div>
 
+            {/* Stage 6: Dependency & Conflict Status Card */}
+            {validating && (
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center gap-2 text-xs text-ink-muted">
+                <RefreshCw className="w-4 h-4 text-teal-600 animate-spin shrink-0" />
+                <span>Evaluating prerequisite dependency graph & zone operational conflicts...</span>
+              </div>
+            )}
+
+            {!validating && validationResult && (
+              validationResult.eligible ? (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs space-y-1">
+                  <div className="flex items-center gap-1.5 font-semibold text-emerald-800">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Dependency Ready & Conflict Free</span>
+                  </div>
+                  <p className="text-emerald-700 text-[11px]">
+                    {validationResult.message || `Activity ${formWorkType} is cleared for assignment in this work zone.`}
+                  </p>
+                </div>
+              ) : (
+                <div className="p-3.5 bg-rose-50/80 border border-rose-200 rounded-lg text-xs space-y-2.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-1.5 font-bold text-rose-900">
+                      <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0" />
+                      <span>Allocation Blocked: {validationResult.code}</span>
+                    </div>
+                    <span className="px-2 py-0.5 bg-rose-100 text-rose-800 text-[10px] font-mono font-bold rounded">
+                      BLOCKED
+                    </span>
+                  </div>
+                  
+                  <p className="text-rose-800 font-medium text-[11px] leading-relaxed">
+                    {validationResult.message}
+                  </p>
+
+                  {validationResult.blockedDependencies && validationResult.blockedDependencies.length > 0 && (
+                    <div className="space-y-1.5 pt-1 border-t border-rose-200/60">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-rose-900">
+                        Prerequisite Dependencies ({validationResult.blockedDependencies.length})
+                      </span>
+                      {validationResult.blockedDependencies.map((dep, idx) => (
+                        <div key={idx} className="bg-white/90 p-2.5 rounded border border-rose-200 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="font-semibold text-ink-primary font-mono text-[11px]">
+                              {dep.predecessorWorkType}
+                            </span>
+                            <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded ${
+                              dep.releaseStatus === 'RELEASED' ? 'bg-emerald-100 text-emerald-800' :
+                              dep.releaseStatus === 'PENDING_RELEASE' ? 'bg-amber-100 text-amber-800' :
+                              'bg-rose-100 text-rose-800'
+                            }`}>
+                              {dep.releaseStatus || 'NO RELEASE'}
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-ink-secondary">
+                            <span className="font-semibold text-ink-primary">Reason:</span> {dep.reason}
+                          </div>
+                          {dep.assignmentCode && (
+                            <div className="text-[10px] text-ink-muted font-mono flex items-center gap-2">
+                              <span>Assignment: <strong>{dep.assignmentCode}</strong></span>
+                              <span>Status: <strong>{dep.assignmentStatus}</strong></span>
+                            </div>
+                          )}
+                          {dep.requiredAction && (
+                            <div className="text-[11px] text-teal-800 bg-teal-50/60 p-1.5 rounded font-medium">
+                              <strong>Required Action:</strong> {dep.requiredAction}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {validationResult.conflicts && validationResult.conflicts.length > 0 && (
+                    <div className="space-y-1.5 pt-1 border-t border-rose-200/60">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-rose-900">
+                        Scheduling & Operational Conflicts ({validationResult.conflicts.length})
+                      </span>
+                      {validationResult.conflicts.map((conf, idx) => (
+                        <div key={idx} className="bg-white/90 p-2 rounded border border-rose-200 text-[11px] text-rose-800">
+                          <span className="font-bold">{conf.conflictType}:</span> {conf.message}
+                          {conf.conflictingAssignmentCode && (
+                            <span className="ml-1 font-mono font-bold">({conf.conflictingAssignmentCode})</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            )}
+
             {/* Submit Action */}
             <div className="pt-2 flex items-center justify-between">
               <span className="text-[11px] text-ink-muted">
@@ -591,11 +728,26 @@ export const WorkAllocationPage: React.FC = () => {
               </span>
               <button
                 type="submit"
-                disabled={!canAllocate || eligibleVendors.length === 0 || matchingZones.length === 0}
+                disabled={
+                  !canAllocate || 
+                  eligibleVendors.length === 0 || 
+                  matchingZones.length === 0 ||
+                  (validationResult !== null && !validationResult.eligible) ||
+                  validating
+                }
                 className="px-5 py-2.5 bg-navy-900 text-white rounded-lg font-semibold text-xs hover:bg-navy-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 shadow-sm"
               >
-                <Plus className="w-3.5 h-3.5 text-teal-400" />
-                <span>Review & Create Assignment</span>
+                {validationResult && !validationResult.eligible ? (
+                  <>
+                    <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
+                    <span>Blocked by Dependency Engine</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-3.5 h-3.5 text-teal-400" />
+                    <span>Review & Create Assignment</span>
+                  </>
+                )}
               </button>
             </div>
           </form>

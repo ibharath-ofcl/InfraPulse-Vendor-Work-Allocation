@@ -28,4 +28,8 @@ public interface WorkZoneRepository extends JpaRepository<WorkZone, String>, Jpa
     long countByProjectId(String projectId);
 
     long countByProjectIdAndStatus(String projectId, ZoneStatus status);
+
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("SELECT wz FROM WorkZone wz WHERE wz.id = :id")
+    Optional<WorkZone> findByIdWithLock(@org.springframework.data.repository.query.Param("id") String id);
 }

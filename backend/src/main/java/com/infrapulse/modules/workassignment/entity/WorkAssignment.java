@@ -5,6 +5,7 @@ import com.infrapulse.modules.project.entity.Project;
 import com.infrapulse.modules.vendor.entity.Vendor;
 import com.infrapulse.modules.workassignment.enums.AssignmentPriority;
 import com.infrapulse.modules.workassignment.enums.AssignmentStatus;
+import com.infrapulse.modules.workassignment.enums.ReleaseStatus;
 import com.infrapulse.modules.workassignment.enums.WorkType;
 import com.infrapulse.modules.workzone.entity.WorkZone;
 import jakarta.persistence.*;
@@ -73,6 +74,20 @@ public class WorkAssignment {
 
     @Column(name = "rejection_reason", columnDefinition = "TEXT")
     private String rejectionReason;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "release_status", length = 32, nullable = false)
+    private ReleaseStatus releaseStatus = ReleaseStatus.PENDING_RELEASE;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "released_by")
+    private User releasedBy;
+
+    @Column(name = "released_at")
+    private Instant releasedAt;
+
+    @Column(name = "release_notes", columnDefinition = "TEXT")
+    private String releaseNotes;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
@@ -276,6 +291,38 @@ public class WorkAssignment {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public ReleaseStatus getReleaseStatus() {
+        return releaseStatus;
+    }
+
+    public void setReleaseStatus(ReleaseStatus releaseStatus) {
+        this.releaseStatus = releaseStatus;
+    }
+
+    public User getReleasedBy() {
+        return releasedBy;
+    }
+
+    public void setReleasedBy(User releasedBy) {
+        this.releasedBy = releasedBy;
+    }
+
+    public Instant getReleasedAt() {
+        return releasedAt;
+    }
+
+    public void setReleasedAt(Instant releasedAt) {
+        this.releasedAt = releasedAt;
+    }
+
+    public String getReleaseNotes() {
+        return releaseNotes;
+    }
+
+    public void setReleaseNotes(String releaseNotes) {
+        this.releaseNotes = releaseNotes;
     }
 
     public Instant getUpdatedAt() {

@@ -110,6 +110,27 @@ public class WorkAssignmentController {
         return ResponseEntity.ok(ApiResponse.success("Work assignment cancelled successfully", response));
     }
 
+    @PostMapping("/api/v1/work-assignments/validate")
+    @PreAuthorize("hasAnyAuthority('WORK_ASSIGNMENT_VIEW', 'WORK_ASSIGNMENT_CREATE', 'ALLOCATE_WORK', 'DEPENDENCY_VIEW', 'PLATFORM_ADMIN')")
+    public ResponseEntity<ApiResponse<com.infrapulse.modules.workdependency.dto.ValidationResultResponse>> validateAssignment(
+        @Valid @RequestBody com.infrapulse.modules.workdependency.dto.AssignmentValidationRequest request,
+        @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        var result = workAssignmentService.validateAssignment(request, principal != null ? principal.getUser() : null);
+        return ResponseEntity.ok(ApiResponse.success("Assignment dependency and scheduling validation completed", result));
+    }
+
+    @PostMapping("/api/v1/work-assignments/{id}/release")
+    @PreAuthorize("hasAnyAuthority('WORK_ASSIGNMENT_RELEASE', 'PLATFORM_ADMIN')")
+    public ResponseEntity<ApiResponse<WorkAssignmentResponse>> releasePrerequisite(
+        @PathVariable String id,
+        @Valid @RequestBody com.infrapulse.modules.workdependency.dto.PrerequisiteReleaseRequest request,
+        @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        WorkAssignmentResponse response = workAssignmentService.releasePrerequisite(id, request, principal != null ? principal.getUser() : null);
+        return ResponseEntity.ok(ApiResponse.success("Prerequisite release decision recorded successfully", response));
+    }
+
     @GetMapping("/api/v1/vendors/me/work-assignments")
     @PreAuthorize("hasRole('VENDOR')")
     public ResponseEntity<ApiResponse<Page<WorkAssignmentResponse>>> getVendorMyAssignments(
@@ -120,3 +141,4 @@ public class WorkAssignmentController {
         return ResponseEntity.ok(ApiResponse.success(page));
     }
 }
+

@@ -17,6 +17,8 @@ export type AssignmentStatusEnum =
   | 'REJECTED'
   | 'CANCELLED';
 
+export type ReleaseStatusEnum = 'PENDING_RELEASE' | 'RELEASED' | 'REJECTED';
+
 export interface UserSummary {
   id: string;
   fullName: string;
@@ -51,6 +53,10 @@ export interface WorkAssignmentItem {
   instructions?: string;
   cancellationReason?: string;
   rejectionReason?: string;
+  releaseStatus?: ReleaseStatusEnum;
+  releasedBy?: UserSummary | null;
+  releasedAt?: string | null;
+  releaseNotes?: string | null;
   createdBy: UserSummary;
   createdAt: string;
   updatedAt: string;
@@ -85,4 +91,91 @@ export interface UpdateAssignmentStatusPayload {
 
 export interface CancelAssignmentPayload {
   reason: string;
+}
+
+// Stage 6 — Dependency & Conflict Engine Types
+export interface BlockedDependencyDetail {
+  predecessorWorkType: WorkTypeEnum;
+  predecessorWorkTypeDisplayName: string;
+  assignmentCode?: string | null;
+  assignmentStatus?: AssignmentStatusEnum | null;
+  releaseStatus?: ReleaseStatusEnum | null;
+  workZoneId: string;
+  workZoneName: string;
+  assignedVendorName?: string | null;
+  reason: string;
+  requiredAction: string;
+}
+
+export interface SchedulingConflictDetail {
+  conflictType: 'DUPLICATE_ACTIVITY' | 'OVERLAPPING_INCOMPATIBLE_WORK' | string;
+  conflictingAssignmentCode: string;
+  workType: WorkTypeEnum;
+  workTypeDisplayName: string;
+  status: AssignmentStatusEnum;
+  assignedVendorName?: string | null;
+  plannedStartDate: string;
+  targetEndDate: string;
+  message: string;
+}
+
+export interface ValidationResultResponse {
+  eligible: boolean;
+  code: 'READY' | 'DEPENDENCY_BLOCKED' | 'SCHEDULING_CONFLICT' | 'DUPLICATE_ACTIVITY' | string;
+  message: string;
+  blockedDependencies: BlockedDependencyDetail[];
+  conflicts: SchedulingConflictDetail[];
+  hasDuplicate: boolean;
+  duplicateAssignmentCode?: string | null;
+}
+
+export interface AssignmentValidationPayload {
+  projectId: string;
+  workZoneId: string;
+  workType: WorkTypeEnum;
+  vendorId?: string;
+  plannedStartDate?: string;
+  targetEndDate?: string;
+  excludeAssignmentId?: string;
+}
+
+export interface PrerequisiteReleasePayload {
+  decision: ReleaseStatusEnum;
+  notes: string;
+}
+
+export interface WorkTypeDependencyItem {
+  id: string;
+  projectId?: string | null;
+  projectName?: string | null;
+  predecessorWorkType: WorkTypeEnum;
+  predecessorDisplayName: string;
+  successorWorkType: WorkTypeEnum;
+  successorDisplayName: string;
+  requiredPredecessorStatus: AssignmentStatusEnum;
+  requiresReleaseApproval: boolean;
+  isActive: boolean;
+  priority: number;
+  description?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateDependencyPayload {
+  projectId?: string | null;
+  predecessorWorkType: WorkTypeEnum;
+  successorWorkType: WorkTypeEnum;
+  requiredPredecessorStatus: AssignmentStatusEnum;
+  requiresReleaseApproval: boolean;
+  isActive: boolean;
+  priority: number;
+  description?: string;
+}
+
+export interface UpdateDependencyPayload {
+  requiredPredecessorStatus?: AssignmentStatusEnum;
+  requiresReleaseApproval?: boolean;
+  isActive?: boolean;
+  priority?: number;
+  description?: string;
 }

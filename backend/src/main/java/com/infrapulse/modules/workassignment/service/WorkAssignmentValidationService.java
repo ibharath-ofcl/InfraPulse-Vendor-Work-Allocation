@@ -1,6 +1,9 @@
 package com.infrapulse.modules.workassignment.service;
 
+import com.infrapulse.common.audit.AuditService;
 import com.infrapulse.common.exception.ApiException;
+
+import com.infrapulse.common.exception.DependencyValidationException;
 import com.infrapulse.modules.auth.model.User;
 import com.infrapulse.modules.auth.model.UserRole;
 import com.infrapulse.modules.project.entity.Project;
@@ -9,6 +12,11 @@ import com.infrapulse.modules.vendor.entity.Vendor;
 import com.infrapulse.modules.vendor.enums.ServiceCategory;
 import com.infrapulse.modules.vendor.enums.VendorStatus;
 import com.infrapulse.modules.workassignment.enums.WorkType;
+import com.infrapulse.modules.workdependency.dto.BlockedDependencyDetail;
+import com.infrapulse.modules.workdependency.dto.SchedulingConflictDetail;
+import com.infrapulse.modules.workdependency.dto.ValidationResultResponse;
+import com.infrapulse.modules.workdependency.service.WorkConflictDetectionService;
+import com.infrapulse.modules.workdependency.service.WorkDependencyService;
 import com.infrapulse.modules.workzone.entity.WorkZone;
 import com.infrapulse.modules.workzone.enums.ZoneStatus;
 import org.slf4j.Logger;
@@ -17,6 +25,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -25,10 +34,23 @@ public class WorkAssignmentValidationService {
     private static final Logger log = LoggerFactory.getLogger(WorkAssignmentValidationService.class);
 
     private final ProjectVendorRepository projectVendorRepository;
+    private final WorkDependencyService workDependencyService;
+    private final WorkConflictDetectionService workConflictDetectionService;
+    private final AuditService auditService;
 
-    public WorkAssignmentValidationService(ProjectVendorRepository projectVendorRepository) {
+    public WorkAssignmentValidationService(
+        ProjectVendorRepository projectVendorRepository,
+        WorkDependencyService workDependencyService,
+        WorkConflictDetectionService workConflictDetectionService,
+        AuditService auditService
+    ) {
         this.projectVendorRepository = projectVendorRepository;
+        this.workDependencyService = workDependencyService;
+        this.workConflictDetectionService = workConflictDetectionService;
+        this.auditService = auditService;
     }
+
+
 
     public void validateProjectAccess(Project project, User currentUser) {
         if (currentUser.getRole() == UserRole.PLATFORM_ADMIN) {
@@ -136,11 +158,139 @@ public class WorkAssignmentValidationService {
     }
 
     /**
-     * Dedicated boundary for Stage 6 Dependency & Conflict Prevention Engine.
-     * In Stage 5, this verifies baseline integrity without blocking legitimate sequential workflows prematurely.
+     * Stage 6: Central validation for prerequisite dependencies.
+     * Evaluates active rules in the same project and work zone.
+     * Throws DependencyValidationException if any prerequisite is uncompleted or unreleased.
      */
     public void validateAssignmentDependencies(Project project, WorkZone workZone, WorkType workType) {
-        log.debug("Executing Stage 5 baseline dependency check for zone: {} and workType: {}", workZone.getZoneCode(), workType);
-        // Stage 6 will dynamically inspect prerequisite work packages (e.g. Trenching approval before Road Resurfacing)
+        log.debug("Executing Stage 6 dependency validation for zone: {} and workType: {}", workZone.getZoneCode(), workType);
+        var blocked = workDependencyService.evaluateDependencies(
+            project.getId(),
+            workZone.getId(),
+            workType,
+            workZone.getZoneName()
+        );
+
+        if (!blocked.isEmpty()) {
+            auditService.recordEvent(
+                null,
+                "ASSIGNMENT_VALIDATION_BLOCKED",
+                "WORK_ZONE",
+                workZone.getId(),
+                "Validation blocked for " + workType.getDisplayName() + " in zone " + workZone.getZoneCode(),
+                "Prerequisites not completed/released"
+            );
+
+            throw new com.infrapulse.common.exception.DependencyValidationException(
+                "DEPENDENCY_NOT_SATISFIED",
+                workType.getDisplayName() + " cannot be assigned because prerequisite work has not been released.",
+                blocked,
+                java.util.List.of()
+            );
+        }
+    }
+
+    /**
+     * Stage 6: Central validation for scheduling conflicts and duplicate activities in the same work zone.
+     */
+    public void validateConflicts(
+        Project project,
+        WorkZone workZone,
+        WorkType workType,
+        LocalDate plannedStartDate,
+        LocalDate targetEndDate,
+        String excludeAssignmentId
+    ) {
+        log.debug("Executing Stage 6 conflict check for zone: {} and workType: {}", workZone.getZoneCode(), workType);
+        var conflicts = workConflictDetectionService.detectConflicts(
+            project.getId(),
+            workZone.getId(),
+            workType,
+            plannedStartDate,
+            targetEndDate,
+            excludeAssignmentId
+        );
+
+        if (!conflicts.isEmpty()) {
+            auditService.recordEvent(
+                null,
+                "SCHEDULING_CONFLICT_DETECTED",
+                "WORK_ZONE",
+                workZone.getId(),
+                "Conflict detected for " + workType.getDisplayName() + " in zone " + workZone.getZoneCode(),
+                conflicts.get(0).reason()
+            );
+
+            throw new com.infrapulse.common.exception.DependencyValidationException(
+                "SCHEDULING_CONFLICT",
+                "Assignment cannot be created due to scheduling or activity conflicts in work zone: " + workZone.getZoneName(),
+                java.util.List.of(),
+                conflicts
+            );
+        }
+    }
+
+    /**
+     * Stage 6: Structured validation response for the live pre-allocation validation API.
+     */
+    public com.infrapulse.modules.workdependency.dto.ValidationResultResponse validateAssignmentEligibility(
+        Project project,
+        WorkZone workZone,
+        WorkType workType,
+        LocalDate plannedStartDate,
+        LocalDate targetEndDate,
+        String excludeAssignmentId
+    ) {
+        var blocked = workDependencyService.evaluateDependencies(
+            project.getId(),
+            workZone.getId(),
+            workType,
+            workZone.getZoneName()
+        );
+
+        var conflicts = workConflictDetectionService.detectConflicts(
+            project.getId(),
+            workZone.getId(),
+            workType,
+            plannedStartDate,
+            targetEndDate,
+            excludeAssignmentId
+        );
+
+        boolean eligible = blocked.isEmpty() && conflicts.isEmpty();
+        String status;
+        String summary;
+
+        if (!blocked.isEmpty()) {
+            status = "BLOCKED";
+            summary = workType.getDisplayName() + " cannot be assigned because prerequisite work has not been completed and released.";
+        } else if (!conflicts.isEmpty()) {
+            status = "CONFLICT";
+            summary = "Operational conflict detected in work zone: " + workZone.getZoneName() + ".";
+        } else {
+            status = "READY";
+            summary = "Prerequisites satisfied and operational work zone is clear. Ready for allocation.";
+        }
+
+        boolean hasDuplicate = conflicts.stream()
+            .anyMatch(c -> "DUPLICATE_ACTIVITY".equals(c.conflictType()));
+        String duplicateAssignmentCode = conflicts.stream()
+            .filter(c -> "DUPLICATE_ACTIVITY".equals(c.conflictType()))
+            .map(com.infrapulse.modules.workdependency.dto.SchedulingConflictDetail::assignmentCode)
+            .findFirst()
+            .orElse(null);
+
+
+        return new com.infrapulse.modules.workdependency.dto.ValidationResultResponse(
+            eligible,
+            status,
+            summary,
+            blocked,
+            conflicts,
+            hasDuplicate,
+            duplicateAssignmentCode
+        );
     }
 }
+
+

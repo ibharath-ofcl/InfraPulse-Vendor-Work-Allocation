@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   FolderKanban, 
   MapPin, 
@@ -11,7 +11,9 @@ import {
   CheckCircle2,
   AlertTriangle,
   XCircle,
-  FileCheck
+  FileCheck,
+  Clock,
+  Layers
 } from 'lucide-react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { PageHeader } from '../components/common/PageHeader';
@@ -22,16 +24,60 @@ import { ActivityTimeline } from '../components/dashboard/ActivityTimeline';
 import { VendorPerformancePreview } from '../components/dashboard/VendorPerformancePreview';
 import { mockWorkZones } from '../data/mockWorkZones';
 import { WorkZone } from '../types';
+import { workAssignmentService } from '../services/workAssignmentService';
+import { WorkAssignmentItem } from '../types/workAssignment';
 
 export const OverviewPage: React.FC = () => {
   const [selectedZone, setSelectedZone] = useState<WorkZone | undefined>(mockWorkZones[0]);
   const [dateRange, setDateRange] = useState('Last 30 Days');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const handleRefresh = () => {
+  // Stage 6 Real Backend Assignments State
+  const [assignments, setAssignments] = useState<WorkAssignmentItem[]>([]);
+
+  const fetchLiveMetrics = useCallback(async () => {
+    try {
+      const data = await workAssignmentService.getAssignments({ size: 100 });
+      setAssignments(data.content || []);
+    } catch (err) {
+      console.error('Failed to load live assignments for metrics', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchLiveMetrics();
+  }, [fetchLiveMetrics]);
+
+  const handleRefresh = async () => {
     setIsRefreshing(true);
-    setTimeout(() => setIsRefreshing(false), 600);
+    await fetchLiveMetrics();
+    setTimeout(() => setIsRefreshing(false), 500);
   };
+
+  // Real backend calculations for Stage 6:
+  const blockedAssignmentsCount = assignments.filter(
+    (a) => a.releaseStatus === 'REJECTED' || a.status === 'REJECTED'
+  ).length;
+
+  const awaitingReleaseCount = assignments.filter(
+    (a) => a.releaseStatus === 'PENDING_RELEASE' || (a.status === 'COMPLETED' && a.releaseStatus !== 'RELEASED')
+  ).length;
+
+  const dependencyReadyCount = assignments.filter(
+    (a) => a.releaseStatus === 'RELEASED' || a.status === 'ACCEPTED' || a.status === 'IN_PROGRESS'
+  ).length;
+
+  // Real conflict calculation: detect overlapping active assignments in the exact same work zone
+  const activeZoneMap = new Map<string, number>();
+  assignments.forEach((a) => {
+    if (['ASSIGNED', 'ACCEPTED', 'IN_PROGRESS'].includes(a.status)) {
+      activeZoneMap.set(a.workZoneId, (activeZoneMap.get(a.workZoneId) || 0) + 1);
+    }
+  });
+  let schedulingConflictsCount = 0;
+  activeZoneMap.forEach((count) => {
+    if (count > 1) schedulingConflictsCount += (count - 1);
+  });
 
   return (
     <PageContainer>
@@ -72,7 +118,69 @@ export const OverviewPage: React.FC = () => {
         }
       />
 
-      {/* KPI Cards Grid */}
+      {/* Stage 6: Dependency & Conflict Prevention Intelligence Grid */}
+      <div className="mb-6 bg-gradient-to-r from-slate-900 to-navy-900 rounded-xl p-4 text-white shadow-card border border-navy-800">
+        <div className="flex items-center justify-between pb-3 mb-3 border-b border-navy-800">
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-teal-400" />
+            <h3 className="font-bold text-xs uppercase tracking-wider text-slate-200">
+              Stage 06 Dependency & Conflict Prevention Engine — Real-time Metrics
+            </h3>
+          </div>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 border border-teal-500/30 flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
+            PostgreSQL Persisted
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="p-3 rounded-lg bg-navy-800/80 border border-navy-700/80">
+            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+              <span>Blocked Assignments</span>
+              <ShieldAlert className="w-4 h-4 text-rose-400" />
+            </div>
+            <div className="text-xl font-bold text-white font-mono">{blockedAssignmentsCount}</div>
+            <div className="text-[10px] text-rose-400 mt-0.5">
+              {blockedAssignmentsCount > 0 ? 'Clearance rejected / dependencies unreleased' : 'Zero blocked packages'}
+            </div>
+          </div>
+
+          <div className="p-3 rounded-lg bg-navy-800/80 border border-navy-700/80">
+            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+              <span>Awaiting Prerequisite Release</span>
+              <Clock className="w-4 h-4 text-amber-400" />
+            </div>
+            <div className="text-xl font-bold text-white font-mono">{awaitingReleaseCount}</div>
+            <div className="text-[10px] text-amber-400 mt-0.5">
+              Requires field engineer authorization
+            </div>
+          </div>
+
+          <div className="p-3 rounded-lg bg-navy-800/80 border border-navy-700/80">
+            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+              <span>Dependency-Ready Assignments</span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            </div>
+            <div className="text-xl font-bold text-white font-mono">{dependencyReadyCount}</div>
+            <div className="text-[10px] text-emerald-400 mt-0.5">
+              All predecessor activities satisfied
+            </div>
+          </div>
+
+          <div className="p-3 rounded-lg bg-navy-800/80 border border-navy-700/80">
+            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+              <span>Scheduling Conflicts</span>
+              <AlertTriangle className={`w-4 h-4 ${schedulingConflictsCount > 0 ? 'text-rose-400' : 'text-teal-400'}`} />
+            </div>
+            <div className="text-xl font-bold text-white font-mono">{schedulingConflictsCount}</div>
+            <div className={`text-[10px] mt-0.5 ${schedulingConflictsCount > 0 ? 'text-rose-400' : 'text-teal-400'}`}>
+              {schedulingConflictsCount > 0 ? 'Overlapping zone occupancy detected' : 'Zero spatial conflicts detected'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Primary KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
         <MetricCard
           title="Active Projects"
@@ -106,11 +214,11 @@ export const OverviewPage: React.FC = () => {
         />
         <MetricCard
           title="Blocked Packages"
-          value="2"
+          value={String(blockedAssignmentsCount)}
           subtitle="Dependency conflict"
           icon={ShieldAlert}
           accentColor="rose"
-          alertBadge="BLOCKED"
+          alertBadge={blockedAssignmentsCount > 0 ? 'BLOCKED' : undefined}
         />
         <MetricCard
           title="Milestone Releases"

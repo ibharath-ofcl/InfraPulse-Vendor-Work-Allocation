@@ -7,6 +7,7 @@ import { ProjectDetailPage } from '../pages/ProjectDetailPage';
 import { WorkZonesPage } from '../pages/WorkZonesPage';
 import { WorkAllocationPage } from '../pages/WorkAllocationPage';
 import { WorkAssignmentDetailPage } from '../pages/WorkAssignmentDetailPage';
+import { WorkDependenciesPage } from '../pages/WorkDependenciesPage';
 import { VendorWorkPage } from '../pages/VendorWorkPage';
 import { VendorsPage } from '../pages/VendorsPage';
 import { VendorDetailPage } from '../pages/VendorDetailPage';
@@ -108,6 +109,16 @@ export const AppRoutes: React.FC = () => {
             element={
               <PermissionGuard requiredPermission="VIEW_ASSIGNED_WORK">
                 <WorkAssignmentDetailPage />
+              </PermissionGuard>
+            } 
+          />
+
+          {/* Stage 6 Work Type Dependencies */}
+          <Route 
+            path="work-dependencies" 
+            element={
+              <PermissionGuard requiredPermission="DEPENDENCY_VIEW">
+                <WorkDependenciesPage />
               </PermissionGuard>
             } 
           />

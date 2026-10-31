@@ -3,6 +3,7 @@ package com.infrapulse.modules.workassignment.dto;
 import com.infrapulse.common.dto.UserSummaryDto;
 import com.infrapulse.modules.workassignment.enums.AssignmentPriority;
 import com.infrapulse.modules.workassignment.enums.AssignmentStatus;
+import com.infrapulse.modules.workassignment.enums.ReleaseStatus;
 import com.infrapulse.modules.workassignment.enums.WorkType;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -34,7 +35,12 @@ public record WorkAssignmentResponse(
     String instructions,
     String cancellationReason,
     String rejectionReason,
+    ReleaseStatus releaseStatus,
+    UserSummaryDto releasedBy,
+    Instant releasedAt,
+    String releaseNotes,
     UserSummaryDto createdBy,
     Instant createdAt,
     Instant updatedAt
 ) {}
+

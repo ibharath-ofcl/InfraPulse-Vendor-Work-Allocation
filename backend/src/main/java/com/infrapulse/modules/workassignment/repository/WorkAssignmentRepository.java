@@ -33,6 +33,26 @@ public interface WorkAssignmentRepository extends JpaRepository<WorkAssignment, 
 
     long countByProjectId(String projectId);
 
+    List<WorkAssignment> findByProjectIdAndWorkZoneIdAndWorkType(
+        String projectId, 
+        String workZoneId, 
+        com.infrapulse.modules.workassignment.enums.WorkType workType
+    );
+
+    List<WorkAssignment> findByProjectIdAndWorkZoneId(String projectId, String workZoneId);
+
+    @Query("""
+        SELECT a FROM WorkAssignment a 
+        WHERE a.project.id = :projectId 
+          AND a.workZone.id = :workZoneId 
+          AND a.status IN :activeStatuses
+    """)
+    List<WorkAssignment> findActiveInZone(
+        @org.springframework.data.repository.query.Param("projectId") String projectId,
+        @org.springframework.data.repository.query.Param("workZoneId") String workZoneId,
+        @org.springframework.data.repository.query.Param("activeStatuses") Collection<AssignmentStatus> activeStatuses
+    );
+
     @Query(value = "SELECT nextval('work_assignment_seq')", nativeQuery = true)
     Long getNextAssignmentSequence();
 }

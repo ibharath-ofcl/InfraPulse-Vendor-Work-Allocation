@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Zap,
+  Briefcase,
   ExternalLink
 } from 'lucide-react';
 import { useAuth } from '../../auth/useAuth';
@@ -40,6 +41,7 @@ const allNavItems: NavItemDef[] = [
   { label: 'Projects', path: '/projects', icon: FolderKanban, requiredPermission: 'VIEW_PROJECTS' },
   { label: 'Work Zones', path: '/work-zones', icon: MapPin, requiredPermission: 'VIEW_WORK_ZONES' },
   { label: 'Work Allocation', path: '/work-allocation', icon: Sliders, highlight: true, requiredPermission: 'VIEW_ASSIGNED_WORK' },
+  { label: 'My Work Orders', path: '/my-work', icon: Briefcase, highlight: true, requiredPermission: 'WORK_ASSIGNMENT_ACCEPT' },
   { label: 'Vendors', path: '/vendors', icon: HardHat, requiredPermission: 'MANAGE_PROJECTS' },
   { label: 'Quality Inspection', path: '/quality-inspection', icon: ShieldCheck, requiredPermission: 'REVIEW_EVIDENCE' },
   { label: 'Evidence Center', path: '/evidence', icon: Camera, requiredPermission: 'SUBMIT_EVIDENCE' },

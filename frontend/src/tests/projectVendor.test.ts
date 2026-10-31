@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { UserRole, Permission } from '../types';
-import { ProjectStatus, ProjectType } from '../types/project';
-import { VendorStatus, ServiceCategory } from '../types/vendor';
+import { ProjectStatus } from '../types/project';
+import { VendorStatus } from '../types/vendor';
 
 describe('Stage 04: Project & Vendor Management Frontend Tests', () => {
 

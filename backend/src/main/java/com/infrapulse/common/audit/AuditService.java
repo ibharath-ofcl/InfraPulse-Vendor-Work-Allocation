@@ -30,6 +30,12 @@ public class AuditService {
         }
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void logEvent(com.infrapulse.modules.auth.model.User actor, String eventType, String entityType, String entityId, String summary, String reason) {
+        String actorId = actor != null ? actor.getId() : null;
+        recordEvent(actorId, eventType, entityType, entityId, summary, reason);
+    }
+
     @Transactional(readOnly = true)
     public List<AuditEvent> getEntityAuditTrail(String entityType, String entityId) {
         return auditEventRepository.findByEntityTypeAndEntityIdOrderByCreatedAtDesc(entityType, entityId);

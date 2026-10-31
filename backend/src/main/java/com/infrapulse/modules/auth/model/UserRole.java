@@ -19,7 +19,15 @@ public enum UserRole {
         Permission.PROJECT_UPDATE,
         Permission.PROJECT_VENDOR_ASSOCIATE,
         Permission.VENDOR_VIEW,
-        Permission.VENDOR_PROJECT_ASSOCIATE
+        Permission.VENDOR_PROJECT_ASSOCIATE,
+        Permission.WORK_ZONE_VIEW,
+        Permission.WORK_ZONE_CREATE,
+        Permission.WORK_ZONE_UPDATE,
+        Permission.WORK_ZONE_STATUS_MANAGE,
+        Permission.WORK_ASSIGNMENT_VIEW,
+        Permission.WORK_ASSIGNMENT_CREATE,
+        Permission.WORK_ASSIGNMENT_UPDATE,
+        Permission.WORK_ASSIGNMENT_CANCEL
     )),
     
     VENDOR(EnumSet.of(
@@ -27,7 +35,12 @@ public enum UserRole {
         Permission.SUBMIT_EVIDENCE,
         Permission.VIEW_MILESTONES,
         Permission.VIEW_PROJECTS,
-        Permission.VENDOR_VIEW
+        Permission.VENDOR_VIEW,
+        Permission.WORK_ZONE_VIEW,
+        Permission.WORK_ASSIGNMENT_VIEW,
+        Permission.WORK_ASSIGNMENT_ACCEPT,
+        Permission.WORK_ASSIGNMENT_REJECT,
+        Permission.WORK_ASSIGNMENT_START
     )),
     
     FIELD_ENGINEER(EnumSet.of(
@@ -39,7 +52,9 @@ public enum UserRole {
         Permission.APPROVE_QUALITY_REVIEW,
         Permission.VIEW_MILESTONES,
         Permission.VIEW_AUDIT_TRAIL,
-        Permission.VENDOR_VIEW
+        Permission.VENDOR_VIEW,
+        Permission.WORK_ZONE_VIEW,
+        Permission.WORK_ASSIGNMENT_VIEW
     )),
     
     FINANCE_OFFICER(EnumSet.of(
@@ -49,7 +64,9 @@ public enum UserRole {
         Permission.VIEW_MILESTONES,
         Permission.AUTHORIZE_PAYMENTS,
         Permission.VIEW_AUDIT_TRAIL,
-        Permission.VENDOR_VIEW
+        Permission.VENDOR_VIEW,
+        Permission.WORK_ZONE_VIEW,
+        Permission.WORK_ASSIGNMENT_VIEW
     ));
 
     private final Set<Permission> permissions;

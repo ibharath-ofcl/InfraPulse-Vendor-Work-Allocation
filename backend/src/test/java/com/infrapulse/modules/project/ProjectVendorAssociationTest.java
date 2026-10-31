@@ -65,6 +65,12 @@ class ProjectVendorAssociationTest {
     private ProjectManagerAssignmentRepository pmAssignmentRepository;
 
     @Autowired
+    private com.infrapulse.modules.workassignment.repository.WorkAssignmentRepository workAssignmentRepository;
+
+    @Autowired
+    private com.infrapulse.modules.workzone.repository.WorkZoneRepository workZoneRepository;
+
+    @Autowired
     private AuditEventRepository auditEventRepository;
 
     @Autowired
@@ -88,6 +94,8 @@ class ProjectVendorAssociationTest {
 
     @BeforeEach
     void setUp() {
+        workAssignmentRepository.deleteAll();
+        workZoneRepository.deleteAll();
         projectVendorRepository.deleteAll();
         pmAssignmentRepository.deleteAll();
         projectRepository.deleteAll();

@@ -6,6 +6,8 @@ import { ProjectsPage } from '../pages/ProjectsPage';
 import { ProjectDetailPage } from '../pages/ProjectDetailPage';
 import { WorkZonesPage } from '../pages/WorkZonesPage';
 import { WorkAllocationPage } from '../pages/WorkAllocationPage';
+import { WorkAssignmentDetailPage } from '../pages/WorkAssignmentDetailPage';
+import { VendorWorkPage } from '../pages/VendorWorkPage';
 import { VendorsPage } from '../pages/VendorsPage';
 import { VendorDetailPage } from '../pages/VendorDetailPage';
 import { QualityInspectionPage } from '../pages/QualityInspectionPage';
@@ -29,7 +31,7 @@ export const AppRoutes: React.FC = () => {
     switch (role) {
       case 'PLATFORM_ADMIN': return '/overview';
       case 'PROJECT_MANAGER': return '/overview';
-      case 'VENDOR': return '/work-allocation';
+      case 'VENDOR': return '/my-work';
       case 'FIELD_ENGINEER': return '/quality-inspection';
       case 'FINANCE_OFFICER': return '/milestones';
       default: return '/overview';
@@ -92,12 +94,30 @@ export const AppRoutes: React.FC = () => {
             } 
           />
 
-          {/* Work Allocation */}
+          {/* Work Allocation Ledger & Creation */}
           <Route 
             path="work-allocation" 
             element={
               <PermissionGuard requiredPermission="VIEW_ASSIGNED_WORK">
                 <WorkAllocationPage />
+              </PermissionGuard>
+            } 
+          />
+          <Route 
+            path="work-allocation/:id" 
+            element={
+              <PermissionGuard requiredPermission="VIEW_ASSIGNED_WORK">
+                <WorkAssignmentDetailPage />
+              </PermissionGuard>
+            } 
+          />
+
+          {/* Vendor Portal: My Work Orders */}
+          <Route 
+            path="my-work" 
+            element={
+              <PermissionGuard requiredPermission="VIEW_ASSIGNED_WORK">
+                <VendorWorkPage />
               </PermissionGuard>
             } 
           />

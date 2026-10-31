@@ -58,6 +58,12 @@ class VendorControllerTest {
     private ProjectVendorRepository projectVendorRepository;
 
     @Autowired
+    private com.infrapulse.modules.workassignment.repository.WorkAssignmentRepository workAssignmentRepository;
+
+    @Autowired
+    private com.infrapulse.modules.workzone.repository.WorkZoneRepository workZoneRepository;
+
+    @Autowired
     private AuditEventRepository auditEventRepository;
 
     @Autowired
@@ -77,6 +83,8 @@ class VendorControllerTest {
 
     @BeforeEach
     void setUp() {
+        workAssignmentRepository.deleteAll();
+        workZoneRepository.deleteAll();
         projectVendorRepository.deleteAll();
         projectRepository.deleteAll();
         vendorRepository.deleteAll();

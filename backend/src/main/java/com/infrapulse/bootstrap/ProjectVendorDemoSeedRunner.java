@@ -42,6 +42,8 @@ public class ProjectVendorDemoSeedRunner implements ApplicationRunner {
     private final ProjectVendorRepository projectVendorRepository;
     private final ProjectManagerAssignmentRepository pmAssignmentRepository;
     private final UserRepository userRepository;
+    private final com.infrapulse.modules.workzone.repository.WorkZoneRepository workZoneRepository;
+    private final com.infrapulse.modules.workassignment.repository.WorkAssignmentRepository workAssignmentRepository;
 
     @Value("${app.seed-demo-data:true}")
     private boolean seedDemoData;
@@ -51,13 +53,17 @@ public class ProjectVendorDemoSeedRunner implements ApplicationRunner {
         VendorRepository vendorRepository,
         ProjectVendorRepository projectVendorRepository,
         ProjectManagerAssignmentRepository pmAssignmentRepository,
-        UserRepository userRepository
+        UserRepository userRepository,
+        com.infrapulse.modules.workzone.repository.WorkZoneRepository workZoneRepository,
+        com.infrapulse.modules.workassignment.repository.WorkAssignmentRepository workAssignmentRepository
     ) {
         this.projectRepository = projectRepository;
         this.vendorRepository = vendorRepository;
         this.projectVendorRepository = projectVendorRepository;
         this.pmAssignmentRepository = pmAssignmentRepository;
         this.userRepository = userRepository;
+        this.workZoneRepository = workZoneRepository;
+        this.workAssignmentRepository = workAssignmentRepository;
     }
 
     @Override
@@ -72,6 +78,10 @@ public class ProjectVendorDemoSeedRunner implements ApplicationRunner {
 
         if (projectRepository.count() == 0) {
             seedDemoProjects();
+        }
+
+        if (workZoneRepository.count() == 0) {
+            seedDemoWorkZonesAndAssignments();
         }
     }
 
@@ -224,5 +234,153 @@ public class ProjectVendorDemoSeedRunner implements ApplicationRunner {
         projectRepository.save(p2);
 
         log.info("Provisioned initial demonstration projects (Chennai Fiber Network Expansion, Bengaluru Smart Utility Corridor)");
+    }
+
+    private void seedDemoWorkZonesAndAssignments() {
+        Optional<Project> cheProjectOpt = projectRepository.findByProjectCode("PRJ-CHE-101");
+        Optional<Project> blrProjectOpt = projectRepository.findByProjectCode("PRJ-BLR-202");
+        Optional<User> adminOpt = userRepository.findByEmail("admin@infrapulse.gov.in");
+        Optional<Vendor> v1Opt = vendorRepository.findByVendorCode("VND-1001");
+
+        if (cheProjectOpt.isEmpty() || adminOpt.isEmpty()) {
+            log.warn("Required projects or admin user missing. Skipping work zone and assignment seed.");
+            return;
+        }
+
+        Project cheProject = cheProjectOpt.get();
+        User admin = adminOpt.get();
+
+        // 1. Chennai Work Zones
+        com.infrapulse.modules.workzone.entity.WorkZone wz1 = new com.infrapulse.modules.workzone.entity.WorkZone(
+            UUID.randomUUID().toString(),
+            "WZ-600040-001",
+            cheProject,
+            "Anna Nagar Sector A",
+            "High-density commercial corridor along 2nd Avenue.",
+            "600040",
+            "Anna Nagar",
+            "Chennai",
+            "Tamil Nadu",
+            new java.math.BigDecimal("13.085000"),
+            new java.math.BigDecimal("80.210100"),
+            com.infrapulse.modules.workzone.enums.ZoneStatus.ACTIVE,
+            admin
+        );
+        workZoneRepository.save(wz1);
+
+        com.infrapulse.modules.workzone.entity.WorkZone wz2 = new com.infrapulse.modules.workzone.entity.WorkZone(
+            UUID.randomUUID().toString(),
+            "WZ-600040-002",
+            cheProject,
+            "Anna Nagar Sector B",
+            "Residential grid and school zone along 5th Main Road.",
+            "600040",
+            "Anna Nagar East",
+            "Chennai",
+            "Tamil Nadu",
+            new java.math.BigDecimal("13.088000"),
+            new java.math.BigDecimal("80.218000"),
+            com.infrapulse.modules.workzone.enums.ZoneStatus.AVAILABLE,
+            admin
+        );
+        workZoneRepository.save(wz2);
+
+        com.infrapulse.modules.workzone.entity.WorkZone wz3 = new com.infrapulse.modules.workzone.entity.WorkZone(
+            UUID.randomUUID().toString(),
+            "WZ-600001-001",
+            cheProject,
+            "George Town Heritage Zone",
+            "Historic arterial transit and harbor feeder route.",
+            "600001",
+            "George Town",
+            "Chennai",
+            "Tamil Nadu",
+            new java.math.BigDecimal("13.090000"),
+            new java.math.BigDecimal("80.290000"),
+            com.infrapulse.modules.workzone.enums.ZoneStatus.AVAILABLE,
+            admin
+        );
+        workZoneRepository.save(wz3);
+
+        // 2. Bengaluru Work Zones
+        if (blrProjectOpt.isPresent()) {
+            Project blrProject = blrProjectOpt.get();
+            com.infrapulse.modules.workzone.entity.WorkZone wzBlr1 = new com.infrapulse.modules.workzone.entity.WorkZone(
+                UUID.randomUUID().toString(),
+                "WZ-560001-001",
+                blrProject,
+                "MG Road Metro Corridor",
+                "Central business district and rapid transit underground ducting.",
+                "560001",
+                "MG Road",
+                "Bengaluru Urban",
+                "Karnataka",
+                new java.math.BigDecimal("12.975600"),
+                new java.math.BigDecimal("77.606600"),
+                com.infrapulse.modules.workzone.enums.ZoneStatus.ACTIVE,
+                admin
+            );
+            workZoneRepository.save(wzBlr1);
+
+            com.infrapulse.modules.workzone.entity.WorkZone wzBlr2 = new com.infrapulse.modules.workzone.entity.WorkZone(
+                UUID.randomUUID().toString(),
+                "WZ-560001-002",
+                blrProject,
+                "Brigade Junction Sector 2",
+                "Commercial intersection with pedestrian subways.",
+                "560001",
+                "Brigade Road",
+                "Bengaluru Urban",
+                "Karnataka",
+                new java.math.BigDecimal("12.971600"),
+                new java.math.BigDecimal("77.607000"),
+                com.infrapulse.modules.workzone.enums.ZoneStatus.AVAILABLE,
+                admin
+            );
+            workZoneRepository.save(wzBlr2);
+        }
+
+        // 3. Initial Work Assignments
+        if (v1Opt.isPresent() && workAssignmentRepository.count() == 0) {
+            Vendor v1 = v1Opt.get();
+
+            com.infrapulse.modules.workassignment.entity.WorkAssignment asn1 = new com.infrapulse.modules.workassignment.entity.WorkAssignment(
+                UUID.randomUUID().toString(),
+                "INF-WA-2026-001001",
+                cheProject,
+                wz1,
+                v1,
+                com.infrapulse.modules.workassignment.enums.WorkType.TRENCHING,
+                "Trenching - Anna Nagar Sector A",
+                "Mechanical excavation and trench preparation for optical fiber duct installation.",
+                LocalDate.of(2026, 11, 10),
+                LocalDate.of(2026, 11, 20),
+                com.infrapulse.modules.workassignment.enums.AssignmentPriority.HIGH,
+                com.infrapulse.modules.workassignment.enums.AssignmentStatus.ACCEPTED,
+                "Follow approved infrastructure safety procedures and prepare trench for conduit laying.",
+                admin
+            );
+            workAssignmentRepository.save(asn1);
+
+            com.infrapulse.modules.workassignment.entity.WorkAssignment asn2 = new com.infrapulse.modules.workassignment.entity.WorkAssignment(
+                UUID.randomUUID().toString(),
+                "INF-WA-2026-001002",
+                cheProject,
+                wz3,
+                v1,
+                com.infrapulse.modules.workassignment.enums.WorkType.ROAD_RESURFACING,
+                "Surface Restoration - George Town Heritage Corridor",
+                "High-grade asphalt mastic resurfacing and compaction over backfilled trench line.",
+                LocalDate.of(2026, 11, 15),
+                LocalDate.of(2026, 11, 28),
+                com.infrapulse.modules.workassignment.enums.AssignmentPriority.MEDIUM,
+                com.infrapulse.modules.workassignment.enums.AssignmentStatus.ASSIGNED,
+                "Ensure smooth transitions with existing pavement levels and clean curb edges.",
+                admin
+            );
+            workAssignmentRepository.save(asn2);
+        }
+
+        log.info("Provisioned initial demonstration spatial work zones and assignments.");
     }
 }

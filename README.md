@@ -1,6 +1,6 @@
 # InfraPulse AI — Intelligent Infrastructure Lifecycle, Vendor Coordination & Quality Assurance Platform
 
-[![Stage 13: Enterprise Audit Trail & Vendor Performance Analytics](https://img.shields.io/badge/Stage%2013-Audit%20Trail%20%26%20Vendor%20Analytics%20Complete-brightgreen)](docs/AUDIT_AND_ANALYTICS.md)
+[![Stage 14: Comprehensive Testing, Security Hardening & Release Readiness](https://img.shields.io/badge/Stage%2014-Testing%2C%20Security%20%26%20Release%20Readiness%20Complete-brightgreen)](docs/STAGE_14_TEST_REPORT.md)
 [![Java](https://img.shields.io/badge/Java-21%20LTS-orange)](https://openjdk.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-brightgreen)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-18.3-blue)](https://react.dev/)
@@ -175,6 +175,12 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - [15-Stage Development Roadmap](docs/DEVELOPMENT_ROADMAP.md)
 - [Human Review & Corrective Action Workflow](docs/HUMAN_REVIEW_WORKFLOW.md)
 - [Enterprise Audit Trail & Vendor Analytics](docs/AUDIT_AND_ANALYTICS.md)
+- [Stage 14 Initial Audit Report](docs/STAGE_14_INITIAL_AUDIT.md)
+- [Security Assessment & Hardening Report](docs/SECURITY_ASSESSMENT.md)
+- [System Threat Model (STRIDE Methodology)](docs/THREAT_MODEL.md)
+- [Multi-Layered Testing Strategy](docs/TESTING_STRATEGY.md)
+- [Stage 14 Test Execution & Quality Report](docs/STAGE_14_TEST_REPORT.md)
+- [Release Readiness Assessment (RC1)](docs/RELEASE_READINESS_ASSESSMENT.md)
 
 ---
 
@@ -182,4 +188,4 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 - **Official Repository**: `https://github.com/ibharath-ofcl/InfraPulse-Vendor-Work-Allocation.git`
 - **Active Branch**: `main`
-- **Current Stage**: `Stage 13 — Enterprise Audit Trail & Vendor Performance Analytics (Completed)`
+- **Current Stage**: `Stage 14 — Comprehensive Testing, Security Hardening & Release Readiness (Completed)`

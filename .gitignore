@@ -74,4 +74,6 @@ htmlcov/
 # Docker & Local Data
 docker-data/
 postgres-data/
+uploads/
+backend/uploads/
 *.log

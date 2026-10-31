@@ -27,6 +27,8 @@ import { Modal } from '../components/common/Modal';
 import { workAssignmentService } from '../services/workAssignmentService';
 import { useAuth } from '../auth/useAuth';
 import { WorkAssignmentItem, AssignmentStatusEnum, ReleaseStatusEnum } from '../types/workAssignment';
+import { EvidenceUploadPanel } from '../components/evidence/EvidenceUploadPanel';
+import { EvidenceGallery } from '../components/evidence/EvidenceGallery';
 
 export const WorkAssignmentDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -36,6 +38,7 @@ export const WorkAssignmentDetailPage: React.FC = () => {
   const [assignment, setAssignment] = useState<WorkAssignmentItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [evidenceRefreshKey, setEvidenceRefreshKey] = useState(0);
 
   // Status Action Modal (Reject / Cancel)
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
@@ -512,32 +515,68 @@ export const WorkAssignmentDetailPage: React.FC = () => {
               <div className="p-3 rounded-lg bg-navy-800/60 border border-navy-700/60">
                 <div className="flex items-center gap-2 text-xs font-bold text-teal-300 mb-1">
                   <Camera className="w-3.5 h-3.5" />
-                  Stage 7: Evidence Submission
+                  Stage 8: Photo Evidence Vault
                 </div>
-                <p className="text-[11px] text-slate-400 leading-tight">
-                  Geo-tagged photographic evidence capture with automated spatial verification for field compliance.
+                <p className="text-[11px] text-teal-100/70 leading-tight">
+                  Cryptographic SHA-256 verified field photography with GPS telemetry and EXIF metadata preservation.
                 </p>
               </div>
 
               <div className="p-3 rounded-lg bg-navy-800/60 border border-navy-700/60">
                 <div className="flex items-center gap-2 text-xs font-bold text-teal-300 mb-1">
                   <FileCheck2 className="w-3.5 h-3.5" />
-                  Stage 7: Quality Inspection
+                  Stage 9 & 10: Quality Assessment
                 </div>
                 <p className="text-[11px] text-slate-400 leading-tight">
-                  AI-assisted computer vision defect detection and field engineer multi-point certification.
+                  AI-assisted computer vision defect detection and explainable compliance findings.
                 </p>
               </div>
 
               <div className="p-3 rounded-lg bg-navy-800/60 border border-navy-700/60">
                 <div className="flex items-center gap-2 text-xs font-bold text-teal-300 mb-1">
                   <Landmark className="w-3.5 h-3.5" />
-                  Stage 8: Milestone Approval
+                  Stage 11: Human Inspection Review
                 </div>
                 <p className="text-[11px] text-slate-400 leading-tight">
-                  Deliverable-linked milestone signoff with automated financial release authorization.
+                  Field engineer review queue, physical measurement verification, and corrective actions.
                 </p>
               </div>
+            </div>
+          </div>
+
+          {/* Photo Evidence Management Section */}
+          <div className="bg-white rounded-xl border border-surface-border p-6 shadow-card space-y-6" id="work-assignment-evidence-section">
+            <div className="flex items-center justify-between pb-4 border-b border-surface-border">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600">
+                  <Camera className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                    Photographic Field Evidence & Verification
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    High-resolution site documentation with cryptographic SHA-256 integrity checks.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Evidence Upload Panel */}
+            <EvidenceUploadPanel
+              assignmentId={assignment.id}
+              onUploadSuccess={() => setEvidenceRefreshKey((k) => k + 1)}
+            />
+
+            {/* Evidence Gallery Grid */}
+            <div>
+              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">
+                Submitted Photographic Records
+              </h3>
+              <EvidenceGallery
+                assignmentId={assignment.id}
+                refreshKey={evidenceRefreshKey}
+              />
             </div>
           </div>
         </div>

@@ -94,6 +94,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Image Metadata Extraction -->
+        <dependency>
+            <groupId>com.drewnoakes</groupId>
+            <artifactId>metadata-extractor</artifactId>
+            <version>2.19.0</version>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

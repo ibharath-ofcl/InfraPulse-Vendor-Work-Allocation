@@ -24,6 +24,11 @@ spring:
     baseline-on-migrate: true
     baseline-version: 0
     locations: classpath:db/migration
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: ${MAX_FILE_SIZE:10MB}
+      max-request-size: ${MAX_REQUEST_SIZE:50MB}
 
 server:
   port: ${SERVER_PORT:8080}
@@ -52,3 +57,17 @@ security:
     admin-email: ${INFRAPULSE_ADMIN_EMAIL:admin@infrapulse.gov.in}
     admin-password: ${INFRAPULSE_ADMIN_PASSWORD:Admin@InfraPulse2025!}
     admin-name: ${INFRAPULSE_ADMIN_NAME:Platform Administrator}
+
+evidence:
+  storage:
+    provider: ${EVIDENCE_STORAGE_PROVIDER:LOCAL}
+    local-dir: ${EVIDENCE_LOCAL_DIR:uploads/evidence}
+  validation:
+    max-file-size: 10485760 # 10MB
+    max-files-per-request: 10
+    min-dimension: 50
+    max-dimension: 8000
+    allowed-content-types:
+      - image/jpeg
+      - image/png
+      - image/webp

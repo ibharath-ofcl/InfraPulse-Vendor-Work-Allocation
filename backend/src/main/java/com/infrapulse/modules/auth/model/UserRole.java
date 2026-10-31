@@ -30,7 +30,9 @@ public enum UserRole {
         Permission.WORK_ASSIGNMENT_CANCEL,
         Permission.WORK_ASSIGNMENT_RELEASE,
         Permission.WORK_ASSIGNMENT_COMPLETE,
-        Permission.DEPENDENCY_VIEW
+        Permission.DEPENDENCY_VIEW,
+        Permission.SUBMIT_EVIDENCE,
+        Permission.REVIEW_EVIDENCE
     )),
     
     VENDOR(EnumSet.of(

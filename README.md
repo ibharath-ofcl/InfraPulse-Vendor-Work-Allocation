@@ -1,6 +1,6 @@
 # InfraPulse AI — Intelligent Infrastructure Lifecycle, Vendor Coordination & Quality Assurance Platform
 
-[![Stage 11: Human Review & Corrective Actions](https://img.shields.io/badge/Stage%2011-Human%20Review%20%26%20Corrective%20Actions%20Complete-brightgreen)](docs/HUMAN_REVIEW_WORKFLOW.md)
+[![Stage 13: Enterprise Audit Trail & Vendor Performance Analytics](https://img.shields.io/badge/Stage%2013-Audit%20Trail%20%26%20Vendor%20Analytics%20Complete-brightgreen)](docs/AUDIT_AND_ANALYTICS.md)
 [![Java](https://img.shields.io/badge/Java-21%20LTS-orange)](https://openjdk.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-brightgreen)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-18.3-blue)](https://react.dev/)
@@ -174,6 +174,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - [API Conventions & Error Standards](docs/API_CONVENTIONS.md)
 - [15-Stage Development Roadmap](docs/DEVELOPMENT_ROADMAP.md)
 - [Human Review & Corrective Action Workflow](docs/HUMAN_REVIEW_WORKFLOW.md)
+- [Enterprise Audit Trail & Vendor Analytics](docs/AUDIT_AND_ANALYTICS.md)
 
 ---
 
@@ -181,4 +182,4 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 - **Official Repository**: `https://github.com/ibharath-ofcl/InfraPulse-Vendor-Work-Allocation.git`
 - **Active Branch**: `main`
-- **Current Stage**: `Stage 11 — Human Review & Corrective Action Workflow (Completed)`
+- **Current Stage**: `Stage 13 — Enterprise Audit Trail & Vendor Performance Analytics (Completed)`

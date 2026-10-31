@@ -44,6 +44,19 @@ public enum Permission {
     WORK_ASSIGNMENT_RELEASE,
     WORK_ASSIGNMENT_COMPLETE,
     DEPENDENCY_VIEW,
-    DEPENDENCY_MANAGE
+    DEPENDENCY_MANAGE,
+
+    // Stage 12 Specific Commercial, Milestone & Payment Authorization Permissions
+    MANAGE_AGREEMENTS,
+    VIEW_AGREEMENTS,
+    MANAGE_MILESTONES,
+    SUBMIT_PAYMENT_REQUEST,
+    REVIEW_PAYMENT_REQUEST,
+
+    // Stage 13 Specific Enterprise Audit & Vendor Performance Analytics Permissions
+    VIEW_ANALYTICS,
+    VERIFY_AUDIT_INTEGRITY,
+    MANAGE_SCORING_CONFIG,
+    EXPORT_REPORTS
 }
 

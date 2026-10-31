@@ -71,7 +71,10 @@ Computer vision tasks require specialized C-backed libraries (OpenCV, NumPy, PyT
     - `ai`: Computer vision integration, edge detection, excavation contour segmentation.
     - `quality`: Stage 10 AI Quality Inspection Engine, work-type inspection templates, multi-criteria assessment, scoring, and confidence evaluation.
     - `humanreview`: Stage 11 Human-in-the-Loop review workspace, Rule 2 pre-validation engine, physical measurements with engineering spec checks, corrective action management, and Stage 6 downstream work zone release.
-    - `dashboard` & `audit`: Real-time operational telemetry, immutable compliance ledger.
+    - `finance`: Stage 12 Milestone management and payment authorization gates.
+    - `analytics`: Stage 13 Empirical vendor performance analytics engine, 10 KPIs, explainable weighted scoring configurations, multi-vendor comparison, project health metrics, and asynchronous CSV report generator.
+    - `audit` (`com.infrapulse.common.audit`): Stage 13 Enterprise append-only audit trail with SHA-256 cryptographic hash chaining, sequence integrity verification, and tamper detection.
+    - `dashboard`: Real-time operational telemetry and cross-module monitoring.
 
 ---
 
@@ -89,6 +92,22 @@ InfraPulse AI enforces an authoritative quality gate before any infrastructure w
      - Any corrective action rework notice is pending (`OPEN`, `VENDOR_SUBMITTED`, or `REJECTED`).
    - **Vendor Rework & Remediations**: Field vendors can submit remedial evidence against issued corrective actions, but can NEVER verify or close their own corrective actions (strictly reserved for Inspectors and Admins).
    - **Stage 6 Downstream Dependency Release**: Once an authoritative `APPROVED` decision is committed, the assignment transitions to `COMPLETED` and `RELEASED`, automatically unblocking dependent successor work zones.
+
+---
+
+### 3.2. Stage 13 Enterprise Audit Trail & Vendor Performance Analytics Architecture
+Stage 13 introduces immutable enterprise accountability and data-driven vendor evaluation:
+1. **Cryptographically Chained Audit Trail (`com.infrapulse.common.audit`)**:
+   - Centralized append-only event store (`audit_events`) capturing events across 8 categories (`SECURITY_AUTH`, `WORK_ALLOCATION`, `CONFLICT_RESOLUTION`, `EVIDENCE_AI`, `QUALITY_INSPECTION`, `FINANCIAL_WORKFLOW`, `PROJECT_MANAGEMENT`, `SYSTEM_ADMINISTRATION`).
+   - **SHA-256 Hash Chaining**: Every event links to the preceding event's hash (`previous_hash`) and increments a monotonically increasing `sequence_number`.
+   - **Canonical Serialization**: Hashes are computed over canonical string payloads; any mutation of timestamp, actor, payload, or outcome triggers cryptographic tamper detection.
+   - **Chain Verification**: `AuditIntegrityService` audits the chain on demand to detect broken links, sequence gaps, or tampered event hashes.
+2. **Empirical Vendor Analytics Engine (`com.infrapulse.modules.analytics`)**:
+   - **10 Ground-Truth KPIs**: Computes completion rates, on-time delivery, quality pass rates, rework frequencies, evidence compliance, inspection turnarounds, corrective action resolution times, overdue counts, delay durations, and simulated financial summaries directly from real database records.
+   - **Statistical Sufficiency Protection**: Flags vendors with sample sizes below threshold (`INSUFFICIENT_DATA`), preventing skewed decisions on small datasets.
+   - **Dynamic Scoring Framework**: Municipal administrators configure normalized KPI weights via versioned, auditable scoring configurations.
+   - **Multi-Vendor Benchmark Matrix**: Ranks vendors into performance tiers (Tier 1 Excellent through Tier 4 Critical) and provides side-by-side comparative analysis with winner callouts.
+   - **Asynchronous Reporting**: Generates exportable CSV files across 7 domain categories via streaming endpoints.
 
 ---
 

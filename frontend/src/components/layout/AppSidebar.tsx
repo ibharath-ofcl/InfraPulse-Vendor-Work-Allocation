@@ -19,7 +19,8 @@ import {
   ExternalLink,
   GitFork,
   ClipboardCheck,
-  Wrench
+  Wrench,
+  FileSpreadsheet
 } from 'lucide-react';
 import { useAuth } from '../../auth/useAuth';
 import { Permission } from '../../types';
@@ -53,7 +54,8 @@ const allNavItems: NavItemDef[] = [
   { label: 'Corrective Actions', path: '/corrective-actions', icon: Wrench, requiredPermission: 'REVIEW_EVIDENCE' },
   { label: 'Evidence Center', path: '/evidence', icon: Camera, requiredPermission: 'SUBMIT_EVIDENCE' },
   { label: 'Milestones & Payments', path: '/milestones', icon: Landmark, requiredPermission: 'VIEW_MILESTONES' },
-  { label: 'Analytics', path: '/analytics', icon: BarChart3, requiredPermission: 'VIEW_AUDIT_TRAIL' },
+  { label: 'Analytics', path: '/analytics', icon: BarChart3, highlight: true, requiredPermission: 'VIEW_ANALYTICS' },
+  { label: 'Reports', path: '/reports', icon: FileSpreadsheet, requiredPermission: 'EXPORT_REPORTS' },
   { label: 'Audit Trail', path: '/audit-trail', icon: History, requiredPermission: 'VIEW_AUDIT_TRAIL' },
   { label: 'User Directory', path: '/users', icon: Users, requiredPermission: 'MANAGE_USERS' },
 ];

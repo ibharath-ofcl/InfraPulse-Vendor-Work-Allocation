@@ -19,6 +19,13 @@ import { VendorCorrectiveActionsPage } from '../pages/VendorCorrectiveActionsPag
 import { EvidencePage } from '../pages/EvidencePage';
 import { MilestonesPage } from '../pages/MilestonesPage';
 import { AnalyticsPage } from '../pages/AnalyticsPage';
+import { ProjectActivityPage } from '../pages/ProjectActivityPage';
+import { VendorActivityPage } from '../pages/VendorActivityPage';
+import { VendorAnalyticsDirectoryPage } from '../pages/VendorAnalyticsDirectoryPage';
+import { VendorPerformanceDetailPage } from '../pages/VendorPerformanceDetailPage';
+import { VendorComparisonPage } from '../pages/VendorComparisonPage';
+import { ProjectAnalyticsPage } from '../pages/ProjectAnalyticsPage';
+import { ReportsPage } from '../pages/ReportsPage';
 import { AuditTrailPage } from '../pages/AuditTrailPage';
 import { UserManagementPage } from '../pages/UserManagementPage';
 import { ProfilePage } from '../pages/ProfilePage';
@@ -88,6 +95,14 @@ export const AppRoutes: React.FC = () => {
               </PermissionGuard>
             } 
           />
+          <Route 
+            path="projects/:id/activity" 
+            element={
+              <PermissionGuard requiredPermission="VIEW_PROJECTS">
+                <ProjectActivityPage />
+              </PermissionGuard>
+            } 
+          />
 
           {/* Work Zones */}
           <Route 
@@ -151,6 +166,14 @@ export const AppRoutes: React.FC = () => {
             element={
               <PermissionGuard requiredPermission="VENDOR_VIEW">
                 <VendorDetailPage />
+              </PermissionGuard>
+            } 
+          />
+          <Route 
+            path="vendors/:id/activity" 
+            element={
+              <PermissionGuard requiredPermission="VIEW_ASSIGNED_WORK">
+                <VendorActivityPage />
               </PermissionGuard>
             } 
           />
@@ -221,22 +244,72 @@ export const AppRoutes: React.FC = () => {
             } 
           />
 
-          {/* Analytics */}
+          {/* Analytics Hub */}
           <Route 
             path="analytics" 
             element={
-              <PermissionGuard requiredPermission="VIEW_AUDIT_TRAIL">
+              <PermissionGuard requiredPermission="VIEW_ANALYTICS">
                 <AnalyticsPage />
               </PermissionGuard>
             } 
           />
+          <Route 
+            path="analytics/vendors" 
+            element={
+              <PermissionGuard requiredPermission="VIEW_ANALYTICS">
+                <VendorAnalyticsDirectoryPage />
+              </PermissionGuard>
+            } 
+          />
+          <Route 
+            path="analytics/vendors/:id" 
+            element={
+              <PermissionGuard requiredPermission="VIEW_ANALYTICS">
+                <VendorPerformanceDetailPage />
+              </PermissionGuard>
+            } 
+          />
+          <Route 
+            path="analytics/vendor-comparison" 
+            element={
+              <PermissionGuard requiredPermission="VIEW_ANALYTICS">
+                <VendorComparisonPage />
+              </PermissionGuard>
+            } 
+          />
+          <Route 
+            path="analytics/projects" 
+            element={
+              <PermissionGuard requiredPermission="VIEW_ANALYTICS">
+                <ProjectAnalyticsPage />
+              </PermissionGuard>
+            } 
+          />
 
-          {/* Audit Trail */}
+          {/* Audit Trail & Logs */}
           <Route 
             path="audit-trail" 
             element={
               <PermissionGuard requiredPermission="VIEW_AUDIT_TRAIL">
                 <AuditTrailPage />
+              </PermissionGuard>
+            } 
+          />
+          <Route 
+            path="audit-logs" 
+            element={
+              <PermissionGuard requiredPermission="VIEW_AUDIT_TRAIL">
+                <AuditTrailPage />
+              </PermissionGuard>
+            } 
+          />
+
+          {/* Reports Export */}
+          <Route 
+            path="reports" 
+            element={
+              <PermissionGuard requiredPermission="EXPORT_REPORTS">
+                <ReportsPage />
               </PermissionGuard>
             } 
           />

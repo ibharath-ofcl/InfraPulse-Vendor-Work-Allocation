@@ -33,7 +33,13 @@ public enum UserRole {
         Permission.DEPENDENCY_VIEW,
         Permission.SUBMIT_EVIDENCE,
         Permission.REVIEW_EVIDENCE,
-        Permission.APPROVE_QUALITY_REVIEW
+        Permission.APPROVE_QUALITY_REVIEW,
+        Permission.VIEW_AGREEMENTS,
+        Permission.MANAGE_AGREEMENTS,
+        Permission.MANAGE_MILESTONES,
+        Permission.REVIEW_PAYMENT_REQUEST,
+        Permission.VIEW_ANALYTICS,
+        Permission.EXPORT_REPORTS
     )),
     
     VENDOR(EnumSet.of(
@@ -48,7 +54,10 @@ public enum UserRole {
         Permission.WORK_ASSIGNMENT_REJECT,
         Permission.WORK_ASSIGNMENT_START,
         Permission.WORK_ASSIGNMENT_COMPLETE,
-        Permission.DEPENDENCY_VIEW
+        Permission.DEPENDENCY_VIEW,
+        Permission.VIEW_AGREEMENTS,
+        Permission.SUBMIT_PAYMENT_REQUEST,
+        Permission.VIEW_ANALYTICS
     )),
     
     FIELD_ENGINEER(EnumSet.of(
@@ -64,7 +73,10 @@ public enum UserRole {
         Permission.WORK_ZONE_VIEW,
         Permission.WORK_ASSIGNMENT_VIEW,
         Permission.WORK_ASSIGNMENT_RELEASE,
-        Permission.DEPENDENCY_VIEW
+        Permission.DEPENDENCY_VIEW,
+        Permission.VIEW_AGREEMENTS,
+        Permission.VIEW_ANALYTICS,
+        Permission.EXPORT_REPORTS
     )),
     
     FINANCE_OFFICER(EnumSet.of(
@@ -77,7 +89,11 @@ public enum UserRole {
         Permission.VENDOR_VIEW,
         Permission.WORK_ZONE_VIEW,
         Permission.WORK_ASSIGNMENT_VIEW,
-        Permission.DEPENDENCY_VIEW
+        Permission.DEPENDENCY_VIEW,
+        Permission.VIEW_AGREEMENTS,
+        Permission.REVIEW_PAYMENT_REQUEST,
+        Permission.VIEW_ANALYTICS,
+        Permission.EXPORT_REPORTS
     ));
 
 

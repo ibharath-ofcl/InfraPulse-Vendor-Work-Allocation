@@ -15,13 +15,19 @@ public enum UserRole {
         Permission.ALLOCATE_WORK,
         Permission.VIEW_ASSIGNED_WORK,
         Permission.VIEW_MILESTONES,
-        Permission.VIEW_AUDIT_TRAIL
+        Permission.VIEW_AUDIT_TRAIL,
+        Permission.PROJECT_UPDATE,
+        Permission.PROJECT_VENDOR_ASSOCIATE,
+        Permission.VENDOR_VIEW,
+        Permission.VENDOR_PROJECT_ASSOCIATE
     )),
     
     VENDOR(EnumSet.of(
         Permission.VIEW_ASSIGNED_WORK,
         Permission.SUBMIT_EVIDENCE,
-        Permission.VIEW_MILESTONES
+        Permission.VIEW_MILESTONES,
+        Permission.VIEW_PROJECTS,
+        Permission.VENDOR_VIEW
     )),
     
     FIELD_ENGINEER(EnumSet.of(
@@ -32,7 +38,8 @@ public enum UserRole {
         Permission.REVIEW_EVIDENCE,
         Permission.APPROVE_QUALITY_REVIEW,
         Permission.VIEW_MILESTONES,
-        Permission.VIEW_AUDIT_TRAIL
+        Permission.VIEW_AUDIT_TRAIL,
+        Permission.VENDOR_VIEW
     )),
     
     FINANCE_OFFICER(EnumSet.of(
@@ -41,7 +48,8 @@ public enum UserRole {
         Permission.VIEW_WORK_ZONES,
         Permission.VIEW_MILESTONES,
         Permission.AUTHORIZE_PAYMENTS,
-        Permission.VIEW_AUDIT_TRAIL
+        Permission.VIEW_AUDIT_TRAIL,
+        Permission.VENDOR_VIEW
     ));
 
     private final Set<Permission> permissions;

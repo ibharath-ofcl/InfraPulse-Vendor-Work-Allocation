@@ -3,9 +3,11 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { DashboardLayout } from '../layouts/DashboardLayout';
 import { OverviewPage } from '../pages/OverviewPage';
 import { ProjectsPage } from '../pages/ProjectsPage';
+import { ProjectDetailPage } from '../pages/ProjectDetailPage';
 import { WorkZonesPage } from '../pages/WorkZonesPage';
 import { WorkAllocationPage } from '../pages/WorkAllocationPage';
 import { VendorsPage } from '../pages/VendorsPage';
+import { VendorDetailPage } from '../pages/VendorDetailPage';
 import { QualityInspectionPage } from '../pages/QualityInspectionPage';
 import { EvidencePage } from '../pages/EvidencePage';
 import { MilestonesPage } from '../pages/MilestonesPage';
@@ -71,6 +73,14 @@ export const AppRoutes: React.FC = () => {
               </PermissionGuard>
             } 
           />
+          <Route 
+            path="projects/:id" 
+            element={
+              <PermissionGuard requiredPermission="VIEW_PROJECTS">
+                <ProjectDetailPage />
+              </PermissionGuard>
+            } 
+          />
 
           {/* Work Zones */}
           <Route 
@@ -96,8 +106,16 @@ export const AppRoutes: React.FC = () => {
           <Route 
             path="vendors" 
             element={
-              <PermissionGuard requiredPermission="MANAGE_PROJECTS">
+              <PermissionGuard requiredPermission="VENDOR_VIEW">
                 <VendorsPage />
+              </PermissionGuard>
+            } 
+          />
+          <Route 
+            path="vendors/:id" 
+            element={
+              <PermissionGuard requiredPermission="VENDOR_VIEW">
+                <VendorDetailPage />
               </PermissionGuard>
             } 
           />

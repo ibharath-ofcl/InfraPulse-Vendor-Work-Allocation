@@ -1,5 +1,6 @@
 package com.infrapulse.common;
 
+import com.infrapulse.common.exception.ApiException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -15,6 +16,16 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleApiException(ApiException ex) {
+        if (ex.getErrors() != null && !ex.getErrors().isEmpty()) {
+            return ResponseEntity.status(ex.getStatus())
+                    .body(ApiResponse.error(ex.getMessage(), ex.getErrors()));
+        }
+        return ResponseEntity.status(ex.getStatus())
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
@@ -24,7 +35,7 @@ public class GlobalExceptionHandler {
             errors.put(fieldName, errorMessage);
         });
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.success("Validation failed", errors));
+                .body(ApiResponse.error("Validation failed", errors));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

@@ -23,6 +23,7 @@ import com.infrapulse.modules.vendor.entity.Vendor;
 import com.infrapulse.modules.vendor.repository.VendorRepository;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class CorrectiveActionController {
@@ -94,6 +95,44 @@ public class CorrectiveActionController {
     }
 
     /**
+     * Assign inspector to a corrective action.
+     */
+    @RequestMapping(value = "/api/v1/corrective-actions/{actionId}/assign", method = {RequestMethod.POST, RequestMethod.PATCH})
+    @PreAuthorize("hasAnyAuthority('APPROVE_QUALITY_REVIEW', 'PLATFORM_ADMIN')")
+    public ResponseEntity<ApiResponse<CorrectiveActionDto>> assignCorrectiveAction(
+            @PathVariable String actionId,
+            @RequestBody Map<String, String> body,
+            @RequestParam(value = "inspectorId", required = false) String inspectorIdParam,
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        User user = principal != null ? principal.getUser() : null;
+        String inspectorId = inspectorIdParam;
+        if ((inspectorId == null || inspectorId.isBlank()) && body != null) {
+            inspectorId = body.get("inspectorId");
+        }
+        CorrectiveActionDto dto = correctiveActionService.assignInspector(actionId, inspectorId, user);
+        return ResponseEntity.ok(ApiResponse.success("Inspector assigned to corrective action", dto));
+    }
+
+    /**
+     * Update corrective action status (e.g. IN_PROGRESS).
+     */
+    @RequestMapping(value = "/api/v1/corrective-actions/{actionId}/status", method = {RequestMethod.POST, RequestMethod.PATCH})
+    @PreAuthorize("hasAnyAuthority('SUBMIT_EVIDENCE', 'REVIEW_EVIDENCE', 'APPROVE_QUALITY_REVIEW', 'PLATFORM_ADMIN')")
+    public ResponseEntity<ApiResponse<CorrectiveActionDto>> updateActionStatus(
+            @PathVariable String actionId,
+            @RequestBody Map<String, String> body,
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        User user = principal != null ? principal.getUser() : null;
+        String statusStr = body.get("status");
+        String notes = body.get("notes");
+        CorrectiveActionStatus status = CorrectiveActionStatus.valueOf(statusStr);
+        CorrectiveActionDto dto = correctiveActionService.updateStatus(actionId, status, notes, user);
+        return ResponseEntity.ok(ApiResponse.success("Corrective action status updated", dto));
+    }
+
+    /**
      * Submit rework completion proof evidence for a corrective action (Vendors & Field Engineers).
      */
     @PostMapping("/api/v1/corrective-actions/{actionId}/submit")
@@ -111,7 +150,7 @@ public class CorrectiveActionController {
     /**
      * Verify and sign-off on a corrective action (Inspectors only - Vendors cannot approve).
      */
-    @PostMapping("/api/v1/corrective-actions/{actionId}/verify")
+    @RequestMapping(value = "/api/v1/corrective-actions/{actionId}/verify", method = {RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH})
     @PreAuthorize("hasAnyAuthority('APPROVE_QUALITY_REVIEW', 'PLATFORM_ADMIN')")
     public ResponseEntity<ApiResponse<CorrectiveActionDto>> verifyCorrectiveAction(
             @PathVariable String actionId,
@@ -126,7 +165,7 @@ public class CorrectiveActionController {
     /**
      * Get corrective actions assigned to currently authenticated vendor.
      */
-    @GetMapping("/api/v1/vendors/me/corrective-actions")
+    @GetMapping({"/api/v1/vendors/me/corrective-actions", "/api/v1/corrective-actions/my-actions"})
     @PreAuthorize("hasAnyAuthority('SUBMIT_EVIDENCE', 'PLATFORM_ADMIN')")
     public ResponseEntity<ApiResponse<List<CorrectiveActionDto>>> getMyVendorCorrectiveActions(
             @AuthenticationPrincipal UserPrincipal principal

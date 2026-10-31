@@ -52,6 +52,24 @@ public class QualityInspectionController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    @PostMapping("/quality/assessments/{assessmentId}/reassess")
+    @PreAuthorize("hasAnyAuthority('REVIEW_EVIDENCE', 'APPROVE_QUALITY_REVIEW', 'PLATFORM_ADMIN')")
+    public ResponseEntity<ApiResponse<QualityAssessmentResponse>> reassessAssessment(
+            @PathVariable String assessmentId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        User currentUser = principal != null ? principal.getUser() : null;
+        QualityAssessmentResponse response = qualityInspectionService.reassessAssessment(assessmentId, currentUser);
+        return ResponseEntity.ok(ApiResponse.success("Assessment reassessment generated successfully", response));
+    }
+
+    @GetMapping("/quality/assessments/{assessmentId}/revisions")
+    @PreAuthorize("hasAnyAuthority('VIEW_ASSIGNED_WORK', 'WORK_ASSIGNMENT_VIEW', 'REVIEW_EVIDENCE', 'APPROVE_QUALITY_REVIEW', 'PLATFORM_ADMIN')")
+    public ResponseEntity<ApiResponse<List<QualityAssessmentResponse>>> getAssessmentRevisions(
+            @PathVariable String assessmentId) {
+        List<QualityAssessmentResponse> list = qualityInspectionService.getAssessmentRevisions(assessmentId);
+        return ResponseEntity.ok(ApiResponse.success("Assessment revisions retrieved", list));
+    }
+
     @GetMapping("/quality/templates")
     @PreAuthorize("hasAnyAuthority('VIEW_ASSIGNED_WORK', 'WORK_ASSIGNMENT_VIEW', 'REVIEW_EVIDENCE', 'APPROVE_QUALITY_REVIEW', 'PLATFORM_ADMIN')")
     public ResponseEntity<ApiResponse<List<QualityTemplateDto>>> getAllTemplates() {

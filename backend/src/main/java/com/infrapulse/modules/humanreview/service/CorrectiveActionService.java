@@ -4,6 +4,7 @@ import com.infrapulse.common.audit.AuditService;
 import com.infrapulse.common.exception.ApiException;
 import com.infrapulse.modules.auth.model.User;
 import com.infrapulse.modules.auth.model.UserRole;
+import com.infrapulse.modules.auth.repository.UserRepository;
 import com.infrapulse.modules.evidence.entity.WorkEvidence;
 import com.infrapulse.modules.evidence.repository.WorkEvidenceRepository;
 import com.infrapulse.modules.humanreview.dto.*;
@@ -18,6 +19,8 @@ import com.infrapulse.modules.quality.entity.QualityAssessmentFinding;
 import com.infrapulse.modules.quality.model.FindingOutcome;
 import com.infrapulse.modules.quality.repository.QualityAssessmentFindingRepository;
 import com.infrapulse.modules.quality.repository.QualityAssessmentRepository;
+import com.infrapulse.modules.vendor.entity.Vendor;
+import com.infrapulse.modules.vendor.repository.VendorRepository;
 import com.infrapulse.modules.workassignment.entity.WorkAssignment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,9 +29,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.infrapulse.modules.vendor.entity.Vendor;
-import com.infrapulse.modules.vendor.repository.VendorRepository;
 
 import java.time.Instant;
 import java.util.List;
@@ -45,6 +45,7 @@ public class CorrectiveActionService {
     private final QualityAssessmentFindingRepository findingRepository;
     private final WorkEvidenceRepository evidenceRepository;
     private final VendorRepository vendorRepository;
+    private final UserRepository userRepository;
     private final AuditService auditService;
 
     public CorrectiveActionService(
@@ -54,6 +55,7 @@ public class CorrectiveActionService {
             QualityAssessmentFindingRepository findingRepository,
             WorkEvidenceRepository evidenceRepository,
             VendorRepository vendorRepository,
+            UserRepository userRepository,
             AuditService auditService) {
         this.correctiveActionRepository = correctiveActionRepository;
         this.correctiveActionEvidenceRepository = correctiveActionEvidenceRepository;
@@ -61,6 +63,7 @@ public class CorrectiveActionService {
         this.findingRepository = findingRepository;
         this.evidenceRepository = evidenceRepository;
         this.vendorRepository = vendorRepository;
+        this.userRepository = userRepository;
         this.auditService = auditService;
     }
 
@@ -221,6 +224,41 @@ public class CorrectiveActionService {
                 null
         );
 
+        return CorrectiveActionDto.fromEntity(ca);
+    }
+
+    @Transactional
+    public CorrectiveActionDto assignInspector(String actionId, String inspectorId, User currentUser) {
+        if (currentUser.getRole() == UserRole.VENDOR) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Vendors cannot assign corrective actions");
+        }
+        CorrectiveAction ca = correctiveActionRepository.findById(actionId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "CorrectiveAction not found: " + actionId));
+        User inspector = userRepository.findById(inspectorId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Inspector user not found: " + inspectorId));
+        ca.setAssignedInspector(inspector);
+        ca = correctiveActionRepository.save(ca);
+        auditService.logEvent(currentUser, "CORRECTIVE_ACTION_ASSIGNED", "CorrectiveAction", ca.getId(),
+                "Assigned inspector " + inspector.getFullName() + " to action " + ca.getActionCode(), null);
+        return CorrectiveActionDto.fromEntity(ca);
+    }
+
+    @Transactional
+    public CorrectiveActionDto updateStatus(String actionId, CorrectiveActionStatus newStatus, String notes, User currentUser) {
+        if (currentUser.getRole() == UserRole.VENDOR) {
+            if (newStatus != CorrectiveActionStatus.IN_PROGRESS) {
+                throw new ApiException(HttpStatus.FORBIDDEN, "Vendors cannot modify corrective action status to " + newStatus);
+            }
+        }
+        CorrectiveAction ca = correctiveActionRepository.findById(actionId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "CorrectiveAction not found: " + actionId));
+        ca.setStatus(newStatus);
+        if (notes != null && !notes.isBlank()) {
+            ca.setReviewerRemarks((ca.getReviewerRemarks() != null ? ca.getReviewerRemarks() + "\n" : "") + notes);
+        }
+        ca = correctiveActionRepository.save(ca);
+        auditService.logEvent(currentUser, "CORRECTIVE_ACTION_STATUS_UPDATED", "CorrectiveAction", ca.getId(),
+                "Updated status to " + newStatus + " for action " + ca.getActionCode(), null);
         return CorrectiveActionDto.fromEntity(ca);
     }
 

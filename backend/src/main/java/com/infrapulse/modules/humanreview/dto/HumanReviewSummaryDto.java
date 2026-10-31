@@ -1,6 +1,7 @@
 package com.infrapulse.modules.humanreview.dto;
 
 import com.infrapulse.modules.humanreview.entity.HumanInspectionReview;
+import com.infrapulse.modules.humanreview.model.ReviewDecisionType;
 import com.infrapulse.modules.humanreview.model.ReviewPriority;
 import com.infrapulse.modules.humanreview.model.ReviewStatus;
 
@@ -17,18 +18,27 @@ public class HumanReviewSummaryDto {
     private String workType;
     private String projectId;
     private String projectName;
+    private String projectCode;
     private String workZoneId;
     private String workZoneName;
+    private String workZoneCode;
+    private String pincode;
     private String vendorId;
     private String vendorName;
     private String reviewerId;
     private String reviewerName;
+    private String templateName;
     private ReviewStatus reviewStatus;
     private ReviewPriority priority;
     private String assessmentStatus;
     private Double evidenceCompletenessScore;
-    private Integer flaggedCriteriaCount;
-    private Integer failedCriteriaCount;
+    private Integer passedCount = 0;
+    private Integer flaggedCriteriaCount = 0;
+    private Integer failedCriteriaCount = 0;
+    private Integer findingsCount = 0;
+    private Integer openCorrectiveActionsCount = 0;
+    private Integer pendingMeasurementsCount = 0;
+    private ReviewDecisionType latestDecision;
     private Instant assignedAt;
     private Instant createdAt;
     private Instant completedAt;
@@ -51,31 +61,45 @@ public class HumanReviewSummaryDto {
         }
 
         if (review.getAssessment() != null) {
-            dto.setAssessmentId(review.getAssessment().getId());
-            dto.setAssessmentCode(review.getAssessment().getAssessmentCode());
-            dto.setAssessmentStatus(review.getAssessment().getStatus() != null ? review.getAssessment().getStatus().name() : null);
-            dto.setEvidenceCompletenessScore(review.getAssessment().getEvidenceCompletenessScore());
-            dto.setFlaggedCriteriaCount(review.getAssessment().getFlaggedCriteriaCount());
-            dto.setFailedCriteriaCount(review.getAssessment().getFailedCriteriaCount());
+            var qa = review.getAssessment();
+            dto.setAssessmentId(qa.getId());
+            dto.setAssessmentCode(qa.getAssessmentCode());
+            dto.setAssessmentStatus(qa.getStatus() != null ? qa.getStatus().name() : null);
+            dto.setEvidenceCompletenessScore(qa.getEvidenceCompletenessScore());
+            dto.setPassedCount(qa.getPassedCriteriaCount());
+            dto.setFlaggedCriteriaCount(qa.getFlaggedCriteriaCount());
+            dto.setFailedCriteriaCount(qa.getFailedCriteriaCount());
+            dto.setFindingsCount(qa.getFindingsCount());
+            if (qa.getTemplate() != null) {
+                dto.setTemplateName(qa.getTemplate().getName());
+            }
         }
 
         if (review.getAssignment() != null) {
-            dto.setAssignmentId(review.getAssignment().getId());
-            dto.setAssignmentCode(review.getAssignment().getAssignmentCode());
-            dto.setTitle(review.getAssignment().getTitle());
-            dto.setWorkType(review.getAssignment().getWorkType() != null ? review.getAssignment().getWorkType().name() : null);
-            if (review.getAssignment().getProject() != null) {
-                dto.setProjectId(review.getAssignment().getProject().getId());
-                dto.setProjectName(review.getAssignment().getProject().getProjectName());
+            var asn = review.getAssignment();
+            dto.setAssignmentId(asn.getId());
+            dto.setAssignmentCode(asn.getAssignmentCode());
+            dto.setTitle(asn.getTitle());
+            dto.setWorkType(asn.getWorkType() != null ? asn.getWorkType().name() : null);
+            if (asn.getProject() != null) {
+                dto.setProjectId(asn.getProject().getId());
+                dto.setProjectName(asn.getProject().getProjectName());
+                dto.setProjectCode(asn.getProject().getProjectCode());
             }
-            if (review.getAssignment().getWorkZone() != null) {
-                dto.setWorkZoneId(review.getAssignment().getWorkZone().getId());
-                dto.setWorkZoneName(review.getAssignment().getWorkZone().getZoneName());
+            if (asn.getWorkZone() != null) {
+                dto.setWorkZoneId(asn.getWorkZone().getId());
+                dto.setWorkZoneName(asn.getWorkZone().getZoneName());
+                dto.setWorkZoneCode(asn.getWorkZone().getZoneCode());
+                dto.setPincode(asn.getWorkZone().getPincode());
             }
-            if (review.getAssignment().getVendor() != null) {
-                dto.setVendorId(review.getAssignment().getVendor().getId());
-                dto.setVendorName(review.getAssignment().getVendor().getCompanyName());
+            if (asn.getVendor() != null) {
+                dto.setVendorId(asn.getVendor().getId());
+                dto.setVendorName(asn.getVendor().getCompanyName());
             }
+        }
+
+        if (review.getDecisions() != null && !review.getDecisions().isEmpty()) {
+            dto.setLatestDecision(review.getDecisions().get(review.getDecisions().size() - 1).getDecisionType());
         }
 
         return dto;
@@ -111,11 +135,20 @@ public class HumanReviewSummaryDto {
     public String getProjectName() { return projectName; }
     public void setProjectName(String projectName) { this.projectName = projectName; }
 
+    public String getProjectCode() { return projectCode; }
+    public void setProjectCode(String projectCode) { this.projectCode = projectCode; }
+
     public String getWorkZoneId() { return workZoneId; }
     public void setWorkZoneId(String workZoneId) { this.workZoneId = workZoneId; }
 
     public String getWorkZoneName() { return workZoneName; }
     public void setWorkZoneName(String workZoneName) { this.workZoneName = workZoneName; }
+
+    public String getWorkZoneCode() { return workZoneCode; }
+    public void setWorkZoneCode(String workZoneCode) { this.workZoneCode = workZoneCode; }
+
+    public String getPincode() { return pincode; }
+    public void setPincode(String pincode) { this.pincode = pincode; }
 
     public String getVendorId() { return vendorId; }
     public void setVendorId(String vendorId) { this.vendorId = vendorId; }
@@ -129,8 +162,17 @@ public class HumanReviewSummaryDto {
     public String getReviewerName() { return reviewerName; }
     public void setReviewerName(String reviewerName) { this.reviewerName = reviewerName; }
 
+    public String getAssignedReviewerId() { return reviewerId; }
+    public String getAssignedReviewerName() { return reviewerName; }
+
+    public String getTemplateName() { return templateName; }
+    public void setTemplateName(String templateName) { this.templateName = templateName; }
+
     public ReviewStatus getReviewStatus() { return reviewStatus; }
     public void setReviewStatus(ReviewStatus reviewStatus) { this.reviewStatus = reviewStatus; }
+
+    public String getStatus() { return reviewStatus != null ? reviewStatus.name() : "PENDING"; }
+    public void setStatus(ReviewStatus status) { this.reviewStatus = status; }
 
     public ReviewPriority getPriority() { return priority; }
     public void setPriority(ReviewPriority priority) { this.priority = priority; }
@@ -141,11 +183,32 @@ public class HumanReviewSummaryDto {
     public Double getEvidenceCompletenessScore() { return evidenceCompletenessScore; }
     public void setEvidenceCompletenessScore(Double evidenceCompletenessScore) { this.evidenceCompletenessScore = evidenceCompletenessScore; }
 
+    public Integer getPassedCount() { return passedCount; }
+    public void setPassedCount(Integer passedCount) { this.passedCount = passedCount; }
+
     public Integer getFlaggedCriteriaCount() { return flaggedCriteriaCount; }
     public void setFlaggedCriteriaCount(Integer flaggedCriteriaCount) { this.flaggedCriteriaCount = flaggedCriteriaCount; }
 
+    public Integer getFlaggedCount() { return flaggedCriteriaCount; }
+    public void setFlaggedCount(Integer flaggedCount) { this.flaggedCriteriaCount = flaggedCount; }
+
     public Integer getFailedCriteriaCount() { return failedCriteriaCount; }
     public void setFailedCriteriaCount(Integer failedCriteriaCount) { this.failedCriteriaCount = failedCriteriaCount; }
+
+    public Integer getFailedCount() { return failedCriteriaCount; }
+    public void setFailedCount(Integer failedCount) { this.failedCriteriaCount = failedCount; }
+
+    public Integer getFindingsCount() { return findingsCount; }
+    public void setFindingsCount(Integer findingsCount) { this.findingsCount = findingsCount; }
+
+    public Integer getOpenCorrectiveActionsCount() { return openCorrectiveActionsCount; }
+    public void setOpenCorrectiveActionsCount(Integer openCorrectiveActionsCount) { this.openCorrectiveActionsCount = openCorrectiveActionsCount; }
+
+    public Integer getPendingMeasurementsCount() { return pendingMeasurementsCount; }
+    public void setPendingMeasurementsCount(Integer pendingMeasurementsCount) { this.pendingMeasurementsCount = pendingMeasurementsCount; }
+
+    public ReviewDecisionType getLatestDecision() { return latestDecision; }
+    public void setLatestDecision(ReviewDecisionType latestDecision) { this.latestDecision = latestDecision; }
 
     public Instant getAssignedAt() { return assignedAt; }
     public void setAssignedAt(Instant assignedAt) { this.assignedAt = assignedAt; }

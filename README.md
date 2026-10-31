@@ -1,6 +1,6 @@
 # InfraPulse AI — Intelligent Infrastructure Lifecycle, Vendor Coordination & Quality Assurance Platform
 
-[![Stage 1: Project Foundation & Architecture](https://img.shields.io/badge/Stage%2001-Foundation%20%26%20Architecture%20Complete-brightgreen)](docs/DEVELOPMENT_ROADMAP.md)
+[![Stage 11: Human Review & Corrective Actions](https://img.shields.io/badge/Stage%2011-Human%20Review%20%26%20Corrective%20Actions%20Complete-brightgreen)](docs/HUMAN_REVIEW_WORKFLOW.md)
 [![Java](https://img.shields.io/badge/Java-21%20LTS-orange)](https://openjdk.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-brightgreen)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-18.3-blue)](https://react.dev/)
@@ -173,6 +173,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - [Database Schema & PostGIS Strategy](docs/DATABASE_DESIGN.md)
 - [API Conventions & Error Standards](docs/API_CONVENTIONS.md)
 - [15-Stage Development Roadmap](docs/DEVELOPMENT_ROADMAP.md)
+- [Human Review & Corrective Action Workflow](docs/HUMAN_REVIEW_WORKFLOW.md)
 
 ---
 
@@ -180,4 +181,4 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 - **Official Repository**: `https://github.com/ibharath-ofcl/InfraPulse-Vendor-Work-Allocation.git`
 - **Active Branch**: `main`
-- **Current Stage**: `Stage 01 — Project Foundation & Architecture`
+- **Current Stage**: `Stage 11 — Human Review & Corrective Action Workflow (Completed)`

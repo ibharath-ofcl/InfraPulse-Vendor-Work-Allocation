@@ -142,3 +142,75 @@ When non-conforming work or defects are identified, engineers issue formal **Cor
 | `POST`| `/api/v1/corrective-actions` | Issue new corrective action rework notice | `REVIEW_EVIDENCE` |
 | `POST`| `/api/v1/corrective-actions/{id}/evidence` | Vendor submits rework proof | `SUBMIT_EVIDENCE` |
 | `POST`| `/api/v1/corrective-actions/{id}/verify` | Engineer signs off / closes rework notice | `APPROVE_QUALITY_REVIEW` |
+
+### Reassessment & Versioned History (`/api/v1/quality/assessments`)
+| Method | Endpoint | Description | Guard |
+| :--- | :--- | :--- | :--- |
+| `POST`| `/api/v1/quality/assessments/{id}/reassess` | Trigger new quality assessment revision | `REVIEW_EVIDENCE` |
+| `GET` | `/api/v1/quality/assessments/{id}/revisions` | Get immutable assessment revision history | `REVIEW_EVIDENCE` |
+
+---
+
+## 8. Evidence Inspection Viewer & AI Detection Overlays (Section C)
+
+The workspace provides an interactive Evidence Inspection Viewer allowing quality engineers to inspect original photographic evidence alongside AI computer vision inference records:
+- **High-Resolution Zoom & Pan**: Interactive zoom controls (50% to 300%) with instant 100% reset.
+- **Original vs AI Overlay Toggle**: Seamlessly toggle between authentic field photographs and model detection bounding boxes.
+- **Normalized Box Projections**: AI bounding boxes are projected using normalized coordinates `[ymin, xmin, ymax, xmax]` with color-coded classes (e.g. `trench`, `spoil_pile`, `conduit`, `warning_tape`) and confidence percentages.
+- **Image Quality Metrics**: Displays blur metrics, clarity scores (0–100), and EXIF timestamp/GPS coordinates.
+- **Model Metadata**: Identifies active inference model (e.g. `YOLOv8-InfraQuality v1.4`) and processing parameters.
+- **No Artificial Findings**: If no model bounding boxes were produced for an image category, the viewer cleanly displays the original photo with an explanatory badge.
+
+---
+
+## 9. Reassessment Workflow (Section 11)
+
+When a vendor uploads remedial evidence and the inspector verifies corrective work:
+1. Historical assessment records and original AI inference detections are **strictly preserved** (Rule 3).
+2. The system triggers a new Stage 10 quality evaluation.
+3. The new assessment links to its predecessor via `previousAssessmentId` or revision code (e.g., `QA-2026-0001-R1`).
+4. The updated assessment enters the human review queue with refreshed completeness scores and criteria outcomes.
+5. The inspector can now re-validate Rule 2 and commit an authoritative `APPROVED` decision.
+
+---
+
+## 10. End-to-End Trenching Demonstration Scenario
+
+The complete Stage 11 scenario verified in test suites:
+1. **Assignment**: Trenching assignment `WA-001` created for Vendor 1 in Zone Alpha (PIN: 500081).
+2. **Submission**: Vendor 1 completes work and submits evidence photos.
+3. **AI Evaluation**: Stage 9 vision pipeline processes images; Stage 10 flags criterion `TRENCH_DEPTH_CHECK` with `REQUIRES_PHYSICAL_MEASUREMENT` and score $< 80\%$.
+4. **Queue Routing**: Review `HIR-001` created in `PENDING` status with `HIGH` priority.
+5. **Inspector Triage**: Inspector Verma opens `/human-review/:reviewId` and inspects original evidence & AI overlays.
+6. **Rule 2 Enforcement**: Inspector attempts premature approval -> **BLOCKED** by Rule 2 engine with explicit error reasons.
+7. **Physical Measurement**: Inspector records steel dip-rod depth measurement ($1.25\,\text{m}$ against spec $[1.20 - 1.50]\,\text{m}$) -> Status `VERIFIED_PASS`.
+8. **Corrective Action**: Inspector flags missing warning tape and creates notice `CA-001` for Vendor 1.
+9. **Vendor Remediation**: Vendor 1 logs into `/my-corrective-actions`, views defect instructions, installs warning tape, and submits photo proof. (Vendor cannot close notice).
+10. **Remediation Sign-off**: Inspector inspects tape photo and signs off -> `CA-001` status `VERIFIED_CLOSED`.
+11. **Reassessment**: Inspector triggers reassessment -> Revised assessment generated with 100% completeness and all criteria `PASSED`.
+12. **Authoritative Approval**: Inspector commits `APPROVED` decision with engineering rationale.
+13. **Dependency Release**: `WA-001` status updated to `COMPLETED` and `RELEASED`. Stage 6 Dependency Engine unblocks downstream Road Resurfacing assignment `WA-002`.
+
+---
+
+## 11. Automated Test Coverage & Verification
+
+### Backend Automated Tests (`HumanReviewWorkflowTest.java`)
+- `testReviewQueueAndDetailRetrieval()`: Verifies pagination, filtering, and summary statistics.
+- `testRule2BlocksApprovalWithUnresolvedFindings()`: Verifies rejection of premature approval when criteria are `FAIL` or `REQUIRES_PHYSICAL_MEASUREMENT`.
+- `testPhysicalMeasurementVerificationAgainstSpecification()`: Verifies measurement bounds and handles missing specifications.
+- `testCorrectiveActionWorkflowAndVendorRestrictions()`: Verifies vendor submission and verifies vendor cannot self-close.
+- `testAuthoritativeApprovalAndStage6DependencyRelease()`: Verifies assignment release and downstream unblocking.
+- `testReassessmentWorkflowPreservesHistory()`: Verifies revision linking and historical immutability.
+- `testRoleBasedAccessControl()`: Verifies IDOR defense and role boundary enforcement.
+
+### Frontend Automated Tests (`frontend/src/tests/humanReview.test.ts`)
+- Queue rendering and filter parameter verification.
+- Review detail parsing with AI overlays and detections.
+- Rule 2 pre-validation calculation engine.
+- Decision dialog submission and validation.
+- Physical measurement creation and tolerance checking.
+- Corrective action lifecycle and vendor rework proof submission.
+- Reassessment trigger and revision list rendering.
+- Bounding box coordinate normalization and zoom scaling.
+

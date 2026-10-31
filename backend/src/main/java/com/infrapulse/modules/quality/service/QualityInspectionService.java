@@ -312,6 +312,21 @@ public class QualityInspectionService {
         return list.stream().map(QualityAssessmentResponse::fromEntity).collect(Collectors.toList());
     }
 
+    @Transactional
+    public QualityAssessmentResponse reassessAssessment(String assessmentId, User currentUser) {
+        QualityAssessment current = assessmentRepository.findById(assessmentId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "QualityAssessment not found: " + assessmentId));
+        return assessAssignmentQuality(current.getAssignment().getId(), assessmentId, currentUser);
+    }
+
+    @Transactional(readOnly = true)
+    public List<QualityAssessmentResponse> getAssessmentRevisions(String assessmentId) {
+        QualityAssessment current = assessmentRepository.findById(assessmentId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "QualityAssessment not found: " + assessmentId));
+        return assessmentRepository.findByAssignmentIdOrderByCreatedAtDesc(current.getAssignment().getId())
+                .stream().map(QualityAssessmentResponse::fromEntity).collect(Collectors.toList());
+    }
+
     @Transactional(readOnly = true)
     public List<QualityTemplateDto> getAllTemplates() {
         return templateRepository.findAll().stream()

@@ -15,6 +15,7 @@ import {
   InspectionEscalationDto,
   ReviewStatus,
   ReviewPriority,
+  AssessmentRevisionDto,
 } from '../types/humanReview';
 
 interface ApiResponse<T> {
@@ -190,6 +191,21 @@ export const humanReviewService = {
   getMyVendorCorrectiveActions: async (): Promise<CorrectiveActionDto[]> => {
     const response = await backendClient.get<ApiResponse<CorrectiveActionDto[]>>(
       '/v1/corrective-actions/my-actions'
+    );
+    return response.data.data;
+  },
+
+  // 4. Reassessment & Revisions
+  reassessAssessment: async (assessmentId: string): Promise<HumanReviewDetailDto> => {
+    const response = await backendClient.post<ApiResponse<HumanReviewDetailDto>>(
+      `/v1/quality/assessments/${assessmentId}/reassess`
+    );
+    return response.data.data;
+  },
+
+  getAssessmentRevisions: async (assessmentId: string): Promise<AssessmentRevisionDto[]> => {
+    const response = await backendClient.get<ApiResponse<AssessmentRevisionDto[]>>(
+      `/v1/quality/assessments/${assessmentId}/revisions`
     );
     return response.data.data;
   },

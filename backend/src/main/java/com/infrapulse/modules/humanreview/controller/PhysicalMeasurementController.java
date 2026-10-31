@@ -56,7 +56,8 @@ public class PhysicalMeasurementController {
     /**
      * Verify or update status of a physical measurement.
      */
-    @PostMapping("/api/v1/quality/measurements/{measurementId}/verify")
+    @RequestMapping(value = {"/api/v1/quality/measurements/{measurementId}/verify", "/api/v1/measurements/{measurementId}/verify"},
+                    method = {RequestMethod.POST, RequestMethod.PATCH, RequestMethod.PUT})
     @PreAuthorize("hasAnyAuthority('APPROVE_QUALITY_REVIEW', 'PLATFORM_ADMIN')")
     public ResponseEntity<ApiResponse<PhysicalMeasurementDto>> verifyMeasurement(
             @PathVariable String measurementId,

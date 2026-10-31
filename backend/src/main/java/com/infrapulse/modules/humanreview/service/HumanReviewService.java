@@ -2,9 +2,14 @@ package com.infrapulse.modules.humanreview.service;
 
 import com.infrapulse.common.audit.AuditService;
 import com.infrapulse.common.exception.ApiException;
+import com.infrapulse.modules.ai.entity.AiDetectionResult;
+import com.infrapulse.modules.ai.entity.AiInferenceResult;
+import com.infrapulse.modules.ai.repository.AiInferenceRepository;
 import com.infrapulse.modules.auth.model.User;
 import com.infrapulse.modules.auth.model.UserRole;
 import com.infrapulse.modules.auth.repository.UserRepository;
+import com.infrapulse.modules.evidence.entity.WorkEvidence;
+import com.infrapulse.modules.evidence.repository.WorkEvidenceRepository;
 import com.infrapulse.modules.humanreview.dto.*;
 import com.infrapulse.modules.humanreview.entity.*;
 import com.infrapulse.modules.humanreview.model.*;
@@ -28,7 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,6 +50,8 @@ public class HumanReviewService {
     private final QualityAssessmentFindingRepository findingRepository;
     private final WorkAssignmentRepository assignmentRepository;
     private final UserRepository userRepository;
+    private final WorkEvidenceRepository evidenceRepository;
+    private final AiInferenceRepository inferenceRepository;
     private final AuditService auditService;
 
     public HumanReviewService(
@@ -57,6 +64,8 @@ public class HumanReviewService {
             QualityAssessmentFindingRepository findingRepository,
             WorkAssignmentRepository assignmentRepository,
             UserRepository userRepository,
+            WorkEvidenceRepository evidenceRepository,
+            AiInferenceRepository inferenceRepository,
             AuditService auditService) {
         this.reviewRepository = reviewRepository;
         this.decisionRepository = decisionRepository;
@@ -67,6 +76,8 @@ public class HumanReviewService {
         this.findingRepository = findingRepository;
         this.assignmentRepository = assignmentRepository;
         this.userRepository = userRepository;
+        this.evidenceRepository = evidenceRepository;
+        this.inferenceRepository = inferenceRepository;
         this.auditService = auditService;
     }
 
@@ -80,7 +91,28 @@ public class HumanReviewService {
             Pageable pageable) {
 
         return reviewRepository.findFiltered(status, priority, reviewerId, projectId, vendorId, pageable)
-                .map(HumanReviewSummaryDto::fromEntity);
+                .map(review -> {
+                    HumanReviewSummaryDto dto = HumanReviewSummaryDto.fromEntity(review);
+                    if (review.getAssessment() != null) {
+                        String aid = review.getAssessment().getId();
+                        List<PhysicalMeasurement> pm = measurementRepository.findByAssessmentIdOrderByMeasuredAtDesc(aid);
+                        int pendingMeas = (int) pm.stream().filter(m -> 
+                                m.getVerificationStatus() == MeasurementVerificationStatus.PENDING || 
+                                m.getVerificationStatus() == MeasurementVerificationStatus.SPECIFICATION_REQUIRED
+                        ).count();
+                        dto.setPendingMeasurementsCount(pendingMeas);
+
+                        List<CorrectiveAction> ca = correctiveActionRepository.findByAssessmentIdOrderByCreatedAtDesc(aid);
+                        int openCa = (int) ca.stream().filter(c -> 
+                                c.getStatus() != CorrectiveActionStatus.CLOSED && 
+                                c.getStatus() != CorrectiveActionStatus.CANCELLED
+                        ).count();
+                        dto.setOpenCorrectiveActionsCount(openCa);
+                    }
+                    var latestDec = decisionRepository.findFirstByReviewIdOrderByDecidedAtDesc(review.getId());
+                    latestDec.ifPresent(d -> dto.setLatestDecision(d.getDecisionType()));
+                    return dto;
+                });
     }
 
     @Transactional(readOnly = true)
@@ -91,11 +123,87 @@ public class HumanReviewService {
         HumanReviewDetailDto dto = HumanReviewDetailDto.fromEntity(review);
 
         if (review.getAssessment() != null) {
+            String assessmentId = review.getAssessment().getId();
+
             List<PhysicalMeasurement> measurements = measurementRepository
-                    .findByAssessmentIdOrderByMeasuredAtDesc(review.getAssessment().getId());
+                    .findByAssessmentIdOrderByMeasuredAtDesc(assessmentId);
             dto.setPhysicalMeasurements(measurements.stream()
                     .map(PhysicalMeasurementDto::fromEntity)
                     .collect(Collectors.toList()));
+
+            List<CorrectiveAction> correctiveActions = correctiveActionRepository
+                    .findByAssessmentIdOrderByCreatedAtDesc(assessmentId);
+            dto.setCorrectiveActions(correctiveActions.stream()
+                    .map(CorrectiveActionDto::fromEntity)
+                    .collect(Collectors.toList()));
+        }
+
+        List<InspectionEscalation> escalations = escalationRepository.findByReviewIdOrderByCreatedAtDesc(review.getId());
+        dto.setEscalations(escalations.stream()
+                .map(InspectionEscalationDto::fromEntity)
+                .collect(Collectors.toList()));
+
+        List<HumanInspectionDecision> decisions = decisionRepository
+                .findByReviewIdOrderByDecidedAtDesc(review.getId());
+        dto.setDecisions(decisions.stream()
+                .map(DecisionResponseDto::fromEntity)
+                .collect(Collectors.toList()));
+        if (!decisions.isEmpty()) {
+            dto.setLatestDecision(decisions.get(0).getDecisionType());
+        }
+
+        // Section C: Populate real Evidence & AI Detection Overlays
+        if (review.getAssignment() != null) {
+            String assignmentId = review.getAssignment().getId();
+            List<WorkEvidence> evidences = evidenceRepository.findByWorkAssignmentIdAndIsDeletedFalse(assignmentId);
+            List<AiInferenceResult> inferences = inferenceRepository.findByAssignmentIdOrderByCreatedAtDesc(assignmentId);
+
+            Map<String, AiInferenceResult> evidenceInferenceMap = new HashMap<>();
+            for (AiInferenceResult inf : inferences) {
+                if (inf.getEvidence() != null && !evidenceInferenceMap.containsKey(inf.getEvidence().getId())) {
+                    evidenceInferenceMap.put(inf.getEvidence().getId(), inf);
+                }
+            }
+
+            List<InspectionEvidenceItemDto> evidenceItems = new ArrayList<>();
+            for (WorkEvidence e : evidences) {
+                InspectionEvidenceItemDto item = new InspectionEvidenceItemDto();
+                item.setId(e.getId());
+                item.setEvidenceCode(e.getEvidenceCode());
+                item.setEvidenceCategory(e.getEvidenceCategory() != null ? e.getEvidenceCategory().name() : "GENERAL");
+                item.setFileName(e.getOriginalFileName());
+                item.setFileSize(e.getFileSize());
+                item.setMimeType(e.getMimeType());
+                item.setPreviewUrl("/api/v1/evidence/" + e.getId() + "/preview");
+                item.setFileUrl("/api/v1/evidence/" + e.getId() + "/file");
+                item.setLatitude(e.getLatitude());
+                item.setLongitude(e.getLongitude());
+                item.setUploadedAt(e.getUploadedAt());
+                item.setSubmittedByName(e.getUploadedBy() != null ? e.getUploadedBy().getFullName() : "Vendor Staff");
+                item.setVendorName(review.getAssignment().getVendor() != null ? review.getAssignment().getVendor().getCompanyName() : "Vendor");
+
+                AiInferenceResult inf = evidenceInferenceMap.get(e.getId());
+                if (inf != null) {
+                    item.setAiQualityStatus(inf.getImageQuality() != null ? inf.getImageQuality().getQualityStatus() : "ACCEPTED");
+                    item.setAiClarityScore(inf.getImageQuality() != null ? inf.getImageQuality().getBlurScore() : 95.0);
+                    item.setAiModelName(inf.getModelId());
+                    item.setAiModelVersion(inf.getModelVersion());
+                    if (inf.getDetections() != null) {
+                        for (AiDetectionResult d : inf.getDetections()) {
+                            item.getDetections().add(new InspectionDetectionDto(
+                                    d.getId(),
+                                    d.getClassId(),
+                                    d.getClassLabel(),
+                                    d.getConfidence(),
+                                    d.getBoundingBoxJson()
+                            ));
+                        }
+                    }
+                }
+
+                evidenceItems.add(item);
+            }
+            dto.setEvidenceList(evidenceItems);
         }
 
         return dto;
@@ -395,5 +503,19 @@ public class HumanReviewService {
         );
 
         return InspectionEscalationDto.fromEntity(escalation);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DecisionResponseDto> getReviewDecisions(String reviewId) {
+        return decisionRepository.findByReviewIdOrderByDecidedAtDesc(reviewId).stream()
+                .map(DecisionResponseDto::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<DecisionResponseDto> getAssessmentDecisions(String assessmentId) {
+        return decisionRepository.findByAssessmentIdOrderByDecidedAtDesc(assessmentId).stream()
+                .map(DecisionResponseDto::fromEntity)
+                .collect(Collectors.toList());
     }
 }

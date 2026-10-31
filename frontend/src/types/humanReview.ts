@@ -120,6 +120,41 @@ export interface HumanReviewSummaryDto {
   updatedAt: string;
 }
 
+export interface InspectionDetectionDto {
+  classLabel: string;
+  confidence: number;
+  box2d?: number[];
+  attributes?: Record<string, any>;
+}
+
+export interface InspectionEvidenceItemDto {
+  id: string;
+  evidenceCode: string;
+  evidenceCategory: string;
+  originalFileName: string;
+  previewUrl: string;
+  storageKey?: string;
+  submittedAt: string;
+  submittedByName?: string;
+  fileSizeBytes?: number;
+  latitude?: number;
+  longitude?: number;
+  aiClarityScore?: number;
+  aiBlurScore?: number;
+  aiModelName?: string;
+  aiModelVersion?: string;
+  detections: InspectionDetectionDto[];
+}
+
+export interface AssessmentRevisionDto {
+  id: string;
+  assessmentCode: string;
+  status: string;
+  evidenceCompletenessScore: number;
+  createdAt: string;
+  evaluationSummary?: string;
+}
+
 export interface HumanReviewDetailDto {
   id: string;
   reviewCode: string;
@@ -158,6 +193,7 @@ export interface HumanReviewDetailDto {
   correctiveActions: CorrectiveActionDto[];
   decisions: HumanInspectionDecisionDto[];
   escalations: InspectionEscalationDto[];
+  evidenceList?: InspectionEvidenceItemDto[];
   createdAt: string;
   updatedAt: string;
 }

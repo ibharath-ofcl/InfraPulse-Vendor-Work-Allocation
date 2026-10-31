@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   Bell, 
   Search, 
@@ -12,6 +12,7 @@ import {
   Layers
 } from 'lucide-react';
 import { mockProjects } from '../../data/mockProjects';
+import { useAuth } from '../../auth/useAuth';
 
 interface TopNavbarProps {
   onOpenMobile: () => void;
@@ -20,6 +21,9 @@ interface TopNavbarProps {
 
 export const TopNavbar: React.FC<TopNavbarProps> = ({ onOpenMobile, collapsed }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
   const [selectedProjectId, setSelectedProjectId] = useState<string>('ALL');
   const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -59,13 +63,21 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ onOpenMobile, collapsed })
       case '/milestones': return 'Milestones & Payments';
       case '/analytics': return 'Performance Analytics';
       case '/audit-trail': return 'Compliance Audit Trail';
-      default: return 'Overview';
+      case '/users': return 'Platform User Management';
+      case '/profile': return 'Operator Profile & Identity';
+      default: return 'Command Center';
     }
   };
 
   const selectedProjectName = selectedProjectId === 'ALL'
     ? 'All Active Projects'
     : mockProjects.find(p => p.id === selectedProjectId)?.name || 'Project Scope';
+
+  const handleSignOut = async () => {
+    setProfileDropdownOpen(false);
+    await logout();
+    navigate('/login');
+  };
 
   return (
     <header className={`sticky top-0 z-30 h-16 bg-white border-b border-surface-border transition-all duration-300 ${
@@ -83,75 +95,73 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ onOpenMobile, collapsed })
           </button>
 
           <div>
-            <div className="flex items-center gap-2 text-xs text-ink-muted">
-              <span>InfraPulse AI</span>
-              <span>/</span>
-              <span className="text-teal-700 font-semibold">{getPageTitle(location.pathname)}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-ink-muted hidden sm:inline">Platform</span>
+              <span className="text-xs text-ink-muted hidden sm:inline">&rsaquo;</span>
+              <h1 className="text-sm md:text-base font-bold text-ink-primary tracking-tight">
+                {getPageTitle(location.pathname)}
+              </h1>
             </div>
-            <h2 className="text-sm md:text-base font-bold text-ink-primary tracking-tight">
-              {getPageTitle(location.pathname)}
-            </h2>
           </div>
         </div>
 
         {/* Center: Global Search Bar */}
-        <div className="hidden md:flex flex-1 max-w-md mx-4">
+        <div className="flex-1 max-w-md hidden md:block">
           <button
             onClick={() => setSearchModalOpen(true)}
-            className="w-full flex items-center justify-between px-3.5 py-1.5 bg-slate-50 border border-surface-border rounded-lg text-ink-muted text-xs hover:border-slate-300 hover:bg-white transition-all shadow-sm"
+            className="w-full flex items-center justify-between px-3 py-1.5 text-xs text-ink-muted bg-slate-50 hover:bg-slate-100 border border-surface-border rounded-lg transition-colors text-left"
           >
-            <span className="flex items-center gap-2">
-              <Search className="w-4 h-4 text-ink-muted" />
-              <span>Search PIN codes, vendors, work zones, or milestones...</span>
-            </span>
-            <kbd className="hidden lg:inline-block px-1.5 py-0.5 text-[10px] bg-slate-200 text-slate-700 rounded font-mono">
-              ⌘K
+            <div className="flex items-center gap-2">
+              <Search className="w-3.5 h-3.5 text-ink-secondary" />
+              <span>Search PIN code, zone (e.g. 560001), or vendor...</span>
+            </div>
+            <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-white border border-surface-border rounded text-ink-secondary shadow-xs">
+              Cmd+K
             </kbd>
           </button>
         </div>
 
-        {/* Right Action Cluster */}
-        <div className="flex items-center gap-3">
-          {/* Project Selector Dropdown */}
-          <div className="relative hidden sm:block" ref={projectRef}>
+        {/* Right Section: Project Scope, Notifications, User Profile */}
+        <div className="flex items-center gap-2 md:gap-3">
+          {/* Project Scope Selector */}
+          <div className="relative" ref={projectRef}>
             <button
               onClick={() => setProjectDropdownOpen(!projectDropdownOpen)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-surface-border bg-white text-xs font-medium text-ink-primary hover:bg-slate-50 transition-all shadow-sm"
+              className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-ink-primary bg-slate-50 hover:bg-slate-100 border border-surface-border rounded-lg transition-colors max-w-[180px] sm:max-w-[220px]"
+              title="Filter by Project Scope"
             >
-              <Layers className="w-3.5 h-3.5 text-teal-600" />
-              <span className="max-w-[130px] truncate text-left">{selectedProjectName}</span>
-              <ChevronDown className="w-3 h-3 text-ink-muted" />
+              <Layers className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+              <span className="truncate font-medium">{selectedProjectName}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-ink-muted shrink-0" />
             </button>
 
             {projectDropdownOpen && (
-              <div className="absolute right-0 mt-1.5 w-64 bg-white rounded-xl shadow-dropdown border border-surface-border py-1 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
-                <div className="px-3 py-1.5 text-[10px] font-bold text-ink-muted uppercase tracking-wider border-b border-slate-100">
+              <div className="absolute right-0 mt-1 w-64 bg-white rounded-lg shadow-modal border border-surface-border py-1 z-50 text-xs">
+                <div className="px-3 py-1.5 font-semibold text-[11px] text-ink-muted uppercase tracking-wider border-b border-surface-border">
                   Select Project Scope
                 </div>
                 <button
-                  onClick={() => {
-                    setSelectedProjectId('ALL');
-                    setProjectDropdownOpen(false);
-                  }}
-                  className="w-full px-3 py-2 text-left text-xs text-ink-primary hover:bg-slate-50 flex items-center justify-between"
+                  onClick={() => { setSelectedProjectId('ALL'); setProjectDropdownOpen(false); }}
+                  className={`w-full px-3 py-2 text-left flex items-center justify-between hover:bg-slate-50 ${
+                    selectedProjectId === 'ALL' ? 'text-teal-700 font-semibold bg-teal-50/50' : 'text-ink-primary'
+                  }`}
                 >
-                  <span className="font-semibold">All Active Projects</span>
+                  <span>All Active Projects</span>
                   {selectedProjectId === 'ALL' && <Check className="w-3.5 h-3.5 text-teal-600" />}
                 </button>
-                {mockProjects.map((p) => (
+                {mockProjects.map((proj) => (
                   <button
-                    key={p.id}
-                    onClick={() => {
-                      setSelectedProjectId(p.id);
-                      setProjectDropdownOpen(false);
-                    }}
-                    className="w-full px-3 py-2 text-left text-xs text-ink-primary hover:bg-slate-50 flex items-center justify-between border-t border-slate-50"
+                    key={proj.id}
+                    onClick={() => { setSelectedProjectId(proj.id); setProjectDropdownOpen(false); }}
+                    className={`w-full px-3 py-2 text-left flex items-center justify-between hover:bg-slate-50 ${
+                      selectedProjectId === proj.id ? 'text-teal-700 font-semibold bg-teal-50/50' : 'text-ink-primary'
+                    }`}
                   >
-                    <div className="truncate pr-2">
-                      <p className="font-medium truncate">{p.name}</p>
-                      <p className="text-[10px] text-ink-muted">PIN: {p.pinCode} • {p.code}</p>
+                    <div className="truncate">
+                      <p className="truncate font-medium">{proj.name}</p>
+                      <p className="text-[10px] text-ink-muted">{proj.pinCode} &bull; {proj.code}</p>
                     </div>
-                    {selectedProjectId === p.id && <Check className="w-3.5 h-3.5 text-teal-600 shrink-0" />}
+                    {selectedProjectId === proj.id && <Check className="w-3.5 h-3.5 text-teal-600 shrink-0" />}
                   </button>
                 ))}
               </div>
@@ -163,86 +173,95 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ onOpenMobile, collapsed })
             <button
               onClick={() => setNotificationOpen(!notificationOpen)}
               className="relative p-2 rounded-lg text-ink-secondary hover:text-ink-primary hover:bg-slate-100 transition-colors"
-              title="Notifications"
+              aria-label="Notifications"
             >
               <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-500 ring-2 ring-white" />
             </button>
 
             {notificationOpen && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-dropdown border border-surface-border py-2 z-50">
+              <div className="absolute right-0 mt-1 w-80 bg-white rounded-xl shadow-modal border border-surface-border py-2 z-50 text-xs animate-fadeIn">
                 <div className="px-4 py-2 border-b border-surface-border flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-ink-primary">Platform Alerts</h4>
-                  <span className="text-[10px] text-teal-600 font-semibold bg-teal-50 px-2 py-0.5 rounded-full">
-                    3 New
+                  <span className="font-bold text-ink-primary">Operational Alerts</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-semibold border border-amber-200">
+                    2 Pending
                   </span>
                 </div>
-                <div className="divide-y divide-slate-100 max-h-72 overflow-y-auto">
-                  <div className="p-3 text-xs hover:bg-slate-50 cursor-pointer">
-                    <p className="font-semibold text-rose-600">Dependency Block Triggered</p>
-                    <p className="text-ink-secondary text-[11px] mt-0.5">Road Resurfacing in Zone 560001-B blocked pending Trenching.</p>
-                    <span className="text-[10px] text-ink-muted mt-1 block">12m ago</span>
+                <div className="divide-y divide-surface-border max-h-64 overflow-y-auto">
+                  <div className="p-3 hover:bg-slate-50 transition-colors cursor-pointer">
+                    <p className="font-semibold text-rose-600 text-[11px] flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                      Sequential Dependency Conflict
+                    </p>
+                    <p className="text-ink-secondary mt-0.5 text-[11px]">
+                      Road Resurfacing blocked in WZ-002: Trenching requires prior QA sign-off.
+                    </p>
+                    <span className="text-[10px] text-ink-muted mt-1 block">12 mins ago</span>
                   </div>
-                  <div className="p-3 text-xs hover:bg-slate-50 cursor-pointer">
-                    <p className="font-semibold text-amber-600">AI Inspection Flagged</p>
-                    <p className="text-ink-secondary text-[11px] mt-0.5">Granular bedding anomaly detected on Sector 4B.</p>
-                    <span className="text-[10px] text-ink-muted mt-1 block">2h ago</span>
-                  </div>
-                  <div className="p-3 text-xs hover:bg-slate-50 cursor-pointer">
-                    <p className="font-semibold text-emerald-600">Milestone Disbursed</p>
-                    <p className="text-ink-secondary text-[11px] mt-0.5">₹ 42,00,000 released for Yelahanka road reinstatement.</p>
-                    <span className="text-[10px] text-ink-muted mt-1 block">4h ago</span>
+                  <div className="p-3 hover:bg-slate-50 transition-colors cursor-pointer">
+                    <p className="font-semibold text-teal-700 text-[11px] flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
+                      Field Evidence Verified
+                    </p>
+                    <p className="text-ink-secondary mt-0.5 text-[11px]">
+                      Apex Infra submitted 3 Trenching depth photos for PIN 560001.
+                    </p>
+                    <span className="text-[10px] text-ink-muted mt-1 block">42 mins ago</span>
                   </div>
                 </div>
               </div>
             )}
           </div>
 
+          <div className="h-6 w-px bg-surface-border" />
+
           {/* User Profile Dropdown */}
-          <div className="relative pl-2 border-l border-surface-border" ref={profileRef}>
+          <div className="relative" ref={profileRef}>
             <button
               onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-              className="flex items-center gap-2.5 p-1 rounded-lg hover:bg-slate-100 transition-colors"
+              className="flex items-center gap-2 p-1 rounded-lg hover:bg-slate-100 transition-colors"
+              aria-label="User profile menu"
             >
-              <div className="w-8 h-8 rounded-full bg-navy-900 text-teal-400 font-bold text-xs flex items-center justify-center border border-navy-800 shadow-sm">
-                AK
+              <div className="w-8 h-8 rounded-lg bg-navy-900 text-teal-300 font-bold text-xs flex items-center justify-center border border-navy-700">
+                {user?.fullName?.charAt(0) || 'A'}
               </div>
-              <div className="hidden xl:flex flex-col text-left">
-                <span className="text-xs font-bold text-ink-primary leading-tight">Arun Kumar</span>
-                <span className="text-[10px] text-ink-muted leading-tight">Platform Administrator</span>
+              <div className="hidden xl:block text-left">
+                <div className="text-xs font-semibold text-ink-primary leading-tight">
+                  {user?.fullName || 'Platform Administrator'}
+                </div>
+                <div className="text-[10px] text-teal-700 font-medium">
+                  {user?.role || 'PLATFORM_ADMIN'}
+                </div>
               </div>
-              <ChevronDown className="w-3 h-3 text-ink-muted hidden xl:block" />
+              <ChevronDown className="w-3.5 h-3.5 text-ink-muted hidden sm:block" />
             </button>
 
             {profileDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-dropdown border border-surface-border py-1 z-50">
-                <div className="px-4 py-2.5 border-b border-surface-border">
-                  <p className="text-xs font-bold text-ink-primary">Arun Kumar</p>
-                  <p className="text-[11px] text-ink-muted">arun.kumar@infrapulse.gov.in</p>
-                  <div className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded text-[10px] font-semibold bg-navy-50 text-navy-800">
-                    <ShieldCheck className="w-3 h-3 text-teal-600" />
-                    <span>Platform Administrator</span>
+              <div className="absolute right-0 mt-1 w-64 bg-white rounded-xl shadow-modal border border-surface-border py-1 z-50 text-xs animate-fadeIn">
+                <div className="px-4 py-3 border-b border-surface-border bg-slate-50/50">
+                  <p className="text-xs font-bold text-ink-primary">{user?.fullName || 'Platform User'}</p>
+                  <p className="text-[11px] text-ink-muted truncate">{user?.email || 'admin@infrapulse.gov.in'}</p>
+                  <div className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded text-[10px] font-semibold bg-navy-900 text-teal-300">
+                    <ShieldCheck className="w-3 h-3 text-teal-400" />
+                    <span>{user?.role || 'PLATFORM_ADMIN'}</span>
                   </div>
                 </div>
                 <div className="py-1">
                   <button 
                     onClick={() => {
-                      alert('User profile settings are locked during Stage 2 presentation.');
                       setProfileDropdownOpen(false);
+                      navigate('/profile');
                     }}
                     className="w-full px-4 py-2 text-left text-xs text-ink-secondary hover:text-ink-primary hover:bg-slate-50 flex items-center gap-2.5"
                   >
-                    <User className="w-3.5 h-3.5" />
-                    <span>My Account Settings</span>
+                    <User className="w-3.5 h-3.5 text-teal-600" />
+                    <span>My Operator Profile</span>
                   </button>
                   <button 
-                    onClick={() => {
-                      alert('Sign out is simulated for this Stage 2 demonstration.');
-                      setProfileDropdownOpen(false);
-                    }}
+                    onClick={handleSignOut}
                     className="w-full px-4 py-2 text-left text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2.5"
                   >
-                    <LogOut className="w-3.5 h-3.5" />
+                    <LogOut className="w-4 h-4" />
                     <span>Sign Out</span>
                   </button>
                 </div>
@@ -282,14 +301,14 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ onOpenMobile, collapsed })
                   onClick={() => setSearchModalOpen(false)}
                   className="p-2 rounded-lg hover:bg-slate-50 flex items-center justify-between cursor-pointer"
                 >
-                  <span className="font-medium text-ink-primary">Zone WZ-001 (PIN 560001) — MG Road</span>
+                  <span className="font-medium text-ink-primary">Zone WZ-001 (PIN 560001) &mdash; MG Road</span>
                   <span className="text-[10px] text-teal-600 font-semibold bg-teal-50 px-2 py-0.5 rounded">Trenching</span>
                 </div>
                 <div 
                   onClick={() => setSearchModalOpen(false)}
                   className="p-2 rounded-lg hover:bg-slate-50 flex items-center justify-between cursor-pointer"
                 >
-                  <span className="font-medium text-ink-primary">Zone WZ-002 (PIN 560001) — Residency Rd</span>
+                  <span className="font-medium text-ink-primary">Zone WZ-002 (PIN 560001) &mdash; Residency Rd</span>
                   <span className="text-[10px] text-rose-600 font-semibold bg-rose-50 px-2 py-0.5 rounded">BLOCKED</span>
                 </div>
                 <div 

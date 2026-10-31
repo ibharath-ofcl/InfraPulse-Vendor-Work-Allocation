@@ -18,3 +18,14 @@ server:
 
 cors:
   allowed-origins: "*"
+
+security:
+  jwt:
+    secret: test-jwt-secret-key-for-unit-testing-purposes-must-be-256-bits-long!
+    access-token-expiration-ms: 900000
+    refresh-token-expiration-ms: 604800000
+    issuer: InfraPulse AI Test
+  bootstrap:
+    admin-email: admin@infrapulse.gov.in
+    admin-password: Admin@InfraPulse2025!
+    admin-name: Platform Administrator

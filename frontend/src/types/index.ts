@@ -171,3 +171,72 @@ export interface HealthStatus {
   service?: string;
   timestamp?: string;
 }
+
+// Authentication & Role-Based Access Control Types
+export type UserRole = 
+  | 'PLATFORM_ADMIN' 
+  | 'PROJECT_MANAGER' 
+  | 'VENDOR' 
+  | 'FIELD_ENGINEER' 
+  | 'FINANCE_OFFICER';
+
+export type UserStatus = 'ACTIVE' | 'INACTIVE' | 'LOCKED';
+
+export type Permission = 
+  | 'VIEW_OVERVIEW'
+  | 'MANAGE_USERS'
+  | 'MANAGE_PROJECTS'
+  | 'VIEW_PROJECTS'
+  | 'VIEW_WORK_ZONES'
+  | 'ALLOCATE_WORK'
+  | 'VIEW_ASSIGNED_WORK'
+  | 'SUBMIT_EVIDENCE'
+  | 'REVIEW_EVIDENCE'
+  | 'APPROVE_QUALITY_REVIEW'
+  | 'VIEW_MILESTONES'
+  | 'AUTHORIZE_PAYMENTS'
+  | 'VIEW_AUDIT_TRAIL';
+
+export interface AuthUser {
+  id: string;
+  fullName: string;
+  email: string;
+  phoneNumber?: string;
+  role: UserRole;
+  status: UserStatus;
+  createdAt?: string;
+  lastLoginAt?: string;
+}
+
+export interface AuthResponse {
+  accessToken: string;
+  tokenType: string;
+  expiresIn: number;
+  user: AuthUser;
+  permissions: Permission[];
+}
+
+export interface CurrentUserResponse {
+  id: string;
+  fullName: string;
+  email: string;
+  role: UserRole;
+  status: UserStatus;
+  permissions: Permission[];
+}
+
+export interface CreateUserPayload {
+  fullName: string;
+  email: string;
+  password: string;
+  phoneNumber?: string;
+  role: UserRole;
+}
+
+export interface UpdateRolePayload {
+  role: UserRole;
+}
+
+export interface UpdateStatusPayload {
+  status: UserStatus;
+}

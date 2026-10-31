@@ -11,13 +11,14 @@ import {
   Landmark, 
   BarChart3, 
   History,
-  Settings,
-  HelpCircle,
+  Users,
   ChevronLeft,
   ChevronRight,
   Zap,
   ExternalLink
 } from 'lucide-react';
+import { useAuth } from '../../auth/useAuth';
+import { Permission } from '../../types';
 
 interface AppSidebarProps {
   collapsed: boolean;
@@ -26,17 +27,26 @@ interface AppSidebarProps {
   onCloseMobile: () => void;
 }
 
-const navItems = [
-  { label: 'Overview', path: '/overview', icon: LayoutDashboard },
-  { label: 'Projects', path: '/projects', icon: FolderKanban },
-  { label: 'Work Zones', path: '/work-zones', icon: MapPin },
-  { label: 'Work Allocation', path: '/work-allocation', icon: Sliders, highlight: true },
-  { label: 'Vendors', path: '/vendors', icon: HardHat },
-  { label: 'Quality Inspection', path: '/quality-inspection', icon: ShieldCheck },
-  { label: 'Evidence Center', path: '/evidence', icon: Camera },
-  { label: 'Milestones & Payments', path: '/milestones', icon: Landmark },
-  { label: 'Analytics', path: '/analytics', icon: BarChart3 },
-  { label: 'Audit Trail', path: '/audit-trail', icon: History },
+interface NavItemDef {
+  label: string;
+  path: string;
+  icon: React.ComponentType<{ className?: string }>;
+  highlight?: boolean;
+  requiredPermission?: Permission;
+}
+
+const allNavItems: NavItemDef[] = [
+  { label: 'Overview', path: '/overview', icon: LayoutDashboard, requiredPermission: 'VIEW_OVERVIEW' },
+  { label: 'Projects', path: '/projects', icon: FolderKanban, requiredPermission: 'VIEW_PROJECTS' },
+  { label: 'Work Zones', path: '/work-zones', icon: MapPin, requiredPermission: 'VIEW_WORK_ZONES' },
+  { label: 'Work Allocation', path: '/work-allocation', icon: Sliders, highlight: true, requiredPermission: 'VIEW_ASSIGNED_WORK' },
+  { label: 'Vendors', path: '/vendors', icon: HardHat, requiredPermission: 'MANAGE_PROJECTS' },
+  { label: 'Quality Inspection', path: '/quality-inspection', icon: ShieldCheck, requiredPermission: 'REVIEW_EVIDENCE' },
+  { label: 'Evidence Center', path: '/evidence', icon: Camera, requiredPermission: 'SUBMIT_EVIDENCE' },
+  { label: 'Milestones & Payments', path: '/milestones', icon: Landmark, requiredPermission: 'VIEW_MILESTONES' },
+  { label: 'Analytics', path: '/analytics', icon: BarChart3, requiredPermission: 'VIEW_AUDIT_TRAIL' },
+  { label: 'Audit Trail', path: '/audit-trail', icon: History, requiredPermission: 'VIEW_AUDIT_TRAIL' },
+  { label: 'User Directory', path: '/users', icon: Users, requiredPermission: 'MANAGE_USERS' },
 ];
 
 export const AppSidebar: React.FC<AppSidebarProps> = ({
@@ -45,6 +55,14 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   mobileOpen,
   onCloseMobile,
 }) => {
+  const { user, hasPermission } = useAuth();
+
+  // Filter items based on user's granted permissions
+  const visibleNavItems = allNavItems.filter((item) => {
+    if (!item.requiredPermission) return true;
+    return hasPermission(item.requiredPermission);
+  });
+
   return (
     <>
       {/* Mobile Backdrop */}
@@ -59,45 +77,39 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
       <aside 
         className={`fixed top-0 bottom-0 left-0 z-40 bg-navy-900 text-slate-300 flex flex-col border-r border-navy-800 transition-all duration-300 ease-in-out ${
           collapsed ? 'w-20' : 'w-64'
-        } ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
+        } ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
         {/* Brand Header */}
-        <div className="h-16 flex items-center justify-between px-5 border-b border-navy-800 bg-navy-950/40">
-          <NavLink 
-            to="/overview" 
-            onClick={onCloseMobile}
-            className="flex items-center gap-3 overflow-hidden group"
-          >
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-teal-500 to-brand-500 p-[1px] shadow-sm shrink-0">
-              <div className="w-full h-full bg-navy-900 rounded-lg flex items-center justify-center group-hover:bg-navy-800 transition-colors">
-                <Zap className="w-4 h-4 text-teal-400" />
-              </div>
+        <div className="h-16 flex items-center px-4 border-b border-navy-800 bg-navy-950/60">
+          <div className="flex items-center gap-3 overflow-hidden">
+            <div className="w-9 h-9 rounded-lg bg-teal-500/10 border border-teal-500/30 flex items-center justify-center shrink-0">
+              <Zap className="w-5 h-5 text-teal-400" />
             </div>
             {!collapsed && (
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1.5 font-bold text-white text-base tracking-tight leading-none">
-                  <span>InfraPulse</span>
-                  <span className="text-teal-400 font-extrabold text-sm">AI</span>
+              <div className="truncate">
+                <div className="font-bold text-sm tracking-tight text-white flex items-center gap-1.5">
+                  <span>InfraPulse AI</span>
+                  <span className="text-[10px] px-1.5 py-0.2 bg-teal-900/60 text-teal-300 border border-teal-700/50 rounded font-mono font-medium">
+                    v1.0
+                  </span>
                 </div>
-                <span className="text-[10px] text-slate-400 tracking-wider uppercase font-medium mt-1">
+                <div className="text-[11px] text-slate-400 font-medium tracking-wide">
                   Infrastructure Intelligence
-                </span>
+                </div>
               </div>
             )}
-          </NavLink>
+          </div>
         </div>
 
         {/* Navigation Items */}
-        <div className="flex-1 py-4 px-3 overflow-y-auto custom-scrollbar space-y-1">
+        <div className="flex-1 overflow-y-auto py-3 px-2 space-y-1 custom-scrollbar">
           {!collapsed && (
-            <p className="px-3 mb-2 text-[10px] uppercase font-bold tracking-wider text-slate-400">
-              Operations Navigation
-            </p>
+            <div className="px-3 pt-1 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Operations &amp; Governance
+            </div>
           )}
 
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink
@@ -105,32 +117,36 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                 to={item.path}
                 onClick={onCloseMobile}
                 className={({ isActive }) => `
-                  flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-all group relative
+                  group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-150
                   ${isActive 
-                    ? 'bg-teal-600 text-white shadow-sm' 
-                    : 'text-slate-300 hover:text-white hover:bg-navy-800'}
-                  ${collapsed ? 'justify-center' : ''}
+                    ? 'bg-navy-800 text-white font-semibold shadow-sm' 
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-navy-800/50'
+                  }
+                  ${collapsed ? 'justify-center px-0' : ''}
                 `}
                 title={collapsed ? item.label : undefined}
               >
                 {({ isActive }) => (
                   <>
-                    <Icon className={`w-4 h-4 shrink-0 transition-colors ${
-                      isActive ? 'text-white' : 'text-slate-400 group-hover:text-teal-400'
-                    }`} />
+                    {/* Active Left Indicator Bar */}
+                    {isActive && (
+                      <span className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-teal-400 rounded-r-full" />
+                    )}
+
+                    <Icon 
+                      className={`w-4 h-4 shrink-0 transition-colors ${
+                        isActive ? 'text-teal-400' : 'text-slate-400 group-hover:text-slate-200'
+                      }`} 
+                    />
+
                     {!collapsed && (
-                      <span className="truncate">
-                        {item.label}
-                      </span>
+                      <span className="truncate flex-1">{item.label}</span>
                     )}
+
                     {!collapsed && item.highlight && (
-                      <span className="ml-auto w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                    )}
-                    {/* Tooltip on collapsed state */}
-                    {collapsed && (
-                      <div className="absolute left-full ml-3 px-2.5 py-1 bg-navy-950 text-white text-xs rounded-md shadow-dropdown opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 border border-navy-800">
-                        {item.label}
-                      </div>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold uppercase tracking-wider bg-teal-950 text-teal-300 border border-teal-700/60">
+                        Core
+                      </span>
                     )}
                   </>
                 )}
@@ -139,18 +155,20 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
           })}
         </div>
 
-        {/* Bottom Section */}
-        <div className="p-3 border-t border-navy-800 space-y-1 bg-navy-950/30">
-          <button 
-            onClick={() => alert('InfraPulse AI Configuration is managed via environment variables and administrative privileges.')}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-navy-800 transition-colors ${
-              collapsed ? 'justify-center' : ''
-            }`}
-            title="Settings"
-          >
-            <Settings className="w-4 h-4 shrink-0" />
-            {!collapsed && <span>System Settings</span>}
-          </button>
+        {/* User Identity & Bottom Section */}
+        <div className="p-3 border-t border-navy-800 space-y-2 bg-navy-950/40">
+          {!collapsed && user && (
+            <div className="p-2.5 rounded-lg bg-navy-900/80 border border-navy-800 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-slate-400 uppercase font-semibold">Active Session</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              </div>
+              <p className="font-semibold text-white truncate mt-1">{user.fullName}</p>
+              <div className="inline-block mt-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-teal-950 text-teal-300 border border-teal-800/60">
+                {user.role}
+              </div>
+            </div>
+          )}
 
           <a 
             href="https://github.com/ibharath-ofcl/InfraPulse-Vendor-Work-Allocation" 
@@ -161,13 +179,8 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
             }`}
             title="Repository Documentation"
           >
-            <HelpCircle className="w-4 h-4 shrink-0" />
-            {!collapsed && (
-              <span className="flex items-center justify-between flex-1">
-                Help & Docs
-                <ExternalLink className="w-3 h-3 opacity-60" />
-              </span>
-            )}
+            <ExternalLink className="w-4 h-4 shrink-0" />
+            {!collapsed && <span>Help &amp; Documentation</span>}
           </a>
 
           {/* Desktop Collapse Toggle */}

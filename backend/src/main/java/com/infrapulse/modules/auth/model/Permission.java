@@ -1,0 +1,17 @@
+package com.infrapulse.modules.auth.model;
+
+public enum Permission {
+    VIEW_OVERVIEW,
+    MANAGE_USERS,
+    MANAGE_PROJECTS,
+    VIEW_PROJECTS,
+    VIEW_WORK_ZONES,
+    ALLOCATE_WORK,
+    VIEW_ASSIGNED_WORK,
+    SUBMIT_EVIDENCE,
+    REVIEW_EVIDENCE,
+    APPROVE_QUALITY_REVIEW,
+    VIEW_MILESTONES,
+    AUTHORIZE_PAYMENTS,
+    VIEW_AUDIT_TRAIL
+}

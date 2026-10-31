@@ -16,7 +16,10 @@ import {
 import { EvidenceDetail, EvidenceReviewStatus } from '../../types/evidence';
 import { EvidenceIntegrityIndicator } from './EvidenceIntegrityIndicator';
 import { evidenceService } from '../../services/evidenceService';
+import { aiVisionService } from '../../services/aiVisionService';
+import { AiInferenceResponse } from '../../types/ai';
 import { useAuth } from '../../auth/useAuth';
+import { Cpu, Eye, EyeOff } from 'lucide-react';
 
 interface EvidencePreviewModalProps {
   evidence: EvidenceDetail;
@@ -38,6 +41,43 @@ export const EvidencePreviewModal: React.FC<EvidencePreviewModalProps> = ({
   const [reviewNotes, setReviewNotes] = useState(evidence.reviewNotes || '');
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
+
+  // AI Vision states
+  const [aiAnalysis, setAiAnalysis] = useState<AiInferenceResponse | null>(null);
+  const [analyzingAi, setAnalyzingAi] = useState(false);
+  const [showAiOverlay, setShowAiOverlay] = useState(true);
+  const [aiLoaded, setAiLoaded] = useState(false);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    aiVisionService
+      .getEvidenceAnalysis(currentEvidence.id)
+      .then((analyses) => {
+        if (isMounted && analyses && analyses.length > 0) {
+          setAiAnalysis(analyses[0]);
+          setAiLoaded(true);
+        }
+      })
+      .catch(() => {
+        // Ignored
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [currentEvidence.id]);
+
+  const handleRunAiAnalysis = async () => {
+    try {
+      setAnalyzingAi(true);
+      const res = await aiVisionService.analyzeEvidence(currentEvidence.id);
+      setAiAnalysis(res);
+      setAiLoaded(true);
+    } catch (err: any) {
+      alert(err?.response?.data?.message || 'Failed to execute AI computer vision analysis.');
+    } finally {
+      setAnalyzingAi(false);
+    }
+  };
 
   const canReview =
     user?.role === 'PLATFORM_ADMIN' ||
@@ -131,16 +171,59 @@ export const EvidencePreviewModal: React.FC<EvidencePreviewModalProps> = ({
         <div className="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-3">
           {/* Main Photo Viewer (2 Cols) */}
           <div className="lg:col-span-2 p-6 flex flex-col items-center justify-center bg-black/40 min-h-[350px]">
-            <img
-              src={evidenceService.getFileUrl(currentEvidence.id)}
-              alt={currentEvidence.originalFileName}
-              className="max-h-[60vh] max-w-full object-contain rounded-lg border border-navy-800 shadow-lg"
-            />
-            {currentEvidence.description && (
-              <p className="mt-4 text-xs text-slate-300 italic text-center max-w-xl">
-                "{currentEvidence.description}"
-              </p>
-            )}
+            <div className="relative inline-block max-h-[60vh] max-w-full">
+              <img
+                src={evidenceService.getFileUrl(currentEvidence.id)}
+                alt={currentEvidence.originalFileName}
+                className="max-h-[60vh] max-w-full object-contain rounded-lg border border-navy-800 shadow-lg block"
+              />
+              {/* Bounding Box Overlays */}
+              {showAiOverlay && aiAnalysis && aiAnalysis.detections && aiAnalysis.detections.length > 0 && (
+                <div className="absolute inset-0 pointer-events-none">
+                  {aiAnalysis.detections.map((det, idx) => {
+                    if (!det.boundingBox) return null;
+                    const top = `${det.boundingBox.ymin * 100}%`;
+                    const left = `${det.boundingBox.xmin * 100}%`;
+                    const width = `${(det.boundingBox.xmax - det.boundingBox.xmin) * 100}%`;
+                    const height = `${(det.boundingBox.ymax - det.boundingBox.ymin) * 100}%`;
+                    return (
+                      <div
+                        key={det.id || idx}
+                        style={{ top, left, width, height }}
+                        className="absolute border-2 border-amber-400 bg-amber-400/20 rounded shadow-sm flex flex-col justify-between"
+                      >
+                        <span className="self-start bg-amber-500 text-navy-950 font-bold font-mono text-[10px] px-1 py-0.5 rounded-br shadow">
+                          {det.classLabel} ({(det.confidence * 100).toFixed(0)}%)
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* AI Overlay Control Toolbar */}
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+              {aiLoaded && aiAnalysis && aiAnalysis.detections.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAiOverlay(!showAiOverlay)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border flex items-center gap-1.5 transition-colors ${
+                    showAiOverlay
+                      ? 'bg-amber-950/70 border-amber-500/50 text-amber-300'
+                      : 'bg-navy-800 border-navy-700 text-slate-400'
+                  }`}
+                >
+                  {showAiOverlay ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                  {showAiOverlay ? 'Hide AI Overlays' : 'Show AI Overlays'}
+                </button>
+              )}
+              {currentEvidence.description && (
+                <p className="text-xs text-slate-300 italic text-center max-w-md">
+                  "{currentEvidence.description}"
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Metadata & Audit Sidebar (1 Col) */}
@@ -217,6 +300,94 @@ export const EvidencePreviewModal: React.FC<EvidencePreviewModalProps> = ({
                   evidenceId={currentEvidence.id}
                   checksum={currentEvidence.checksumSha256}
                 />
+              </div>
+
+              {/* Stage 09 AI Vision Findings */}
+              <div className="p-3.5 rounded-xl bg-navy-950/70 border border-teal-500/30 text-xs space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-teal-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <Cpu className="w-3.5 h-3.5 text-teal-400" /> AI Computer Vision
+                  </h4>
+                  {aiAnalysis && (
+                    <span className="font-mono text-[10px] text-teal-400 font-semibold bg-teal-950/80 px-2 py-0.5 rounded border border-teal-500/30">
+                      {aiAnalysis.modelId} v{aiAnalysis.modelVersion}
+                    </span>
+                  )}
+                </div>
+
+                {aiAnalysis ? (
+                  <div className="space-y-2">
+                    {/* Image Quality Summary */}
+                    {aiAnalysis.imageQuality && (
+                      <div className="flex items-center justify-between text-[11px] p-2 rounded bg-navy-900/80 border border-navy-800">
+                        <span className="text-slate-400">Quality Assessment:</span>
+                        <span
+                          className={`font-semibold px-2 py-0.5 rounded text-[10px] border ${
+                            aiAnalysis.imageQuality.qualityStatus === 'ACCEPTABLE'
+                              ? 'bg-emerald-950/60 text-emerald-300 border-emerald-500/30'
+                              : 'bg-amber-950/60 text-amber-300 border-amber-500/30'
+                          }`}
+                        >
+                          {aiAnalysis.imageQuality.qualityStatus} (Blur: {aiAnalysis.imageQuality.blurScore.toFixed(0)})
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Detections */}
+                    <div>
+                      <span className="text-[10px] text-slate-400 block mb-1">
+                        Detections ({aiAnalysis.totalDetections}):
+                      </span>
+                      {aiAnalysis.detections && aiAnalysis.detections.length > 0 ? (
+                        <div className="space-y-1 max-h-28 overflow-y-auto">
+                          {aiAnalysis.detections.map((det, idx) => (
+                            <div
+                              key={det.id || idx}
+                              className="flex items-center justify-between p-1.5 rounded bg-navy-900 border border-navy-800 text-[11px]"
+                            >
+                              <span className="font-medium text-slate-200">{det.classLabel}</span>
+                              <span className="font-mono text-teal-300">
+                                {(det.confidence * 100).toFixed(0)}% conf
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-slate-400 italic">No defects or target anomalies detected.</p>
+                      )}
+                    </div>
+
+                    {/* Physical Measurement Notice */}
+                    {aiAnalysis.unsupportedCategories && aiAnalysis.unsupportedCategories.length > 0 && (
+                      <div className="p-2 rounded bg-amber-950/40 border border-amber-600/30 text-[10px] text-amber-300 flex items-start gap-1.5">
+                        <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-400" />
+                        <span>
+                          Notice: Physical depths and internal compaction require physical measurement verification (Stage 11).
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-2 space-y-2">
+                    <p className="text-[11px] text-slate-400">No automated vision inference executed yet.</p>
+                    <button
+                      type="button"
+                      onClick={handleRunAiAnalysis}
+                      disabled={analyzingAi}
+                      className="w-full py-1.5 px-2 rounded-lg text-xs font-semibold bg-teal-600 hover:bg-teal-500 text-navy-950 transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      {analyzingAi ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Analyzing Evidence...
+                        </>
+                      ) : (
+                        <>
+                          <Cpu className="w-3.5 h-3.5" /> Run AI Vision Analysis
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Review Decision & Notes */}

@@ -1,351 +1,530 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  FolderKanban, 
-  MapPin, 
-  HardHat, 
-  ShieldCheck, 
-  ShieldAlert, 
-  Landmark, 
-  RefreshCw, 
-  Calendar, 
-  CheckCircle2,
-  AlertTriangle,
-  XCircle,
-  FileCheck,
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  FolderKanban,
+  HardHat,
   Clock,
-  Layers
+  PlayCircle,
+  FileCheck,
+  ShieldAlert,
+  CheckCircle2,
+  Award,
+  RefreshCw,
+  Building,
+  Shield,
+  ArrowRight,
+  MapPin,
 } from 'lucide-react';
 import { PageContainer } from '../components/layout/PageContainer';
-import { PageHeader } from '../components/common/PageHeader';
 import { MetricCard } from '../components/dashboard/MetricCard';
-import { InfrastructureOverview } from '../components/dashboard/InfrastructureOverview';
-import { WorkZoneMap } from '../components/maps/WorkZoneMap';
-import { ActivityTimeline } from '../components/dashboard/ActivityTimeline';
-import { VendorPerformancePreview } from '../components/dashboard/VendorPerformancePreview';
-import { mockWorkZones } from '../data/mockWorkZones';
-import { WorkZone } from '../types';
-import { workAssignmentService } from '../services/workAssignmentService';
-import { WorkAssignmentItem } from '../types/workAssignment';
+import { AssignmentStatusChart } from '../components/dashboard/AssignmentStatusChart';
+import { ProjectProgressList } from '../components/dashboard/ProjectProgressList';
+import { WorkZoneTable } from '../components/dashboard/WorkZoneTable';
+import { DependencyMonitor } from '../components/dashboard/DependencyMonitor';
+import { VendorWorkloadTable } from '../components/dashboard/VendorWorkloadTable';
+import { RecentActivityTimeline } from '../components/dashboard/RecentActivityTimeline';
+import { DashboardFilters } from '../components/dashboard/DashboardFilters';
+import { DashboardSkeleton } from '../components/dashboard/DashboardSkeleton';
+import { WorkZoneMap, MapZoneData } from '../components/maps/WorkZoneMap';
+import { useAuth } from '../auth/useAuth';
+import { dashboardService } from '../services/dashboardService';
+import { projectService } from '../services/projectService';
+import {
+  DashboardSummary,
+  AssignmentDistributionItem,
+  ProjectProgressItem,
+  WorkZoneOverviewItem,
+  BlockedDependencyItem,
+  ReadyDependencyItem,
+  VendorWorkloadItem,
+  RecentActivityItem,
+  DashboardFilterParams,
+} from '../types/dashboard';
 
 export const OverviewPage: React.FC = () => {
-  const [selectedZone, setSelectedZone] = useState<WorkZone | undefined>(mockWorkZones[0]);
-  const [dateRange, setDateRange] = useState('Last 30 Days');
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // State
+  const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [filters, setFilters] = useState<DashboardFilterParams>({});
+  const [projectsList, setProjectsList] = useState<{ id: string; code: string; name: string }[]>([]);
 
-  // Stage 6 Real Backend Assignments State
-  const [assignments, setAssignments] = useState<WorkAssignmentItem[]>([]);
+  // Analytics data
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [distribution, setDistribution] = useState<AssignmentDistributionItem[]>([]);
+  const [distributionTotal, setDistributionTotal] = useState(0);
+  const [selectedStatus, setSelectedStatus] = useState<string | undefined>(undefined);
+  const [projectsProgress, setProjectsProgress] = useState<ProjectProgressItem[]>([]);
+  const [workZones, setWorkZones] = useState<WorkZoneOverviewItem[]>([]);
+  const [selectedZone, setSelectedZone] = useState<WorkZoneOverviewItem | undefined>(undefined);
+  const [blockedDependencies, setBlockedDependencies] = useState<BlockedDependencyItem[]>([]);
+  const [readyDependencies, setReadyDependencies] = useState<ReadyDependencyItem[]>([]);
+  const [totalBlocked, setTotalBlocked] = useState(0);
+  const [totalReady, setTotalReady] = useState(0);
+  const [vendorsWorkload, setVendorsWorkload] = useState<VendorWorkloadItem[]>([]);
+  const [recentEvents, setRecentEvents] = useState<RecentActivityItem[]>([]);
+  const [recentTotal, setRecentTotal] = useState(0);
+  const [activityPage, setActivityPage] = useState(0);
+  const [hasMoreEvents, setHasMoreEvents] = useState(false);
+  const [isLoadingMoreActivity, setIsLoadingMoreActivity] = useState(false);
 
-  const fetchLiveMetrics = useCallback(async () => {
+  // Load project options for the global selector
+  useEffect(() => {
+    projectService.getProjects({ size: 100 })
+      .then((res) => {
+        const options = (res.content || []).map((p) => ({
+          id: p.id,
+          code: p.projectCode,
+          name: p.projectName,
+        }));
+        setProjectsList(options);
+      })
+      .catch((err) => console.error('Failed to load project list for selector', err));
+  }, []);
+
+  // Fetch all dashboard data backed by real database records
+  const loadDashboardData = useCallback(async (currentFilters: DashboardFilterParams, showLoading = true) => {
+    if (showLoading) setIsLoading(true);
     try {
-      const data = await workAssignmentService.getAssignments({ size: 100 });
-      setAssignments(data.content || []);
+      const [
+        summaryData,
+        distData,
+        progressData,
+        zonesData,
+        depData,
+        workloadData,
+        activityData,
+      ] = await Promise.all([
+        dashboardService.getSummary(currentFilters),
+        dashboardService.getAssignmentDistribution(currentFilters),
+        dashboardService.getProjectProgress(currentFilters.projectId),
+        dashboardService.getWorkZones({ ...currentFilters, size: 50 }),
+        dashboardService.getDependencyMonitoring(currentFilters.projectId, currentFilters.workZoneId),
+        dashboardService.getVendorWorkload(currentFilters.projectId),
+        dashboardService.getRecentActivity(currentFilters.projectId, 0, 10),
+      ]);
+
+      setSummary(summaryData);
+      setDistribution(distData.distribution || []);
+      setDistributionTotal(distData.total || 0);
+      setProjectsProgress(progressData.projects || []);
+      setWorkZones(zonesData.workZones || []);
+      if (zonesData.workZones && zonesData.workZones.length > 0) {
+        setSelectedZone(zonesData.workZones[0]);
+      }
+      setBlockedDependencies(depData.blockedAssignments || []);
+      setReadyDependencies(depData.readyAssignments || []);
+      setTotalBlocked(depData.totalBlocked || 0);
+      setTotalReady(depData.totalReady || 0);
+      setVendorsWorkload(workloadData.vendors || []);
+      setRecentEvents(activityData.events || []);
+      setRecentTotal(activityData.totalElements || 0);
+      setActivityPage(0);
+      setHasMoreEvents(activityData.page + 1 < activityData.totalPages);
     } catch (err) {
-      console.error('Failed to load live assignments for metrics', err);
+      console.error('Failed to load dashboard data', err);
+    } finally {
+      if (showLoading) setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchLiveMetrics();
-  }, [fetchLiveMetrics]);
+    loadDashboardData(filters, true);
+  }, [loadDashboardData, filters]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await fetchLiveMetrics();
+    await loadDashboardData(filters, false);
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
-  // Real backend calculations for Stage 6:
-  const blockedAssignmentsCount = assignments.filter(
-    (a) => a.releaseStatus === 'REJECTED' || a.status === 'REJECTED'
-  ).length;
+  const handleApplyFilters = (newFilters: DashboardFilterParams) => {
+    setFilters(newFilters);
+  };
 
-  const awaitingReleaseCount = assignments.filter(
-    (a) => a.releaseStatus === 'PENDING_RELEASE' || (a.status === 'COMPLETED' && a.releaseStatus !== 'RELEASED')
-  ).length;
+  const handleClearFilters = () => {
+    setFilters({});
+  };
 
-  const dependencyReadyCount = assignments.filter(
-    (a) => a.releaseStatus === 'RELEASED' || a.status === 'ACCEPTED' || a.status === 'IN_PROGRESS'
-  ).length;
-
-  // Real conflict calculation: detect overlapping active assignments in the exact same work zone
-  const activeZoneMap = new Map<string, number>();
-  assignments.forEach((a) => {
-    if (['ASSIGNED', 'ACCEPTED', 'IN_PROGRESS'].includes(a.status)) {
-      activeZoneMap.set(a.workZoneId, (activeZoneMap.get(a.workZoneId) || 0) + 1);
+  const handleLoadMoreActivity = async () => {
+    setIsLoadingMoreActivity(true);
+    try {
+      const nextPage = activityPage + 1;
+      const data = await dashboardService.getRecentActivity(filters.projectId, nextPage, 10);
+      setRecentEvents((prev) => [...prev, ...(data.events || [])]);
+      setActivityPage(nextPage);
+      setHasMoreEvents(nextPage + 1 < data.totalPages);
+    } catch (err) {
+      console.error('Failed to load more activity events', err);
+    } finally {
+      setIsLoadingMoreActivity(false);
     }
+  };
+
+  // Convert WorkZoneOverviewItem to MapZoneData for the GIS Leaflet Map
+  const mapZones: MapZoneData[] = useMemo(() => {
+    return workZones
+      .filter((z) => z.centerLatitude !== null && z.centerLongitude !== null)
+      .map((z) => ({
+        id: z.workZoneId,
+        code: z.zoneCode,
+        name: z.zoneName,
+        pinCode: z.pincode,
+        projectName: z.projectName,
+        status: z.operationalStatus,
+        activeWork: z.activeWork,
+        blockedWork: z.blockedWork,
+        completedWork: z.completedWork,
+        lat: Number(z.centerLatitude),
+        lng: Number(z.centerLongitude),
+      }));
+  }, [workZones]);
+
+  // Active filters count
+  const activeFilterCount = Object.values(filters).filter(
+    (v) => v !== undefined && v !== '' && v !== 'ALL'
+  ).length;
+
+  const currentDateFormatted = new Date().toLocaleDateString(undefined, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
   });
-  let schedulingConflictsCount = 0;
-  activeZoneMap.forEach((count) => {
-    if (count > 1) schedulingConflictsCount += (count - 1);
-  });
+
+  const isVendorRole = user?.role === 'VENDOR';
+  const isFieldEngineer = user?.role === 'FIELD_ENGINEER';
 
   return (
     <PageContainer>
-      {/* Top Header */}
-      <PageHeader
-        title="Infrastructure Command Center"
-        subtitle="Monitor infrastructure execution, vendor activity, and quality compliance across operational zones."
-        badge={
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
-            Live Operations Grid
-          </span>
-        }
-        actions={
-          <>
-            <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-surface-border text-xs text-ink-secondary shadow-sm">
-              <Calendar className="w-3.5 h-3.5 text-ink-muted" />
-              <select 
-                value={dateRange}
-                onChange={(e) => setDateRange(e.target.value)}
-                className="bg-transparent font-medium text-ink-primary outline-none cursor-pointer"
-              >
-                <option value="Today">Today (Real-time)</option>
-                <option value="Last 7 Days">Last 7 Days</option>
-                <option value="Last 30 Days">Last 30 Days</option>
-                <option value="This Quarter">This Quarter (Q4 2026)</option>
-              </select>
-            </div>
+      {/* Global Dashboard Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 pb-4 border-b border-surface-border">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold tracking-tight text-ink-primary">
+              Infrastructure Operations Command Center
+            </h1>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
+              Live Operations
+            </span>
+          </div>
+          <p className="text-xs text-ink-secondary mt-1">
+            Real-time infrastructure operations visibility, vendor coordination, and dependency readiness
+          </p>
+        </div>
 
-            <button
-              onClick={handleRefresh}
-              className="flex items-center gap-2 px-3 py-1.5 bg-white border border-surface-border rounded-lg text-xs font-semibold text-ink-primary hover:bg-slate-50 transition-all shadow-sm"
+        {/* Global Controls */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {/* Current Date */}
+          <span className="text-xs font-medium text-ink-muted hidden md:inline">
+            {currentDateFormatted}
+          </span>
+
+          {/* Project Selector */}
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-surface-border rounded-lg shadow-sm text-xs text-ink-primary">
+            <Building className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <select
+              value={filters.projectId || 'ALL'}
+              onChange={(e) => {
+                const val = e.target.value === 'ALL' ? undefined : e.target.value;
+                setFilters((prev) => ({ ...prev, projectId: val }));
+              }}
+              className="bg-transparent font-semibold focus:outline-none cursor-pointer max-w-[160px] truncate"
             >
-              <RefreshCw className={`w-3.5 h-3.5 text-teal-600 ${isRefreshing ? 'animate-spin' : ''}`} />
-              <span>Refresh</span>
-            </button>
-          </>
-        }
+              <option value="ALL">All Authorized Projects</option>
+              {projectsList.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.code} - {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* User Profile Chip */}
+          {user && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-navy-800">
+              <Shield className="w-3.5 h-3.5 text-teal-600" />
+              <span className="font-semibold">{user.fullName}</span>
+              <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-slate-200 text-slate-700">
+                {user.role}
+              </span>
+            </div>
+          )}
+
+          {/* Refresh Action */}
+          <button
+            type="button"
+            onClick={handleRefresh}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-surface-border rounded-lg text-xs font-semibold text-ink-primary hover:bg-slate-50 transition-all shadow-sm"
+            title="Refresh operational data"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-teal-600 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Global Filter Bar */}
+      <DashboardFilters
+        filters={filters}
+        projects={projectsList}
+        onApplyFilters={handleApplyFilters}
+        onClearFilters={handleClearFilters}
+        activeCount={activeFilterCount}
       />
 
-      {/* Stage 6: Dependency & Conflict Prevention Intelligence Grid */}
-      <div className="mb-6 bg-gradient-to-r from-slate-900 to-navy-900 rounded-xl p-4 text-white shadow-card border border-navy-800">
-        <div className="flex items-center justify-between pb-3 mb-3 border-b border-navy-800">
-          <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-teal-400" />
-            <h3 className="font-bold text-xs uppercase tracking-wider text-slate-200">
-              Stage 06 Dependency & Conflict Prevention Engine — Real-time Metrics
-            </h3>
-          </div>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 border border-teal-500/30 flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-            PostgreSQL Persisted
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="p-3 rounded-lg bg-navy-800/80 border border-navy-700/80">
-            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-              <span>Blocked Assignments</span>
-              <ShieldAlert className="w-4 h-4 text-rose-400" />
+      {/* Role-Specific Alert Banner for Vendor */}
+      {isVendorRole && (
+        <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-blue-900 to-navy-900 text-white shadow-card border border-blue-800 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-blue-800/80 border border-blue-700 flex items-center justify-center">
+              <HardHat className="w-5 h-5 text-teal-300" />
             </div>
-            <div className="text-xl font-bold text-white font-mono">{blockedAssignmentsCount}</div>
-            <div className="text-[10px] text-rose-400 mt-0.5">
-              {blockedAssignmentsCount > 0 ? 'Clearance rejected / dependencies unreleased' : 'Zero blocked packages'}
-            </div>
-          </div>
-
-          <div className="p-3 rounded-lg bg-navy-800/80 border border-navy-700/80">
-            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-              <span>Awaiting Prerequisite Release</span>
-              <Clock className="w-4 h-4 text-amber-400" />
-            </div>
-            <div className="text-xl font-bold text-white font-mono">{awaitingReleaseCount}</div>
-            <div className="text-[10px] text-amber-400 mt-0.5">
-              Requires field engineer authorization
-            </div>
-          </div>
-
-          <div className="p-3 rounded-lg bg-navy-800/80 border border-navy-700/80">
-            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-              <span>Dependency-Ready Assignments</span>
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            </div>
-            <div className="text-xl font-bold text-white font-mono">{dependencyReadyCount}</div>
-            <div className="text-[10px] text-emerald-400 mt-0.5">
-              All predecessor activities satisfied
-            </div>
-          </div>
-
-          <div className="p-3 rounded-lg bg-navy-800/80 border border-navy-700/80">
-            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-              <span>Scheduling Conflicts</span>
-              <AlertTriangle className={`w-4 h-4 ${schedulingConflictsCount > 0 ? 'text-rose-400' : 'text-teal-400'}`} />
-            </div>
-            <div className="text-xl font-bold text-white font-mono">{schedulingConflictsCount}</div>
-            <div className={`text-[10px] mt-0.5 ${schedulingConflictsCount > 0 ? 'text-rose-400' : 'text-teal-400'}`}>
-              {schedulingConflictsCount > 0 ? 'Overlapping zone occupancy detected' : 'Zero spatial conflicts detected'}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Primary KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
-        <MetricCard
-          title="Active Projects"
-          value="4"
-          subtitle="All municipal zones"
-          icon={FolderKanban}
-          accentColor="navy"
-          trend={{ value: '+1 this mo', isPositive: true }}
-        />
-        <MetricCard
-          title="Active Work Zones"
-          value="6"
-          subtitle="4 PIN corridors"
-          icon={MapPin}
-          accentColor="blue"
-        />
-        <MetricCard
-          title="Assigned Vendors"
-          value="4"
-          subtitle="92% avg on-time"
-          icon={HardHat}
-          accentColor="teal"
-        />
-        <MetricCard
-          title="Pending Inspections"
-          value="3"
-          subtitle="Awaiting sign-off"
-          icon={ShieldCheck}
-          accentColor="amber"
-          alertBadge="Action Needed"
-        />
-        <MetricCard
-          title="Blocked Packages"
-          value={String(blockedAssignmentsCount)}
-          subtitle="Dependency conflict"
-          icon={ShieldAlert}
-          accentColor="rose"
-          alertBadge={blockedAssignmentsCount > 0 ? 'BLOCKED' : undefined}
-        />
-        <MetricCard
-          title="Milestone Releases"
-          value="₹ 1.85 Cr"
-          subtitle="1 pending sign-off"
-          icon={Landmark}
-          accentColor="emerald"
-        />
-      </div>
-
-      {/* Main Grid: GIS Map & Infrastructure Pipeline */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-        {/* Left 7 Columns: Work Zone GIS Map */}
-        <div className="lg:col-span-7 bg-white rounded-xl p-5 border border-surface-border shadow-card flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-3 pb-3 border-b border-surface-border">
             <div>
-              <h3 className="font-bold text-sm text-ink-primary">
-                Geographical Work Zone Command
-              </h3>
-              <p className="text-xs text-ink-secondary">
-                Spatial PIN-code allocation and active corridor mapping
+              <h3 className="font-bold text-sm">Contractor Work Allocation Hub</h3>
+              <p className="text-xs text-blue-200 mt-0.5">
+                Displaying only authorized work packages assigned directly to your organization.
               </p>
             </div>
-            {selectedZone && (
-              <span className="text-xs font-semibold text-navy-800 bg-slate-100 px-2.5 py-1 rounded-md">
-                Selected: {selectedZone.code}
-              </span>
-            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/work-allocation')}
+            className="px-3.5 py-1.5 rounded-lg bg-teal-500 hover:bg-teal-400 text-navy-900 font-bold text-xs flex items-center gap-1.5 transition-colors"
+          >
+            <span>My Work Orders</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* Role-Specific Alert Banner for Field Engineer */}
+      {isFieldEngineer && (
+        <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-teal-900 to-navy-900 text-white shadow-card border border-teal-800 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-teal-800/80 border border-teal-700 flex items-center justify-center">
+              <FileCheck className="w-5 h-5 text-teal-300" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm">Field Engineering & Prerequisite Clearance Hub</h3>
+              <p className="text-xs text-teal-200 mt-0.5">
+                Review submitted work assignments and authorize release clearance for downstream activities.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/work-allocation?status=SUBMITTED_FOR_REVIEW')}
+            className="px-3.5 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-navy-900 font-bold text-xs flex items-center gap-1.5 transition-colors"
+          >
+            <span>Review Queue</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* Main Content Area */}
+      {isLoading ? (
+        <DashboardSkeleton />
+      ) : (
+        <div className="space-y-6">
+          {/* Section B: Operational KPI Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3">
+            <MetricCard
+              title="Total Projects"
+              value={summary?.totalProjects ?? 0}
+              subtitle="Accessible scope"
+              icon={FolderKanban}
+              accentColor="navy"
+              onClick={() => navigate('/projects')}
+            />
+
+            <MetricCard
+              title="Active Work"
+              value={summary?.activeAssignments ?? 0}
+              subtitle="Assigned / Active"
+              icon={HardHat}
+              accentColor="blue"
+              onClick={() => navigate('/work-allocation')}
+            />
+
+            <MetricCard
+              title="Pending Accept"
+              value={summary?.pendingAcceptance ?? 0}
+              subtitle="Awaiting vendor"
+              icon={Clock}
+              accentColor="amber"
+              alertBadge={summary && summary.pendingAcceptance > 0 ? 'Pending' : undefined}
+              onClick={() => navigate('/work-allocation?status=ASSIGNED')}
+            />
+
+            <MetricCard
+              title="In Progress"
+              value={summary?.inProgress ?? 0}
+              subtitle="Actively executing"
+              icon={PlayCircle}
+              accentColor="teal"
+              onClick={() => navigate('/work-allocation?status=IN_PROGRESS')}
+            />
+
+            <MetricCard
+              title="Awaiting Review"
+              value={summary?.awaitingReview ?? 0}
+              subtitle="Submitted packages"
+              icon={FileCheck}
+              accentColor="purple"
+              alertBadge={summary && summary.awaitingReview > 0 ? 'Review' : undefined}
+              onClick={() => navigate('/work-allocation?status=SUBMITTED_FOR_REVIEW')}
+            />
+
+            <MetricCard
+              title="Dependency Blocked"
+              value={summary?.dependencyBlocked ?? 0}
+              subtitle="Prerequisite rules"
+              icon={ShieldAlert}
+              accentColor="rose"
+              alertBadge={summary && summary.dependencyBlocked > 0 ? 'BLOCKED' : undefined}
+              onClick={() => {
+                const el = document.getElementById('dependency-monitor-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+            />
+
+            <MetricCard
+              title="Ready for Next Stage"
+              value={summary?.readyForNextStage ?? 0}
+              subtitle="Cleared prerequisites"
+              icon={CheckCircle2}
+              accentColor="emerald"
+              onClick={() => navigate('/work-dependencies')}
+            />
+
+            <MetricCard
+              title="Completed Work"
+              value={summary?.completedAssignments ?? 0}
+              subtitle="Authorized sign-off"
+              icon={Award}
+              accentColor="emerald"
+              onClick={() => navigate('/work-allocation?status=COMPLETED')}
+            />
           </div>
 
-          <WorkZoneMap
-            zones={mockWorkZones}
-            selectedZoneId={selectedZone?.id}
-            onSelectZone={(zone) => setSelectedZone(zone)}
-            height="380px"
-          />
+          {/* Section C & D: Assignment Status Distribution + Project Progress Overview */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-5">
+              <AssignmentStatusChart
+                data={distribution}
+                total={distributionTotal}
+                selectedStatus={selectedStatus}
+                onSelectStatus={(status) => {
+                  setSelectedStatus(status === selectedStatus ? undefined : status);
+                  navigate(`/work-allocation?status=${status}`);
+                }}
+              />
+            </div>
 
-          {/* Selected Zone Quick Bar */}
-          {selectedZone && (
-            <div className="mt-3 p-3 rounded-lg bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-              <div>
-                <span className="font-bold text-ink-primary">{selectedZone.name}</span>
-                <span className="text-ink-muted ml-2">PIN: {selectedZone.pinCode}</span>
-                <p className="text-[11px] text-ink-secondary mt-0.5">
-                  Work Type: <strong>{selectedZone.currentWorkType}</strong> • Contractor: <strong>{selectedZone.assignedVendorName || 'Unassigned'}</strong>
-                </p>
-              </div>
-              <div>
-                {selectedZone.blockingReason ? (
-                  <span className="px-2 py-1 rounded bg-rose-50 text-rose-700 font-semibold border border-rose-200 block text-center">
-                    Blocked by Dependency
-                  </span>
-                ) : (
-                  <span className="px-2 py-1 rounded bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200 block text-center">
-                    Workflow Active
-                  </span>
+            <div className="lg:col-span-7">
+              <ProjectProgressList projects={projectsProgress} />
+            </div>
+          </div>
+
+          {/* Section F: Dedicated Dependency & Work Readiness Monitor */}
+          <div id="dependency-monitor-section">
+            <DependencyMonitor
+              blockedAssignments={blockedDependencies}
+              readyAssignments={readyDependencies}
+              totalBlocked={totalBlocked}
+              totalReady={totalReady}
+            />
+          </div>
+
+          {/* Section E & Section 5: Work-Zone Deployment & Operational GIS Map */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* GIS Map */}
+            <div className="lg:col-span-5">
+              <div className="bg-white rounded-xl p-5 border border-surface-border shadow-card flex flex-col justify-between h-full">
+                <div className="flex items-center justify-between pb-3 mb-3 border-b border-surface-border">
+                  <div>
+                    <h3 className="font-bold text-sm text-ink-primary flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-teal-600" />
+                      Spatial Operational Work-Zone Grid
+                    </h3>
+                    <p className="text-xs text-ink-secondary">
+                      Leaflet GIS mapping with persisted coordinates
+                    </p>
+                  </div>
+                  {selectedZone && (
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 text-navy-800 font-bold">
+                      {selectedZone.zoneCode}
+                    </span>
+                  )}
+                </div>
+
+                <WorkZoneMap
+                  zones={mapZones}
+                  selectedZoneId={selectedZone?.workZoneId}
+                  onSelectZone={(zone) => {
+                    const match = workZones.find((z) => z.workZoneId === zone.id);
+                    if (match) setSelectedZone(match);
+                  }}
+                  height="340px"
+                />
+
+                {selectedZone && (
+                  <div className="mt-3 p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+                    <div>
+                      <div className="font-bold text-ink-primary">{selectedZone.zoneName}</div>
+                      <div className="text-[11px] text-ink-muted">
+                        PIN: <strong>{selectedZone.pincode}</strong> • {selectedZone.locality}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
+                        selectedZone.operationalStatus === 'BLOCKED'
+                          ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                          : selectedZone.operationalStatus === 'ACTIVE'
+                          ? 'bg-teal-50 text-teal-700 border border-teal-200'
+                          : 'bg-slate-100 text-slate-700'
+                      }`}>
+                        {selectedZone.operationalStatus}
+                      </span>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Right 5 Columns: Infrastructure Pipeline */}
-        <div className="lg:col-span-5 space-y-6">
-          <InfrastructureOverview />
+            {/* Work Zone Table */}
+            <div className="lg:col-span-7">
+              <WorkZoneTable
+                workZones={workZones}
+                selectedZoneId={selectedZone?.workZoneId}
+                onSelectZone={(zone) => setSelectedZone(zone)}
+              />
+            </div>
+          </div>
 
-          {/* Quality Assurance Snapshot */}
-          <div className="bg-white rounded-xl p-5 border border-surface-border shadow-card">
-            <div className="flex items-center justify-between mb-3 pb-2 border-b border-surface-border">
-              <h4 className="font-bold text-sm text-ink-primary">
-                Quality Assurance Snapshot
-              </h4>
-              <span className="text-[11px] text-ink-muted font-medium">
-                Last 30 Days
-              </span>
+          {/* Section G & H: Vendor Workload + Recent Activity Timeline */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-6">
+              <VendorWorkloadTable vendors={vendorsWorkload} />
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="p-3 rounded-lg bg-emerald-50/70 border border-emerald-100">
-                <div className="flex items-center justify-between text-emerald-700 font-semibold mb-1">
-                  <span>Passed QA</span>
-                  <CheckCircle2 className="w-4 h-4" />
-                </div>
-                <div className="text-xl font-bold text-emerald-800">18</div>
-                <p className="text-[10px] text-emerald-600 mt-0.5">Milestone released</p>
-              </div>
-
-              <div className="p-3 rounded-lg bg-rose-50/70 border border-rose-100">
-                <div className="flex items-center justify-between text-rose-700 font-semibold mb-1">
-                  <span>Failed QA</span>
-                  <XCircle className="w-4 h-4" />
-                </div>
-                <div className="text-xl font-bold text-rose-800">2</div>
-                <p className="text-[10px] text-rose-600 mt-0.5">Rework required</p>
-              </div>
-
-              <div className="p-3 rounded-lg bg-amber-50/70 border border-amber-100">
-                <div className="flex items-center justify-between text-amber-700 font-semibold mb-1">
-                  <span>Review Queue</span>
-                  <AlertTriangle className="w-4 h-4" />
-                </div>
-                <div className="text-xl font-bold text-amber-800">3</div>
-                <p className="text-[10px] text-amber-600 mt-0.5">AI Flagged cases</p>
-              </div>
-
-              <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
-                <div className="flex items-center justify-between text-slate-700 font-semibold mb-1">
-                  <span>Pending Evidence</span>
-                  <FileCheck className="w-4 h-4" />
-                </div>
-                <div className="text-xl font-bold text-slate-800">4</div>
-                <p className="text-[10px] text-slate-500 mt-0.5">Awaiting contractor</p>
-              </div>
+            <div className="lg:col-span-6">
+              <RecentActivityTimeline
+                events={recentEvents}
+                totalElements={recentTotal}
+                hasMore={hasMoreEvents}
+                onLoadMore={handleLoadMoreActivity}
+                isLoadingMore={isLoadingMoreActivity}
+              />
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Bottom Grid: Live Activity & Vendor Performance */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-6">
-          <ActivityTimeline />
-        </div>
-        <div className="lg:col-span-6">
-          <VendorPerformancePreview />
-        </div>
-      </div>
+      )}
     </PageContainer>
   );
 };

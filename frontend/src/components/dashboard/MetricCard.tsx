@@ -10,8 +10,9 @@ interface MetricCardProps {
     value: string;
     isPositive: boolean;
   };
-  accentColor?: 'teal' | 'emerald' | 'amber' | 'rose' | 'blue' | 'navy';
+  accentColor?: 'teal' | 'emerald' | 'amber' | 'rose' | 'blue' | 'navy' | 'purple';
   alertBadge?: string;
+  onClick?: () => void;
 }
 
 export const MetricCard: React.FC<MetricCardProps> = ({
@@ -22,6 +23,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   trend,
   accentColor = 'navy',
   alertBadge,
+  onClick,
 }) => {
   const colorMap = {
     teal: 'bg-teal-50 text-teal-600 border-teal-100',
@@ -29,11 +31,17 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     amber: 'bg-amber-50 text-amber-600 border-amber-100',
     rose: 'bg-rose-50 text-rose-600 border-rose-100',
     blue: 'bg-blue-50 text-blue-600 border-blue-100',
+    purple: 'bg-purple-50 text-purple-600 border-purple-100',
     navy: 'bg-slate-100 text-navy-800 border-slate-200',
   }[accentColor];
 
   return (
-    <div className="bg-white rounded-xl p-5 border border-surface-border shadow-card hover:shadow-card-hover transition-all">
+    <div 
+      onClick={onClick}
+      className={`bg-white rounded-xl p-5 border border-surface-border shadow-card hover:shadow-card-hover transition-all ${
+        onClick ? 'cursor-pointer hover:border-teal-300 hover:-translate-y-0.5 active:translate-y-0' : ''
+      }`}
+    >
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs font-medium text-ink-secondary tracking-wide uppercase">

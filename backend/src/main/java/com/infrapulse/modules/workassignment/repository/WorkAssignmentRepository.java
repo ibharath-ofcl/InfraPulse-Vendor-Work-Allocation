@@ -53,6 +53,24 @@ public interface WorkAssignmentRepository extends JpaRepository<WorkAssignment, 
         @org.springframework.data.repository.query.Param("activeStatuses") Collection<AssignmentStatus> activeStatuses
     );
 
+    long countByStatus(AssignmentStatus status);
+
+    long countByStatusIn(Collection<AssignmentStatus> statuses);
+
+    long countByProjectIdAndStatus(String projectId, AssignmentStatus status);
+
+    long countByProjectIdAndStatusIn(String projectId, Collection<AssignmentStatus> statuses);
+
+    long countByWorkZoneId(String workZoneId);
+
+    long countByWorkZoneIdAndStatus(String workZoneId, AssignmentStatus status);
+
+    List<WorkAssignment> findByProjectIdOrderByCreatedAtDesc(String projectId);
+
+    List<WorkAssignment> findByWorkZoneIdOrderByCreatedAtDesc(String workZoneId);
+
+    List<WorkAssignment> findByVendorIdOrderByCreatedAtDesc(String vendorId);
+
     @Query(value = "SELECT nextval('work_assignment_seq')", nativeQuery = true)
     Long getNextAssignmentSequence();
 }

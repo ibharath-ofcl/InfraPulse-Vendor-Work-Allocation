@@ -1,0 +1,105 @@
+name: InfraPulse AI - Production Release Automation
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  validate-and-package:
+    name: Validate, Package & Publish Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ------------------------------------------------------------------------
+      # 1. Frontend Build & Archive
+      # ------------------------------------------------------------------------
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run Frontend Tests
+        working-directory: frontend
+        run: npm test -- --run
+
+      - name: Build Frontend Production Bundle
+        working-directory: frontend
+        run: npm run build
+
+      - name: Package Frontend Dist Tarball
+        run: tar -czf infrapulse-frontend-${{ github.ref_name }}.tar.gz -C frontend/dist .
+
+      # ------------------------------------------------------------------------
+      # 2. Backend Build & Package
+      # ------------------------------------------------------------------------
+      - name: Setup Java 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run Backend Regression Test Suite
+        working-directory: backend
+        run: mvn clean test -B
+
+      - name: Package Executable Backend JAR
+        working-directory: backend
+        run: mvn package -DskipTests=true -B
+
+      - name: Copy JAR for Release
+        run: cp backend/target/*.jar ./infrapulse-backend-${{ github.ref_name }}.jar
+
+      # ------------------------------------------------------------------------
+      # 3. AI Service Tests
+      # ------------------------------------------------------------------------
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: ai-service/requirements.txt
+
+      - name: Install AI Service Dependencies
+        working-directory: ai-service
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run AI Service Tests
+        working-directory: ai-service
+        run: pytest -v --tb=short
+
+      # ------------------------------------------------------------------------
+      # 4. GitHub Release Creation
+      # ------------------------------------------------------------------------
+      - name: Publish Official GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: InfraPulse AI ${{ github.ref_name }}
+          body_path: docs/RELEASE_NOTES_${{ github.ref_name }}.md
+          draft: false
+          prerelease: false
+          files: |
+            infrapulse-backend-${{ github.ref_name }}.jar
+            infrapulse-frontend-${{ github.ref_name }}.tar.gz
+            docker-compose.prod.yml
+            .env.example
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

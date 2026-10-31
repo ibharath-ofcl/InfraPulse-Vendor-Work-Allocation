@@ -1,0 +1,57 @@
+spring:
+  application:
+    name: InfraPulse AI Local Dev
+  datasource:
+    url: jdbc:h2:mem:infrapulse_local;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;INIT=CREATE SEQUENCE IF NOT EXISTS work_assignment_seq START WITH 1001\;CREATE SEQUENCE IF NOT EXISTS work_evidence_seq START WITH 1001\;CREATE SEQUENCE IF NOT EXISTS ai_inference_seq START WITH 1001\;CREATE SEQUENCE IF NOT EXISTS quality_assessment_seq START WITH 1001\;CREATE SEQUENCE IF NOT EXISTS human_review_seq START WITH 1001\;CREATE SEQUENCE IF NOT EXISTS corrective_action_seq START WITH 1001\;CREATE SEQUENCE IF NOT EXISTS measurement_seq START WITH 1001\;CREATE SEQUENCE IF NOT EXISTS agreement_seq START WITH 1001\;CREATE SEQUENCE IF NOT EXISTS milestone_seq START WITH 1001\;CREATE SEQUENCE IF NOT EXISTS payment_request_seq START WITH 1001\;CREATE SEQUENCE IF NOT EXISTS payment_auth_seq START WITH 1001\;CREATE SEQUENCE IF NOT EXISTS financial_txn_seq START WITH 1001\;CREATE SEQUENCE IF NOT EXISTS audit_seq START WITH 1001\;CREATE SEQUENCE IF NOT EXISTS report_seq START WITH 1001;
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  flyway:
+    enabled: false
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+cors:
+  allowed-origins: "http://localhost:3000,http://localhost:5173,http://localhost:8080"
+
+security:
+  jwt:
+    secret: infrapulse-super-secure-production-jwt-signing-secret-key-256-bits-minimum!
+    access-token-expiration-ms: 900000
+    refresh-token-expiration-ms: 604800000
+    issuer: InfraPulse AI Local
+  bootstrap:
+    admin-email: admin@infrapulse.gov.in
+    admin-password: Admin@InfraPulse2025!
+    admin-name: Platform Administrator
+
+evidence:
+  storage:
+    provider: LOCAL
+    local-dir: uploads/evidence
+  validation:
+    max-file-size: 10485760
+    max-files-per-request: 10
+    min-dimension: 50
+    max-dimension: 8000
+    allowed-content-types:
+      - image/jpeg
+      - image/png
+      - image/webp
+
+ai:
+  service:
+    url: http://localhost:8000
+    connect-timeout-ms: 5000
+    read-timeout-ms: 30000

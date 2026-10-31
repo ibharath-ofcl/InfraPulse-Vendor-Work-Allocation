@@ -68,11 +68,11 @@
             <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
 
-        <!-- In-memory DB for isolated tests -->
+        <!-- In-memory DB for isolated tests & local dev profile -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <scope>test</scope>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- JWT Dependencies -->

@@ -16,7 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/analytics/scoring-configurations")
+@RequestMapping({"/api/v1/analytics/scoring-configurations", "/api/v1/analytics/scoring-configs"})
 public class ScoringConfigurationController {
 
     private final VendorScoringConfigurationService service;
@@ -63,7 +63,7 @@ public class ScoringConfigurationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(created));
     }
 
-    @PatchMapping("/{configurationId}/activate")
+    @RequestMapping(value = "/{configurationId}/activate", method = {RequestMethod.PATCH, RequestMethod.POST})
     @PreAuthorize("hasAnyAuthority('MANAGE_SCORING_CONFIG', 'PLATFORM_ADMIN')")
     public ResponseEntity<ApiResponse<ScoringConfigurationDto>> activateConfiguration(
             @PathVariable String configurationId,

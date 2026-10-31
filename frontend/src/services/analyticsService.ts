@@ -80,7 +80,7 @@ export const analyticsService = {
   },
 
   activateScoringConfiguration: async (configId: string): Promise<ScoringConfiguration> => {
-    const res = await backendClient.post<ApiResponse<ScoringConfiguration>>(`/v1/analytics/scoring-configs/${configId}/activate`);
+    const res = await backendClient.patch<ApiResponse<ScoringConfiguration>>(`/v1/analytics/scoring-configs/${configId}/activate`);
     return res.data.data;
   },
 

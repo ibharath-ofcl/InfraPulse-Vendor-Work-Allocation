@@ -28,7 +28,7 @@ public class VendorScoringConfigurationService {
         this.auditService = auditService;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public VendorScoringConfiguration getActiveConfigurationEntity() {
         return repository.findFirstByActiveTrueOrderByVersionDesc()
                 .orElseGet(() -> {
@@ -46,7 +46,7 @@ public class VendorScoringConfigurationService {
                 });
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public ScoringConfigurationDto getActiveConfiguration() {
         return mapToDto(getActiveConfigurationEntity());
     }

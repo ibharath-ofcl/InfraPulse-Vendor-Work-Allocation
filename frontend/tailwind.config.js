@@ -7,60 +7,81 @@ export default {
   theme: {
     extend: {
       colors: {
+        infra: {
+          navy: '#10243A',           // Deep Infrastructure Navy
+          steel: '#24445F',          // Steel Blue
+          amber: '#F5A623',          // Construction Amber
+          'amber-hover': '#E0921B',
+          teal: '#13A89E',           // Infrastructure Teal
+          'teal-dark': '#0E827B',
+          concrete: '#F3F5F6',       // Soft Concrete Background
+          white: '#FFFFFF',          // Surface White
+          charcoal: '#202B36',       // Text Charcoal
+          muted: '#718096',          // Muted Text
+          border: '#DCE3E8',         // Border Line
+          success: '#219653',        // Success Green
+          warning: '#E9A23B',        // Warning Amber
+          error: '#D64545',          // Error Red
+        },
         navy: {
-          950: '#0d1827',
-          900: '#14243A', // Primary Navy
-          800: '#203650', // Secondary Navy
-          700: '#2a4768',
-          600: '#395c85',
+          950: '#0B1928',
+          900: '#10243A', // Primary Deep Infrastructure Navy
+          800: '#1B3550',
+          700: '#24445F', // Steel Blue
+          600: '#325777',
+        },
+        steel: {
+          500: '#24445F',
+          600: '#1C374E',
+        },
+        amber: {
+          400: '#FBBF24',
+          500: '#F5A623', // Construction Amber
+          600: '#E0921B',
         },
         teal: {
           50: '#f0fdfa',
           100: '#ccfbf1',
           200: '#99f6e4',
-          500: '#14b8a6',
-          600: '#0D9488', // Accent Teal
+          500: '#13A89E', // Infrastructure Teal
+          600: '#0E827B',
           700: '#0f766e',
         },
         surface: {
-          main: '#F4F7FA', // Main background
-          card: '#FFFFFF', // Card background
-          border: '#E2E8F0', // Border subtle
-          hover: '#F8FAFC',
+          canvas: '#F3F5F6', // Soft Concrete
+          main: '#F3F5F6',   // Soft Concrete
+          card: '#FFFFFF',   // Surface White
+          border: '#DCE3E8', // Enterprise Border
+          hover: '#EAEFF2',
         },
         ink: {
-          primary: '#172033', // Primary text
-          secondary: '#64748B', // Secondary text
-          muted: '#94A3B8',
-        },
-        brand: {
-          50: '#eef8ff',
-          100: '#d8eeff',
-          500: '#2b97ff',
-          600: '#1478f5',
-          700: '#0d5fe1',
+          primary: '#202B36',   // Charcoal
+          secondary: '#718096', // Muted Text
+          muted: '#8C9BAE',
         },
         status: {
-          success: '#16A34A',
-          'success-bg': '#F0FDF4',
-          warning: '#D97706',
-          'warning-bg': '#FFFBEB',
-          danger: '#DC2626',
-          'danger-bg': '#FEF2F2',
-          info: '#2563EB',
-          'info-bg': '#EFF6FF',
+          success: '#219653',
+          'success-bg': '#E8F5E9',
+          warning: '#E9A23B',
+          'warning-bg': '#FFF8E1',
+          danger: '#D64545',
+          'danger-bg': '#FFEBEE',
+          info: '#24445F',
+          'info-bg': '#EBF2F7',
         }
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       boxShadow: {
-        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)',
-        'card-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05)',
-        'modal': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)',
-        'dropdown': '0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04)',
+        'card': '0 1px 3px 0 rgba(16, 36, 58, 0.05), 0 1px 2px -1px rgba(16, 36, 58, 0.03)',
+        'card-hover': '0 6px 16px -2px rgba(16, 36, 58, 0.08), 0 2px 6px -1px rgba(16, 36, 58, 0.04)',
+        'elevated': '0 12px 28px -4px rgba(16, 36, 58, 0.12), 0 4px 10px -2px rgba(16, 36, 58, 0.06)',
+        'modal': '0 20px 30px -6px rgba(16, 36, 58, 0.20), 0 10px 14px -4px rgba(16, 36, 58, 0.10)',
+        'dropdown': '0 10px 15px -3px rgba(16, 36, 58, 0.08), 0 4px 6px -4px rgba(16, 36, 58, 0.04)',
       }
     },
   },
   plugins: [],
 }
+

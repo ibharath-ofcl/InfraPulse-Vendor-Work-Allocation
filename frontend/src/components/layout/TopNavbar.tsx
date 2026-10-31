@@ -9,10 +9,12 @@ import {
   ShieldCheck, 
   LogOut, 
   Check, 
-  Layers
+  Layers,
+  MapPin
 } from 'lucide-react';
 import { mockProjects } from '../../data/mockProjects';
 import { useAuth } from '../../auth/useAuth';
+import { BrandLogo } from '../common/BrandLogo';
 
 interface TopNavbarProps {
   onOpenMobile: () => void;
@@ -80,7 +82,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ onOpenMobile, collapsed })
   };
 
   return (
-    <header className={`sticky top-0 z-30 h-16 bg-white border-b border-surface-border transition-all duration-300 ${
+    <header className={`sticky top-0 z-30 h-16 bg-white border-b border-[#DCE3E8] transition-all duration-300 ${
       collapsed ? 'lg:pl-20' : 'lg:pl-64'
     }`}>
       <div className="h-full px-4 md:px-6 flex items-center justify-between gap-4">
@@ -94,11 +96,18 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ onOpenMobile, collapsed })
             <Menu className="w-5 h-5" />
           </button>
 
+          <div className="lg:hidden flex items-center">
+            <BrandLogo size="xs" showText={false} theme="light" />
+          </div>
+
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-ink-muted hidden sm:inline">Platform</span>
+              <span className="text-xs text-ink-muted hidden sm:flex items-center gap-1">
+                <MapPin className="w-3 h-3 text-[#13A89E]" />
+                Infrastructure Operations
+              </span>
               <span className="text-xs text-ink-muted hidden sm:inline">&rsaquo;</span>
-              <h1 className="text-sm md:text-base font-bold text-ink-primary tracking-tight">
+              <h1 className="text-sm md:text-base font-bold text-[#10243A] tracking-tight">
                 {getPageTitle(location.pathname)}
               </h1>
             </div>

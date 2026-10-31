@@ -26,20 +26,20 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   onClick,
 }) => {
   const colorMap = {
-    teal: 'bg-teal-50 text-teal-600 border-teal-100',
-    emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
-    amber: 'bg-amber-50 text-amber-600 border-amber-100',
-    rose: 'bg-rose-50 text-rose-600 border-rose-100',
-    blue: 'bg-blue-50 text-blue-600 border-blue-100',
-    purple: 'bg-purple-50 text-purple-600 border-purple-100',
-    navy: 'bg-slate-100 text-navy-800 border-slate-200',
+    teal: 'bg-[#13A89E]/10 text-[#0E827B] border-[#13A89E]/30',
+    emerald: 'bg-[#219653]/10 text-[#219653] border-[#219653]/30',
+    amber: 'bg-[#F5A623]/15 text-[#E0921B] border-[#F5A623]/30',
+    rose: 'bg-[#D64545]/10 text-[#D64545] border-[#D64545]/30',
+    blue: 'bg-[#24445F]/10 text-[#24445F] border-[#24445F]/30',
+    purple: 'bg-[#7C3AED]/10 text-[#7C3AED] border-[#7C3AED]/30',
+    navy: 'bg-[#10243A]/10 text-[#10243A] border-[#10243A]/20',
   }[accentColor];
 
   return (
     <div 
       onClick={onClick}
-      className={`bg-white rounded-xl p-5 border border-surface-border shadow-card hover:shadow-card-hover transition-all ${
-        onClick ? 'cursor-pointer hover:border-teal-300 hover:-translate-y-0.5 active:translate-y-0' : ''
+      className={`bg-white rounded-xl p-4 sm:p-5 border border-[#DCE3E8] shadow-card hover:shadow-card-hover transition-all ${
+        onClick ? 'cursor-pointer hover:border-[#13A89E] hover:-translate-y-0.5 active:translate-y-0' : ''
       }`}
     >
       <div className="flex items-start justify-between">

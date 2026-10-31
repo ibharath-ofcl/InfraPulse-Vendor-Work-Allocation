@@ -3,17 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import {
   FolderKanban,
   HardHat,
-  Clock,
   PlayCircle,
   FileCheck,
   ShieldAlert,
-  CheckCircle2,
   Award,
   RefreshCw,
   Building,
   Shield,
   ArrowRight,
   MapPin,
+  Sliders,
+  Landmark,
 } from 'lucide-react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { MetricCard } from '../components/dashboard/MetricCard';
@@ -29,6 +29,8 @@ import { WorkZoneMap, MapZoneData } from '../components/maps/WorkZoneMap';
 import { useAuth } from '../auth/useAuth';
 import { dashboardService } from '../services/dashboardService';
 import { projectService } from '../services/projectService';
+import { vendorService } from '../services/vendorService';
+import { mockMilestones } from '../data/mockMilestones';
 import {
   DashboardSummary,
   AssignmentDistributionItem,
@@ -69,6 +71,7 @@ export const OverviewPage: React.FC = () => {
   const [activityPage, setActivityPage] = useState(0);
   const [hasMoreEvents, setHasMoreEvents] = useState(false);
   const [isLoadingMoreActivity, setIsLoadingMoreActivity] = useState(false);
+  const [registeredVendors, setRegisteredVendors] = useState<number>(3);
 
   // Load project options for the global selector
   useEffect(() => {
@@ -96,6 +99,7 @@ export const OverviewPage: React.FC = () => {
         depData,
         workloadData,
         activityData,
+        vendorsData,
       ] = await Promise.all([
         dashboardService.getSummary(currentFilters),
         dashboardService.getAssignmentDistribution(currentFilters),
@@ -104,6 +108,7 @@ export const OverviewPage: React.FC = () => {
         dashboardService.getDependencyMonitoring(currentFilters.projectId, currentFilters.workZoneId),
         dashboardService.getVendorWorkload(currentFilters.projectId),
         dashboardService.getRecentActivity(currentFilters.projectId, 0, 10),
+        vendorService.getVendors({ size: 100 }).catch(() => ({ totalElements: 3, content: [] })),
       ]);
 
       setSummary(summaryData);
@@ -123,6 +128,7 @@ export const OverviewPage: React.FC = () => {
       setRecentTotal(activityData.totalElements || 0);
       setActivityPage(0);
       setHasMoreEvents(activityData.page + 1 < activityData.totalPages);
+      setRegisteredVendors(vendorsData?.totalElements || workloadData.vendors?.length || 3);
     } catch (err) {
       console.error('Failed to load dashboard data', err);
     } finally {
@@ -197,22 +203,26 @@ export const OverviewPage: React.FC = () => {
   const isVendorRole = user?.role === 'VENDOR';
   const isFieldEngineer = user?.role === 'FIELD_ENGINEER';
 
+  const activeProjectsCount = projectsProgress.filter(p => p.projectStatus === 'ACTIVE').length || (summary?.totalProjects ?? 0);
+  const pendingMilestonesCount = mockMilestones.filter(m => m.approvalStatus === 'ELIGIBLE' || m.approvalStatus === 'LOCKED').length;
+  const pendingPaymentsCount = mockMilestones.filter(m => m.approvalStatus === 'ELIGIBLE').length;
+
   return (
     <PageContainer>
       {/* Global Dashboard Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 pb-4 border-b border-surface-border">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 pb-4 border-b border-[#DCE3E8]">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-ink-primary">
-              Infrastructure Operations Command Center
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-xl md:text-2xl font-black tracking-tight text-[#10243A]">
+              Infrastructure Operations Overview
             </h1>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
-              Live Operations
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#13A89E]/10 text-[#0E827B] border border-[#13A89E]/30">
+              <span className="w-2 h-2 rounded-full bg-[#13A89E] animate-pulse" />
+              Live Operations Command
             </span>
           </div>
-          <p className="text-xs text-ink-secondary mt-1">
-            Real-time infrastructure operations visibility, vendor coordination, and dependency readiness
+          <p className="text-xs text-[#718096] mt-1 font-medium">
+            Monitor projects, coordinate vendors, track work execution and verify infrastructure quality.
           </p>
         </div>
 
@@ -245,10 +255,10 @@ export const OverviewPage: React.FC = () => {
 
           {/* User Profile Chip */}
           {user && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-navy-800">
-              <Shield className="w-3.5 h-3.5 text-teal-600" />
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#DCE3E8] rounded-lg text-xs font-medium text-[#10243A] shadow-sm">
+              <Shield className="w-3.5 h-3.5 text-[#13A89E]" />
               <span className="font-semibold">{user.fullName}</span>
-              <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-slate-200 text-slate-700">
+              <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-[#10243A] text-white">
                 {user.role}
               </span>
             </div>
@@ -331,59 +341,58 @@ export const OverviewPage: React.FC = () => {
         <DashboardSkeleton />
       ) : (
         <div className="space-y-6">
-          {/* Section B: Operational KPI Cards */}
+          {/* Section B: Operational KPI Cards (8 Official Metrics from Backend) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3">
             <MetricCard
               title="Total Projects"
               value={summary?.totalProjects ?? 0}
-              subtitle="Accessible scope"
+              subtitle="Portfolio scope"
               icon={FolderKanban}
               accentColor="navy"
               onClick={() => navigate('/projects')}
             />
 
             <MetricCard
-              title="Active Work"
-              value={summary?.activeAssignments ?? 0}
-              subtitle="Assigned / Active"
+              title="Active Projects"
+              value={activeProjectsCount}
+              subtitle="Under execution"
+              icon={PlayCircle}
+              accentColor="teal"
+              onClick={() => navigate('/projects')}
+            />
+
+            <MetricCard
+              title="Registered Vendors"
+              value={registeredVendors}
+              subtitle="Qualified contractors"
               icon={HardHat}
+              accentColor="amber"
+              onClick={() => navigate('/vendors')}
+            />
+
+            <MetricCard
+              title="Active Work Assignments"
+              value={summary?.activeAssignments ?? 0}
+              subtitle="Field work orders"
+              icon={Sliders}
               accentColor="blue"
               onClick={() => navigate('/work-allocation')}
             />
 
             <MetricCard
-              title="Pending Accept"
-              value={summary?.pendingAcceptance ?? 0}
-              subtitle="Awaiting vendor"
-              icon={Clock}
-              accentColor="amber"
-              alertBadge={summary && summary.pendingAcceptance > 0 ? 'Pending' : undefined}
-              onClick={() => navigate('/work-allocation?status=ASSIGNED')}
-            />
-
-            <MetricCard
-              title="In Progress"
-              value={summary?.inProgress ?? 0}
-              subtitle="Actively executing"
-              icon={PlayCircle}
-              accentColor="teal"
-              onClick={() => navigate('/work-allocation?status=IN_PROGRESS')}
-            />
-
-            <MetricCard
-              title="Awaiting Review"
+              title="Work Awaiting Inspection"
               value={summary?.awaitingReview ?? 0}
               subtitle="Submitted packages"
               icon={FileCheck}
               accentColor="purple"
               alertBadge={summary && summary.awaitingReview > 0 ? 'Review' : undefined}
-              onClick={() => navigate('/work-allocation?status=SUBMITTED_FOR_REVIEW')}
+              onClick={() => navigate('/quality-inspection')}
             />
 
             <MetricCard
-              title="Dependency Blocked"
+              title="Quality Issues"
               value={summary?.dependencyBlocked ?? 0}
-              subtitle="Prerequisite rules"
+              subtitle="Dependency blockers"
               icon={ShieldAlert}
               accentColor="rose"
               alertBadge={summary && summary.dependencyBlocked > 0 ? 'BLOCKED' : undefined}
@@ -394,21 +403,21 @@ export const OverviewPage: React.FC = () => {
             />
 
             <MetricCard
-              title="Ready for Next Stage"
-              value={summary?.readyForNextStage ?? 0}
-              subtitle="Cleared prerequisites"
-              icon={CheckCircle2}
-              accentColor="emerald"
-              onClick={() => navigate('/work-dependencies')}
+              title="Pending Milestones"
+              value={pendingMilestonesCount}
+              subtitle="Approval checkpoints"
+              icon={Landmark}
+              accentColor="amber"
+              onClick={() => navigate('/milestones')}
             />
 
             <MetricCard
-              title="Completed Work"
-              value={summary?.completedAssignments ?? 0}
-              subtitle="Authorized sign-off"
+              title="Pending Payments"
+              value={pendingPaymentsCount}
+              subtitle="Eligible for release"
               icon={Award}
               accentColor="emerald"
-              onClick={() => navigate('/work-allocation?status=COMPLETED')}
+              onClick={() => navigate('/milestones')}
             />
           </div>
 

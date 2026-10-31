@@ -5,17 +5,68 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --infra-navy: #10243A;
+    --steel-blue: #24445F;
+    --construction-amber: #F5A623;
+    --infra-teal: #13A89E;
+    --soft-concrete: #F3F5F6;
+    --surface-white: #FFFFFF;
+    --charcoal-text: #202B36;
+    --muted-text: #718096;
+    --border-line: #DCE3E8;
+  }
+
   body {
-    background-color: #F4F7FA;
-    color: #172033;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: #F3F5F6;
+    color: #202B36;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
   }
 }
 
 @layer utilities {
-  /* Subtle custom scrollbar */
+  /* Subtle Engineering Blueprint Grid Background */
+  .blueprint-grid {
+    background-image: 
+      linear-gradient(to right, rgba(36, 68, 95, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(36, 68, 95, 0.05) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .blueprint-grid-dark {
+    background-image: 
+      linear-gradient(to right, rgba(19, 168, 158, 0.08) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(19, 168, 158, 0.08) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Infrastructure Construction Hazard / Attention Pattern */
+  .construction-stripe {
+    background: repeating-linear-gradient(
+      45deg,
+      #F5A623,
+      #F5A623 10px,
+      #10243A 10px,
+      #10243A 20px
+    );
+  }
+
+  .construction-stripe-subtle {
+    background: repeating-linear-gradient(
+      -45deg,
+      rgba(245, 166, 35, 0.15),
+      rgba(245, 166, 35, 0.15) 8px,
+      transparent 8px,
+      transparent 16px
+    );
+  }
+
+  /* Subtle Custom Scrollbar */
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -30,4 +81,11 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #94A3B8;
   }
+
+  /* Mobile Touch Target Minimums */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
+

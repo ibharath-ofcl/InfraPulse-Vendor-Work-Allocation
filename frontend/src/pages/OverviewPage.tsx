@@ -342,7 +342,7 @@ export const OverviewPage: React.FC = () => {
       ) : (
         <div className="space-y-6">
           {/* Section B: Operational KPI Cards (8 Official Metrics from Backend) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <MetricCard
               title="Total Projects"
               value={summary?.totalProjects ?? 0}

@@ -27,6 +27,7 @@ import com.infrapulse.modules.workzone.entity.WorkZone;
 import com.infrapulse.modules.workzone.enums.ZoneStatus;
 import com.infrapulse.modules.workzone.repository.WorkZoneRepository;
 import com.infrapulse.security.JwtTokenProvider;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -461,5 +462,16 @@ class EvidenceControllerTest {
         mockMvc.perform(get("/api/v1/evidence/{id}", evidenceId)
                         .header("Authorization", vendor1Token))
                 .andExpect(status().isBadRequest());
+    }
+
+    @AfterEach
+    void tearDown() {
+        evidenceRepository.deleteAll();
+        assignmentRepository.deleteAll();
+        workZoneRepository.deleteAll();
+        projectRepository.deleteAll();
+        vendorRepository.deleteAll();
+        auditEventRepository.deleteAll();
+        userRepository.deleteAll();
     }
 }

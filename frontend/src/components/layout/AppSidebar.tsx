@@ -17,7 +17,9 @@ import {
   Zap,
   Briefcase,
   ExternalLink,
-  GitFork
+  GitFork,
+  ClipboardCheck,
+  Wrench
 } from 'lucide-react';
 import { useAuth } from '../../auth/useAuth';
 import { Permission } from '../../types';
@@ -44,8 +46,11 @@ const allNavItems: NavItemDef[] = [
   { label: 'Work Allocation', path: '/work-allocation', icon: Sliders, highlight: true, requiredPermission: 'VIEW_ASSIGNED_WORK' },
   { label: 'Work Dependencies', path: '/work-dependencies', icon: GitFork, requiredPermission: 'DEPENDENCY_VIEW' },
   { label: 'My Work Orders', path: '/my-work', icon: Briefcase, highlight: true, requiredPermission: 'WORK_ASSIGNMENT_ACCEPT' },
+  { label: 'My Rework Actions', path: '/my-corrective-actions', icon: Wrench, highlight: true, requiredPermission: 'WORK_ASSIGNMENT_ACCEPT' },
   { label: 'Vendors', path: '/vendors', icon: HardHat, requiredPermission: 'MANAGE_PROJECTS' },
   { label: 'Quality Inspection', path: '/quality-inspection', icon: ShieldCheck, requiredPermission: 'REVIEW_EVIDENCE' },
+  { label: 'Human Review', path: '/human-review', icon: ClipboardCheck, highlight: true, requiredPermission: 'REVIEW_EVIDENCE' },
+  { label: 'Corrective Actions', path: '/corrective-actions', icon: Wrench, requiredPermission: 'REVIEW_EVIDENCE' },
   { label: 'Evidence Center', path: '/evidence', icon: Camera, requiredPermission: 'SUBMIT_EVIDENCE' },
   { label: 'Milestones & Payments', path: '/milestones', icon: Landmark, requiredPermission: 'VIEW_MILESTONES' },
   { label: 'Analytics', path: '/analytics', icon: BarChart3, requiredPermission: 'VIEW_AUDIT_TRAIL' },

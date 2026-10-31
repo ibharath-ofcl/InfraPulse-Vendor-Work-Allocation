@@ -18,6 +18,7 @@ import com.infrapulse.modules.vendor.enums.ServiceCategory;
 import com.infrapulse.modules.vendor.enums.VendorStatus;
 import com.infrapulse.modules.vendor.repository.VendorRepository;
 import com.infrapulse.security.JwtTokenProvider;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -294,5 +295,17 @@ class ProjectVendorAssociationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isForbidden());
+    }
+
+    @AfterEach
+    void tearDown() {
+        workAssignmentRepository.deleteAll();
+        workZoneRepository.deleteAll();
+        projectVendorRepository.deleteAll();
+        pmAssignmentRepository.deleteAll();
+        projectRepository.deleteAll();
+        vendorRepository.deleteAll();
+        auditEventRepository.deleteAll();
+        userRepository.deleteAll();
     }
 }

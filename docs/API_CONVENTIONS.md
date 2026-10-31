@@ -108,3 +108,62 @@ All errors follow structured JSON envelopes with machine-readable codes and acti
 - Authenticated endpoints require standard Bearer token header:
   `Authorization: Bearer <JWT_ACCESS_TOKEN>`
 - Cross-Origin Resource Sharing (CORS) enforces explicit allowed origins via `CORS_ALLOWED_ORIGINS` environment variables.
+
+---
+
+## 6. Human Review & Corrective Action API Conventions (Stage 11)
+
+### 6.1. Endpoints Overview
+
+| Method | Endpoint | Authorized Roles | Description |
+| :--- | :--- | :--- | :--- |
+| **GET** | `/api/v1/human-reviews/queue` | `QUALITY_INSPECTOR`, `PROJECT_MANAGER`, `ADMIN` | Fetch queued reviews filtered by priority, reason, status |
+| **GET** | `/api/v1/human-reviews/{reviewId}` | `QUALITY_INSPECTOR`, `PROJECT_MANAGER`, `ADMIN` | Fetch complete review dossier (evidence, criteria, findings, measurements, actions) |
+| **POST** | `/api/v1/human-reviews/{reviewId}/claim` | `QUALITY_INSPECTOR`, `ADMIN` | Claim ownership of a queued review task |
+| **POST** | `/api/v1/human-reviews/{reviewId}/decisions` | `QUALITY_INSPECTOR`, `ADMIN` | Record inspection verdict (`APPROVED`, `APPROVED_WITH_CONDITIONS`, `REJECTED`, `REWORK_REQUIRED`, `ESCALATED`) |
+| **POST** | `/api/v1/human-reviews/{reviewId}/escalate` | `QUALITY_INSPECTOR`, `ADMIN` | Escalate review to senior management/project managers |
+| **POST** | `/api/v1/physical-measurements` | `QUALITY_INSPECTOR`, `ADMIN` | Record or verify physical measurements against engineering tolerances |
+| **POST** | `/api/v1/corrective-actions` | `QUALITY_INSPECTOR`, `ADMIN` | Issue rework notice to vendor with severity and remediation deadline |
+| **POST** | `/api/v1/corrective-actions/{id}/vendor-submit`| `VENDOR`, `ADMIN` | Vendor submits remedial proof evidence |
+| **POST** | `/api/v1/corrective-actions/{id}/verify` | `QUALITY_INSPECTOR`, `ADMIN` | Verify remediation and close corrective action (**Vendors forbidden**) |
+| **GET** | `/api/v1/corrective-actions/vendor/{vendorId}`| `VENDOR`, `QUALITY_INSPECTOR`, `ADMIN` | Fetch assigned corrective actions for a vendor organization |
+
+---
+
+### 6.2. Rule 2 Pre-Validation Error (`422 Unprocessable Entity`)
+When an inspector attempts to record an `APPROVED` decision while unresolved non-compliances exist, the Rule 2 engine blocks the transition and returns:
+
+```json
+{
+  "success": false,
+  "message": "Rule 2 Validation Failed: Cannot approve review with unverified/non-compliant measurements or open corrective actions.",
+  "data": {
+    "errorCode": "RULE2_VALIDATION_FAILED",
+    "reviewId": "hr-7729-ab12",
+    "blockingReasons": [
+      "Physical measurement 'TRENCH_DEPTH_MM' is marked SPECIFICATION_REQUIRED without engineering tolerances.",
+      "Corrective action 'CA-104-01' is OPEN and must be remediated and verified before approval."
+    ]
+  },
+  "timestamp": "2026-10-31T04:30:00.000Z"
+}
+```
+
+### 6.3. Physical Measurement Tolerance Error (`400 Bad Request`)
+When a physical measurement is recorded without engineering target specifications or tolerance boundaries:
+
+```json
+{
+  "success": false,
+  "message": "Physical measurements must never auto-pass without engineering specifications.",
+  "data": {
+    "errorCode": "SPECIFICATION_REQUIRED",
+    "parameterName": "CONDUIT_DEPTH_MM",
+    "measuredValue": 850.0,
+    "unit": "MM",
+    "complianceStatus": "SPECIFICATION_REQUIRED"
+  },
+  "timestamp": "2026-10-31T04:30:00.000Z"
+}
+```
+

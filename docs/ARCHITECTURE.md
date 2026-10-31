@@ -63,8 +63,32 @@ Computer vision tasks require specialized C-backed libraries (OpenCV, NumPy, PyT
   - `com.infrapulse.common`: Standard unified `ApiResponse<T>`, exception advice, and base entities.
   - `com.infrapulse.security`: Security filter chains, token evaluators, and principal resolution.
   - `com.infrapulse.modules`: Domain-partitioned packages:
-    - `health`: Service discovery and readiness probing (`/api/health`).
-    - *Upcoming*: `projects`, `zones`, `vendors`, `allocations`, `dependencies`, `evidence`, `milestones`, `audit`.
+    - `auth` & `user`: Role-based access control (ADMIN, PROJECT_MANAGER, QUALITY_INSPECTOR, VENDOR, AUDITOR), token management.
+    - `project` & `workzone`: Infrastructure project hierarchy, municipal PIN codes, PostGIS spatial boundaries.
+    - `vendor` & `allocation`: Vendor profiles, capacity scoring, work package assignments.
+    - `dependency`: Topological DAG sorting, prerequisite validation, circular dependency detection.
+    - `evidence`: Cryptographic photo registry, tamper detection, EXIF metadata extraction.
+    - `ai`: Computer vision integration, edge detection, excavation contour segmentation.
+    - `quality`: Stage 10 AI Quality Inspection Engine, work-type inspection templates, multi-criteria assessment, scoring, and confidence evaluation.
+    - `humanreview`: Stage 11 Human-in-the-Loop review workspace, Rule 2 pre-validation engine, physical measurements with engineering spec checks, corrective action management, and Stage 6 downstream work zone release.
+    - `dashboard` & `audit`: Real-time operational telemetry, immutable compliance ledger.
+
+---
+
+### 3.1. Stage 10 & 11 Quality Inspection & Human Review Architecture
+InfraPulse AI enforces an authoritative quality gate before any infrastructure work package can be completed or released downstream:
+1. **AI Quality Assessment Engine (`quality`)**:
+   - Compares field evidence against work-type inspection templates (`quality_inspection_templates`).
+   - Automatically computes weighted compliance scores, completeness metrics, and assigns assessment statuses (`PASSED`, `FAILED`, `FLAGGED_FOR_REVIEW`, `INCONCLUSIVE`).
+   - Generates granular findings (`quality_findings`) linking specific defects or compliance anomalies.
+2. **Human-in-the-Loop Review Workspace (`humanreview`)**:
+   - Dual-mode inspection workspace with synchronized high-resolution zoom, bounding box overlays, and criterion-by-criterion evaluation.
+   - **Rule 2 Pre-Validation Engine**: Enforces that an `APPROVED` decision is strictly rejected if:
+     - Any mandatory or critical criterion failed.
+     - Any physical measurement is failed, unverified, or marked `SPECIFICATION_REQUIRED` (measurements never auto-pass without engineering specs).
+     - Any corrective action rework notice is pending (`OPEN`, `VENDOR_SUBMITTED`, or `REJECTED`).
+   - **Vendor Rework & Remediations**: Field vendors can submit remedial evidence against issued corrective actions, but can NEVER verify or close their own corrective actions (strictly reserved for Inspectors and Admins).
+   - **Stage 6 Downstream Dependency Release**: Once an authoritative `APPROVED` decision is committed, the assignment transitions to `COMPLETED` and `RELEASED`, automatically unblocking dependent successor work zones.
 
 ---
 

@@ -19,6 +19,7 @@ import com.infrapulse.modules.project.entity.Project;
 import com.infrapulse.modules.project.enums.ProjectStatus;
 import com.infrapulse.modules.project.enums.ProjectType;
 import com.infrapulse.modules.project.repository.ProjectRepository;
+import com.infrapulse.modules.project.repository.ProjectVendorRepository;
 import com.infrapulse.modules.vendor.entity.Vendor;
 import com.infrapulse.modules.vendor.enums.ServiceCategory;
 import com.infrapulse.modules.vendor.enums.VendorStatus;
@@ -32,6 +33,7 @@ import com.infrapulse.modules.workzone.entity.WorkZone;
 import com.infrapulse.modules.workzone.enums.ZoneStatus;
 import com.infrapulse.modules.workzone.repository.WorkZoneRepository;
 import com.infrapulse.security.JwtTokenProvider;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -79,6 +81,9 @@ public class AiProcessingControllerTest {
     private ProjectRepository projectRepository;
 
     @Autowired
+    private ProjectVendorRepository projectVendorRepository;
+
+    @Autowired
     private WorkZoneRepository workZoneRepository;
 
     @Autowired
@@ -119,15 +124,21 @@ public class AiProcessingControllerTest {
     private String vendor1Token;
     private String vendor2Token;
 
-    @BeforeEach
-    void setUp() throws Exception {
+    @AfterEach
+    void tearDown() {
         inferenceRepository.deleteAll();
         evidenceRepository.deleteAll();
         assignmentRepository.deleteAll();
         workZoneRepository.deleteAll();
+        projectVendorRepository.deleteAll();
         projectRepository.deleteAll();
         vendorRepository.deleteAll();
         userRepository.deleteAll();
+    }
+
+    @BeforeEach
+    void setUp() throws Exception {
+        tearDown();
 
         // 1. Admin user
         adminUser = userRepository.save(new User(

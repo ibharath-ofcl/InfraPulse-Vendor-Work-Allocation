@@ -408,4 +408,15 @@ class ProjectControllerTest {
             .andExpect(jsonPath("$.data.auditTrail", hasSize(greaterThanOrEqualTo(1))))
             .andExpect(jsonPath("$.data.auditTrail[0].eventType", is("PROJECT_UPDATED")));
     }
+
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        workAssignmentRepository.deleteAll();
+        workZoneRepository.deleteAll();
+        projectVendorRepository.deleteAll();
+        pmAssignmentRepository.deleteAll();
+        projectRepository.deleteAll();
+        auditEventRepository.deleteAll();
+        userRepository.deleteAll();
+    }
 }

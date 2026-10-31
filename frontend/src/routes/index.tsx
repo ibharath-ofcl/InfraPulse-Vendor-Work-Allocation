@@ -12,6 +12,10 @@ import { VendorWorkPage } from '../pages/VendorWorkPage';
 import { VendorsPage } from '../pages/VendorsPage';
 import { VendorDetailPage } from '../pages/VendorDetailPage';
 import { QualityInspectionPage } from '../pages/QualityInspectionPage';
+import { HumanReviewQueuePage } from '../pages/HumanReviewQueuePage';
+import { InspectionWorkspacePage } from '../pages/InspectionWorkspacePage';
+import { CorrectiveActionsPage } from '../pages/CorrectiveActionsPage';
+import { VendorCorrectiveActionsPage } from '../pages/VendorCorrectiveActionsPage';
 import { EvidencePage } from '../pages/EvidencePage';
 import { MilestonesPage } from '../pages/MilestonesPage';
 import { AnalyticsPage } from '../pages/AnalyticsPage';
@@ -157,6 +161,42 @@ export const AppRoutes: React.FC = () => {
             element={
               <PermissionGuard requiredPermission="REVIEW_EVIDENCE">
                 <QualityInspectionPage />
+              </PermissionGuard>
+            } 
+          />
+
+          {/* Stage 11: Human Review Queue & Inspection Workspace */}
+          <Route 
+            path="human-review" 
+            element={
+              <PermissionGuard requiredPermission="REVIEW_EVIDENCE">
+                <HumanReviewQueuePage />
+              </PermissionGuard>
+            } 
+          />
+          <Route 
+            path="human-review/:reviewId" 
+            element={
+              <PermissionGuard requiredPermission="REVIEW_EVIDENCE">
+                <InspectionWorkspacePage />
+              </PermissionGuard>
+            } 
+          />
+
+          {/* Stage 11: Corrective Actions */}
+          <Route 
+            path="corrective-actions" 
+            element={
+              <PermissionGuard requiredPermission="REVIEW_EVIDENCE">
+                <CorrectiveActionsPage />
+              </PermissionGuard>
+            } 
+          />
+          <Route 
+            path="my-corrective-actions" 
+            element={
+              <PermissionGuard requiredPermission="VIEW_ASSIGNED_WORK">
+                <VendorCorrectiveActionsPage />
               </PermissionGuard>
             } 
           />

@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -68,9 +69,9 @@ public class IntelligenceOrchestrationService {
             return new IntelligenceOverviewDto(
                     projectId != null ? projectId : "none",
                     "No Project Available",
-                    0, 0, 0, 0, 0, BigDecimal.ZERO,
-                    0, 0, 0, 0.0, 0, java.util.Map.of(),
-                    RiskLevel.LOW, BigDecimal.ZERO, 0, 0,
+                    0L, 0L, 0L, 0L, 0L, 0.0,
+                    0L, 0L, 0L, 0.0, 0L, Collections.emptyMap(),
+                    RiskLevel.LOW, BigDecimal.ZERO, 0L, 0L,
                     Instant.now()
             );
         }

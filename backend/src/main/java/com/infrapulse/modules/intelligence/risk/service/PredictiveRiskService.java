@@ -351,12 +351,12 @@ public class PredictiveRiskService {
         if (project == null) {
             return new RiskDashboardSummaryDto(
                     projectId != null ? projectId : "none",
+                    "No Project Available",
                     RiskLevel.LOW,
                     BigDecimal.ZERO,
-                    0, 0, 0, 0, 0,
-                    java.util.Map.of(),
-                    java.util.List.of(),
-                    null
+                    0L, 0L, 0L, 0L, 0L,
+                    Collections.emptyMap(),
+                    Collections.emptyList()
             );
         }
 
@@ -365,7 +365,7 @@ public class PredictiveRiskService {
         RiskLevel overallLevel = latestOpt.map(ProjectRiskAssessment::getOverallRiskLevel).orElse(RiskLevel.LOW);
         BigDecimal overallScore = latestOpt.map(ProjectRiskAssessment::getOverallScore).orElse(BigDecimal.valueOf(15.00));
 
-        List<ProjectRiskAlert> activeAlerts = alertRepository.findByProjectIdAndAlertStatus(projectId, RiskAlertStatus.ACTIVE);
+        List<ProjectRiskAlert> activeAlerts = alertRepository.findByProjectIdAndAlertStatus(actualProjectId, RiskAlertStatus.ACTIVE);
         long totalActive = activeAlerts.size();
         long critical = activeAlerts.stream().filter(a -> a.getRiskLevel() == RiskLevel.CRITICAL).count();
         long high = activeAlerts.stream().filter(a -> a.getRiskLevel() == RiskLevel.HIGH).count();

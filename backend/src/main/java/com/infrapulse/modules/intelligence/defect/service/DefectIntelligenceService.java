@@ -348,9 +348,12 @@ public class DefectIntelligenceService {
         if (project == null) {
             return new DefectDashboardSummaryDto(
                     projectId != null ? projectId : "none",
-                    0, 0, 0, 0, 0, 0, 0.0,
-                    java.util.Map.of(),
-                    java.util.Map.of()
+                    "No Project Available",
+                    0L, 0L, 0L, 0L, 0L, 0L,
+                    0.0,
+                    Collections.emptyMap(),
+                    Collections.emptyMap(),
+                    Collections.emptyMap()
             );
         }
 

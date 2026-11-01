@@ -347,9 +347,10 @@ public class ContractIntelligenceService {
             return new ContractComplianceSummaryDto(
                     projectId != null ? projectId : "none",
                     "No Project Available",
-                    0, 0, 0, 0, 0,
-                    BigDecimal.ZERO,
-                    0, 0
+                    0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L,
+                    0.0,
+                    Collections.emptyMap(),
+                    Collections.emptyMap()
             );
         }
 
@@ -362,10 +363,10 @@ public class ContractIntelligenceService {
         long draftReqs = requirements.stream().filter(r -> r.getApprovalStatus() == RequirementApprovalStatus.DRAFT).count();
         long physReqCount = requirements.stream().filter(ContractRequirement::isRequiresPhysicalMeasurement).count();
 
-        long verifiedEvidenceCount = requirementEvidenceRepository.countCompliantByProjectId(projectId);
-        long totalEvidenceRecords = requirementEvidenceRepository.countTotalByProjectId(projectId);
-        long pendingEvidenceCount = requirementEvidenceRepository.countByProjectIdAndStatus(projectId, RequirementEvidenceStatus.EVIDENCE_PENDING);
-        long nonCompliantCount = requirementEvidenceRepository.countByProjectIdAndStatus(projectId, RequirementEvidenceStatus.NON_COMPLIANT);
+        long verifiedEvidenceCount = requirementEvidenceRepository.countCompliantByProjectId(actualProjectId);
+        long totalEvidenceRecords = requirementEvidenceRepository.countTotalByProjectId(actualProjectId);
+        long pendingEvidenceCount = requirementEvidenceRepository.countByProjectIdAndStatus(actualProjectId, RequirementEvidenceStatus.EVIDENCE_PENDING);
+        long nonCompliantCount = requirementEvidenceRepository.countByProjectIdAndStatus(actualProjectId, RequirementEvidenceStatus.NON_COMPLIANT);
 
         double compliancePercentage = totalReqs > 0
                 ? Math.round(((double) verifiedEvidenceCount / (double) Math.max(1, totalEvidenceRecords)) * 1000.0) / 10.0

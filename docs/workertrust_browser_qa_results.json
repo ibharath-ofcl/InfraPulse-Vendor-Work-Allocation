@@ -1,0 +1,554 @@
+[
+  {
+    "timestamp": "2026-11-01T07:57:51.193Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:57:51.196Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:57:53.383Z",
+    "status": "PASS",
+    "role": "VENDOR",
+    "feature": "Authentication",
+    "message": "Successfully logged in as vendor@infrapulse.gov.in",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:57:55.209Z",
+    "status": "PASS",
+    "role": "VENDOR",
+    "feature": "Navigation",
+    "message": "Opened WorkerTrust portal as Vendor",
+    "evidence": "docs/screenshots/wt_vendor_01_workertrust_home.png"
+  },
+  {
+    "timestamp": "2026-11-01T07:57:56.154Z",
+    "status": "PASS",
+    "role": "VENDOR",
+    "feature": "Worker Registration UI",
+    "message": "Register Worker form rendered cleanly",
+    "evidence": "docs/screenshots/wt_vendor_02_register_tab.png"
+  },
+  {
+    "timestamp": "2026-11-01T07:57:57.290Z",
+    "status": "PASS",
+    "role": "VENDOR",
+    "feature": "Worker Directory",
+    "message": "Vendor directory loaded with isolated vendor workforce",
+    "evidence": "docs/screenshots/wt_vendor_05_worker_directory.png"
+  },
+  {
+    "timestamp": "2026-11-01T07:57:58.704Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:57:58.705Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:00.591Z",
+    "status": "PASS",
+    "role": "PROJECT_MANAGER",
+    "feature": "Authentication",
+    "message": "Successfully logged in as pm@infrapulse.gov.in",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:02.571Z",
+    "status": "PASS",
+    "role": "PROJECT_MANAGER",
+    "feature": "Navigation",
+    "message": "Opened WorkerTrust dashboard as Project Manager",
+    "evidence": "docs/screenshots/wt_pm_01_workertrust_home.png"
+  },
+  {
+    "timestamp": "2026-11-01T07:58:03.721Z",
+    "status": "PASS",
+    "role": "PROJECT_MANAGER",
+    "feature": "Verification Queue",
+    "message": "Verification Queue rendered pending worker submissions",
+    "evidence": "docs/screenshots/wt_pm_02_verification_queue.png"
+  },
+  {
+    "timestamp": "2026-11-01T07:58:04.876Z",
+    "status": "PASS",
+    "role": "PROJECT_MANAGER",
+    "feature": "Zone Allocation",
+    "message": "Zone Allocations tab loaded with project assignment matrix",
+    "evidence": "docs/screenshots/wt_pm_05_zone_allocations.png"
+  },
+  {
+    "timestamp": "2026-11-01T07:58:06.309Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:06.309Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:08.225Z",
+    "status": "PASS",
+    "role": "FIELD_ENGINEER",
+    "feature": "Authentication",
+    "message": "Successfully logged in as field@infrapulse.gov.in",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:09.936Z",
+    "status": "PASS",
+    "role": "FIELD_ENGINEER",
+    "feature": "Navigation",
+    "message": "Opened WorkerTrust as Field Engineer",
+    "evidence": "docs/screenshots/wt_field_01_workertrust_home.png"
+  },
+  {
+    "timestamp": "2026-11-01T07:58:11.072Z",
+    "status": "PASS",
+    "role": "FIELD_ENGINEER",
+    "feature": "Gate Terminal",
+    "message": "Site access scanner interface loaded",
+    "evidence": "docs/screenshots/wt_field_02_gate_terminal.png"
+  },
+  {
+    "timestamp": "2026-11-01T07:58:12.217Z",
+    "status": "PASS",
+    "role": "FIELD_ENGINEER",
+    "feature": "Emergency Headcount",
+    "message": "Live muster roll headcount loaded with active personnel breakdown",
+    "evidence": "docs/screenshots/wt_field_04_emergency_headcount.png"
+  },
+  {
+    "timestamp": "2026-11-01T07:58:13.342Z",
+    "status": "PASS",
+    "role": "FIELD_ENGINEER",
+    "feature": "Safety & Incidents",
+    "message": "Incident reporting & investigation board loaded",
+    "evidence": "docs/screenshots/wt_field_05_safety_incidents.png"
+  },
+  {
+    "timestamp": "2026-11-01T07:58:14.753Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:14.753Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:16.637Z",
+    "status": "PASS",
+    "role": "FINANCE_OFFICER",
+    "feature": "Authentication",
+    "message": "Successfully logged in as finance@infrapulse.gov.in",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:18.339Z",
+    "status": "PASS",
+    "role": "FINANCE_OFFICER",
+    "feature": "Navigation",
+    "message": "Finance officer accessed read-only workforce intelligence",
+    "evidence": "docs/screenshots/wt_finance_01_workertrust_home.png"
+  },
+  {
+    "timestamp": "2026-11-01T07:58:18.348Z",
+    "status": "PASS",
+    "role": "FINANCE_OFFICER",
+    "feature": "Role Restriction",
+    "message": "Gate Terminal and Register Worker tabs properly hidden for Finance role",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:19.782Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:19.782Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:21.671Z",
+    "status": "PASS",
+    "role": "PLATFORM_ADMIN",
+    "feature": "Authentication",
+    "message": "Successfully logged in as admin@infrapulse.gov.in",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:21.766Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:21.788Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:21.789Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:21.791Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:21.793Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load zones for project: AxiosError: Request failed with status code 400\n    at settle (http://localhost:3000/node_modules/.vite/deps/axios.js?v=ff5f5f14:1884:12)\n    at XMLHttpRequest.onloadend (http://localhost:3000/node_modules/.vite/deps/axios.js?v=ff5f5f14:2555:7)\n    at Axios.request (http://localhost:3000/node_modules/.vite/deps/axios.js?v=ff5f5f14:3779:43)\n    at async http://localhost:3000/src/services/api.ts:72:24\n    at async Axios.request (http://localhost:3000/node_modules/.vite/deps/axios.js?v=ff5f5f14:3774:14)\n    at async Object.getWorkZones (http://localhost:3000/src/services/workZoneService.ts:13:22)\n    at async loadZonesForProject (http://localhost:3000/src/pages/workertrust/WorkerTrustDashboardPage.tsx?t=1793518123399:144:19)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:21.793Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load zones for project: AxiosError: Request failed with status code 400\n    at settle (http://localhost:3000/node_modules/.vite/deps/axios.js?v=ff5f5f14:1884:12)\n    at XMLHttpRequest.onloadend (http://localhost:3000/node_modules/.vite/deps/axios.js?v=ff5f5f14:2555:7)\n    at Axios.request (http://localhost:3000/node_modules/.vite/deps/axios.js?v=ff5f5f14:3779:43)\n    at async http://localhost:3000/src/services/api.ts:72:24\n    at async Axios.request (http://localhost:3000/node_modules/.vite/deps/axios.js?v=ff5f5f14:3774:14)\n    at async Object.getWorkZones (http://localhost:3000/src/services/workZoneService.ts:13:22)\n    at async loadZonesForProject (http://localhost:3000/src/pages/workertrust/WorkerTrustDashboardPage.tsx?t=1793518123399:144:19)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:23.380Z",
+    "status": "PASS",
+    "role": "PLATFORM_ADMIN",
+    "feature": "WorkerTrust Intelligence",
+    "message": "Admin verified live system-wide workforce KPIs & distribution",
+    "evidence": "docs/screenshots/wt_admin_01_workertrust_analytics.png"
+  },
+  {
+    "timestamp": "2026-11-01T07:58:23.440Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:23.440Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:24.993Z",
+    "status": "PASS",
+    "role": "PLATFORM_ADMIN",
+    "feature": "User Management",
+    "message": "Admin verified revamped user directory layout with KPI cards and aligned table",
+    "evidence": "docs/screenshots/wt_admin_02_user_management.png"
+  },
+  {
+    "timestamp": "2026-11-01T07:58:25.047Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:25.048Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:26.620Z",
+    "status": "PASS",
+    "role": "PLATFORM_ADMIN",
+    "feature": "Cryptographic Audit",
+    "message": "Cryptographic audit ledger loaded with WorkerTrust events",
+    "evidence": "docs/screenshots/wt_admin_03_audit_trail.png"
+  },
+  {
+    "timestamp": "2026-11-01T07:58:26.703Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:26.703Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:28.039Z",
+    "status": "PASS",
+    "role": "MOBILE",
+    "feature": "Viewport 360x800",
+    "message": "Verified responsive layout and zero horizontal overflow on 360x800_mobile_small",
+    "evidence": "docs/screenshots/wt_mobile_360x800_mobile_small.png"
+  },
+  {
+    "timestamp": "2026-11-01T07:58:28.153Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:28.153Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:29.528Z",
+    "status": "PASS",
+    "role": "MOBILE",
+    "feature": "Viewport 375x812",
+    "message": "Verified responsive layout and zero horizontal overflow on 375x812_iphone_x",
+    "evidence": "docs/screenshots/wt_mobile_375x812_iphone_x.png"
+  },
+  {
+    "timestamp": "2026-11-01T07:58:29.601Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:29.603Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:30.947Z",
+    "status": "PASS",
+    "role": "MOBILE",
+    "feature": "Viewport 390x844",
+    "message": "Verified responsive layout and zero horizontal overflow on 390x844_iphone_14",
+    "evidence": "docs/screenshots/wt_mobile_390x844_iphone_14.png"
+  },
+  {
+    "timestamp": "2026-11-01T07:58:31.006Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:31.006Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:32.353Z",
+    "status": "PASS",
+    "role": "MOBILE",
+    "feature": "Viewport 430x932",
+    "message": "Verified responsive layout and zero horizontal overflow on 430x932_iphone_pro_max",
+    "evidence": "docs/screenshots/wt_mobile_430x932_iphone_pro_max.png"
+  },
+  {
+    "timestamp": "2026-11-01T07:58:32.429Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:32.429Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:33.781Z",
+    "status": "PASS",
+    "role": "MOBILE",
+    "feature": "Viewport 768x1024",
+    "message": "Verified responsive layout and zero horizontal overflow on 768x1024_ipad_portrait",
+    "evidence": "docs/screenshots/wt_mobile_768x1024_ipad_portrait.png"
+  },
+  {
+    "timestamp": "2026-11-01T07:58:33.853Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:33.853Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:35.217Z",
+    "status": "PASS",
+    "role": "MOBILE",
+    "feature": "Viewport 1024x768",
+    "message": "Verified responsive layout and zero horizontal overflow on 1024x768_ipad_landscape",
+    "evidence": "docs/screenshots/wt_mobile_1024x768_ipad_landscape.png"
+  },
+  {
+    "timestamp": "2026-11-01T07:58:35.286Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:35.286Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:36.644Z",
+    "status": "PASS",
+    "role": "REGRESSION",
+    "feature": "Projects Module",
+    "message": "Projects dashboard loaded and operational",
+    "evidence": "docs/screenshots/wt_regression_01_projects.png"
+  },
+  {
+    "timestamp": "2026-11-01T07:58:36.700Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:36.700Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:38.073Z",
+    "status": "PASS",
+    "role": "REGRESSION",
+    "feature": "Vendors Module",
+    "message": "Vendor directory and empanelment active",
+    "evidence": "docs/screenshots/wt_regression_02_vendors.png"
+  },
+  {
+    "timestamp": "2026-11-01T07:58:38.133Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:38.134Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:39.502Z",
+    "status": "PASS",
+    "role": "REGRESSION",
+    "feature": "Work Allocation",
+    "message": "Work allocation matrix and spatial dependencies operational",
+    "evidence": "docs/screenshots/wt_regression_03_work_allocation.png"
+  },
+  {
+    "timestamp": "2026-11-01T07:58:39.581Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T07:58:39.582Z",
+    "status": "WARN",
+    "role": "CONSOLE",
+    "feature": "JavaScript Error",
+    "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+    "evidence": ""
+  }
+]

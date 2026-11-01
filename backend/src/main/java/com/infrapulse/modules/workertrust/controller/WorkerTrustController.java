@@ -298,7 +298,7 @@ public class WorkerTrustController {
     // --- Workforce Analytics ---
 
     @GetMapping("/analytics")
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'PROJECT_MANAGER', 'FINANCE_OFFICER') or hasAuthority('WORKER_ANALYTICS')")
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'PROJECT_MANAGER', 'FINANCE_OFFICER', 'VENDOR', 'FIELD_ENGINEER') or hasAuthority('WORKER_ANALYTICS')")
     public ResponseEntity<ApiResponse<WorkforceAnalyticsResponse>> getAnalytics(
         @RequestParam(required = false) String projectId,
         @RequestParam(required = false) String vendorId,

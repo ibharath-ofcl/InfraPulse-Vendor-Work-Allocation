@@ -132,6 +132,15 @@ export const WorkerTrustDashboardPage: React.FC = () => {
   const isAdmin = user?.role === 'PLATFORM_ADMIN';
   const isField = user?.role === 'FIELD_ENGINEER';
 
+  // Role-appropriate default tab selection
+  useEffect(() => {
+    if (user?.role === 'VENDOR') {
+      setActiveTab((prev) => (prev === 'overview' ? 'directory' : prev));
+    } else if (user?.role === 'FIELD_ENGINEER') {
+      setActiveTab((prev) => (prev === 'overview' ? 'site-access' : prev));
+    }
+  }, [user?.role]);
+
   // Load Initial Master Data
   useEffect(() => {
     const loadMasterData = async () => {

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.persistence.criteria.Predicate;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -36,6 +37,17 @@ public class AuditService {
         this.auditEventRepository = auditEventRepository;
         this.chainHeadRepository = chainHeadRepository;
         this.integrityService = integrityService;
+    }
+
+    @PostConstruct
+    public void init() {
+        try {
+            if (chainHeadRepository.findByChainScope("GLOBAL").isEmpty()) {
+                chainHeadRepository.save(new AuditChainHead("GLOBAL", 0L, AuditIntegrityService.GENESIS_HASH));
+            }
+        } catch (Exception e) {
+            log.warn("GLOBAL audit chain head initialization note: {}", e.getMessage());
+        }
     }
 
     /**
@@ -195,8 +207,14 @@ public class AuditService {
 
         AuditChainHead head = chainHeadRepository.findByChainScopeWithLock(scope)
                 .orElseGet(() -> {
-                    AuditChainHead newHead = new AuditChainHead(scope, 0L, AuditIntegrityService.GENESIS_HASH);
-                    return chainHeadRepository.save(newHead);
+                    try {
+                        AuditChainHead newHead = new AuditChainHead(scope, 0L, AuditIntegrityService.GENESIS_HASH);
+                        return chainHeadRepository.saveAndFlush(newHead);
+                    } catch (Exception e) {
+                        return chainHeadRepository.findByChainScope(scope)
+                                .orElseGet(() -> chainHeadRepository.findByChainScopeWithLock(scope)
+                                        .orElseThrow(() -> new IllegalStateException("Failed to acquire chain head for scope " + scope)));
+                    }
                 });
 
         long nextSequence = head.getLastSequence() + 1;

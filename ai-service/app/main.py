@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from app.api.models import router as models_router
 from app.api.inference import router as inference_router
+from app.api.intelligence import router as intelligence_router
 from app.models.model_registry import list_models
 
 app = FastAPI(
@@ -61,6 +62,7 @@ def get_root():
 # Include API Routers
 app.include_router(models_router)
 app.include_router(inference_router)
+app.include_router(intelligence_router)
 
 if __name__ == "__main__":
     import uvicorn

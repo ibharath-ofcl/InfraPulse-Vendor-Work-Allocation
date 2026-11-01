@@ -23,6 +23,10 @@ import com.infrapulse.modules.humanreview.model.ReviewDecisionType;
 import com.infrapulse.modules.humanreview.repository.CorrectiveActionRepository;
 import com.infrapulse.modules.humanreview.repository.HumanInspectionDecisionRepository;
 import com.infrapulse.modules.humanreview.repository.PhysicalMeasurementRepository;
+import com.infrapulse.modules.intelligence.contract.repository.ContractRequirementEvidenceRepository;
+import com.infrapulse.modules.intelligence.risk.model.RiskAlertStatus;
+import com.infrapulse.modules.intelligence.risk.model.RiskLevel;
+import com.infrapulse.modules.intelligence.risk.repository.ProjectRiskAlertRepository;
 import com.infrapulse.modules.project.repository.ProjectVendorRepository;
 import com.infrapulse.modules.quality.entity.QualityAssessment;
 import com.infrapulse.modules.quality.model.AssessmentStatus;
@@ -54,6 +58,8 @@ public class MilestoneEligibilityService {
     private final HumanInspectionDecisionRepository humanInspectionDecisionRepository;
     private final CorrectiveActionRepository correctiveActionRepository;
     private final PhysicalMeasurementRepository physicalMeasurementRepository;
+    private final ContractRequirementEvidenceRepository contractRequirementEvidenceRepository;
+    private final ProjectRiskAlertRepository riskAlertRepository;
     private final AuditService auditService;
     private final ObjectMapper objectMapper;
 
@@ -67,6 +73,8 @@ public class MilestoneEligibilityService {
             HumanInspectionDecisionRepository humanInspectionDecisionRepository,
             CorrectiveActionRepository correctiveActionRepository,
             PhysicalMeasurementRepository physicalMeasurementRepository,
+            ContractRequirementEvidenceRepository contractRequirementEvidenceRepository,
+            ProjectRiskAlertRepository riskAlertRepository,
             AuditService auditService,
             ObjectMapper objectMapper) {
         this.milestoneRepository = milestoneRepository;
@@ -78,6 +86,8 @@ public class MilestoneEligibilityService {
         this.humanInspectionDecisionRepository = humanInspectionDecisionRepository;
         this.correctiveActionRepository = correctiveActionRepository;
         this.physicalMeasurementRepository = physicalMeasurementRepository;
+        this.contractRequirementEvidenceRepository = contractRequirementEvidenceRepository;
+        this.riskAlertRepository = riskAlertRepository;
         this.auditService = auditService;
         this.objectMapper = objectMapper;
     }
@@ -236,6 +246,30 @@ public class MilestoneEligibilityService {
         checklist.put("STAGE11_HUMAN_INSPECTION_APPROVED", hasAssignments && allHumanApprovalsGranted);
         checklist.put("PHYSICAL_MEASUREMENTS_VERIFIED", allMeasurementsVerified);
         checklist.put("MANDATORY_CORRECTIVE_ACTIONS_CLOSED", allCorrectiveActionsClosed);
+
+        // 6. Contract Intelligence Requirements Compliance check (if configured for project)
+        if (milestone.getProject() != null) {
+            String projId = milestone.getProject().getId();
+            long totalReqs = contractRequirementEvidenceRepository.countTotalByProjectId(projId);
+            if (totalReqs > 0) {
+                long compliantReqs = contractRequirementEvidenceRepository.countCompliantByProjectId(projId);
+                boolean contractReqsSatisfied = compliantReqs >= totalReqs;
+                checklist.put("CONTRACT_INTELLIGENCE_REQUIREMENTS_COMPLIANT", contractReqsSatisfied);
+                if (!contractReqsSatisfied) {
+                    blockingConditions.add(String.format("Contract intelligence requirements incomplete: %d/%d compliant (VERIFIED or WAIVED)", compliantReqs, totalReqs));
+                }
+            }
+
+            // 7. Predictive Risk Intelligence - Critical Risk Alert Gate
+            long activeCriticalAlerts = riskAlertRepository.countByProjectIdAndRiskLevelAndAlertStatus(
+                    projId, RiskLevel.CRITICAL, RiskAlertStatus.ACTIVE
+            );
+            boolean noCriticalRisks = activeCriticalAlerts == 0;
+            checklist.put("NO_CRITICAL_PREDICTIVE_RISK_ALERTS", noCriticalRisks);
+            if (!noCriticalRisks) {
+                blockingConditions.add(String.format("Milestone blocked by %d unaddressed CRITICAL predictive risk alert(s)", activeCriticalAlerts));
+            }
+        }
 
         boolean isEligible = blockingConditions.isEmpty();
 

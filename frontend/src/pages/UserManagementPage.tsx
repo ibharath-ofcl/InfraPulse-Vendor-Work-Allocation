@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { PageContainer } from '../components/layout/PageContainer';
 import { PageHeader } from '../components/common/PageHeader';
 import { SearchInput } from '../components/common/SearchInput';
 import { StatusBadge } from '../components/common/StatusBadge';
@@ -8,12 +9,18 @@ import { AuthUser, UserRole, UserStatus } from '../types';
 import { 
   UserPlus, 
   ShieldCheck, 
-  CheckCircle, 
+  CheckCircle2, 
   XCircle, 
   Edit3, 
   AlertTriangle,
   RotateCcw,
-  Users
+  Users,
+  Phone,
+  Clock,
+  KeyRound,
+  ShieldAlert,
+  Filter,
+  CheckCircle
 } from 'lucide-react';
 
 const mockSeedUsers: AuthUser[] = [
@@ -114,12 +121,22 @@ export const UserManagementPage: React.FC = () => {
     return users.filter((u) => {
       const matchesSearch = 
         u.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        u.email.toLowerCase().includes(searchQuery.toLowerCase());
+        u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.role.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
       const matchesStatus = statusFilter === 'ALL' || u.status === statusFilter;
       return matchesSearch && matchesRole && matchesStatus;
     });
   }, [users, searchQuery, roleFilter, statusFilter]);
+
+  // Aggregate metrics
+  const metrics = useMemo(() => {
+    const total = users.length;
+    const active = users.filter((u) => u.status === 'ACTIVE').length;
+    const suspended = users.filter((u) => u.status === 'INACTIVE' || u.status === 'LOCKED').length;
+    const uniqueRoles = new Set(users.map((u) => u.role)).size;
+    return { total, active, suspended, uniqueRoles };
+  }, [users]);
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -209,7 +226,7 @@ export const UserManagementPage: React.FC = () => {
   const getRoleBadgeStyle = (role: UserRole) => {
     switch (role) {
       case 'PLATFORM_ADMIN':
-        return 'bg-navy-900 text-teal-300 border-navy-700';
+        return 'bg-slate-900 text-teal-300 border-slate-700 shadow-sm';
       case 'PROJECT_MANAGER':
         return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'VENDOR':
@@ -223,24 +240,51 @@ export const UserManagementPage: React.FC = () => {
     }
   };
 
+  const formatRoleLabel = (role: UserRole) => {
+    switch (role) {
+      case 'PLATFORM_ADMIN': return 'Platform Admin';
+      case 'PROJECT_MANAGER': return 'Project Manager';
+      case 'VENDOR': return 'Vendor Partner';
+      case 'FIELD_ENGINEER': return 'Field QA Engineer';
+      case 'FINANCE_OFFICER': return 'Finance Officer';
+      default: return role;
+    }
+  };
+
+  const getUserInitials = (fullName: string) => {
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
+  const resetFilters = () => {
+    setSearchQuery('');
+    setRoleFilter('ALL');
+    setStatusFilter('ALL');
+  };
+
+  const hasActiveFilters = searchQuery !== '' || roleFilter !== 'ALL' || statusFilter !== 'ALL';
+
   return (
-    <div className="space-y-6">
+    <PageContainer className="space-y-6">
+      {/* Page Title & Top Actions */}
       <PageHeader
         title="Platform User Management"
         subtitle="Manage municipal infrastructure operators, assign authorized platform roles, and audit account statuses."
         badge={
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-800 border border-teal-200">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-800 border border-teal-200 shadow-xs">
             <ShieldCheck className="w-3.5 h-3.5 text-teal-600" />
             <span>Admin Authorization Enforced</span>
           </div>
         }
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={fetchUsers}
-              className="px-3 py-2 text-xs font-medium bg-white hover:bg-slate-50 border border-surface-border text-ink-primary rounded-lg transition-colors flex items-center gap-1.5"
+              className="px-3.5 py-2 text-xs font-medium bg-white hover:bg-slate-50 border border-surface-border text-ink-primary rounded-lg transition-all shadow-xs flex items-center gap-1.5"
+              title="Reload user list from database"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
+              <RotateCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-teal-600' : 'text-slate-500'}`} />
               <span>Refresh</span>
             </button>
             <button
@@ -248,7 +292,7 @@ export const UserManagementPage: React.FC = () => {
                 setActionError(null);
                 setAddModalOpen(true);
               }}
-              className="px-3.5 py-2 text-xs font-medium bg-navy-900 hover:bg-navy-800 text-white rounded-lg transition-colors shadow-sm flex items-center gap-1.5"
+              className="px-4 py-2 text-xs font-semibold bg-navy-900 hover:bg-navy-800 text-white rounded-lg transition-all shadow-sm flex items-center gap-1.5"
             >
               <UserPlus className="w-4 h-4 text-teal-400" />
               <span>Provision User</span>
@@ -257,39 +301,96 @@ export const UserManagementPage: React.FC = () => {
         }
       />
 
+      {/* KPI Overview Metrics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white p-4 rounded-xl border border-surface-border shadow-card hover:shadow-card-hover transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-ink-secondary">Total Operators</span>
+            <div className="p-2 bg-teal-50 text-teal-700 rounded-lg border border-teal-100">
+              <Users className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-bold tracking-tight text-ink-primary">{metrics.total}</span>
+            <span className="text-[11px] font-medium text-emerald-600">Registered Accounts</span>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl border border-surface-border shadow-card hover:shadow-card-hover transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-ink-secondary">Active Accounts</span>
+            <div className="p-2 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-100">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-bold tracking-tight text-emerald-700">{metrics.active}</span>
+            <span className="text-[11px] font-medium text-ink-muted">100% Operational</span>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl border border-surface-border shadow-card hover:shadow-card-hover transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-ink-secondary">Security Holds</span>
+            <div className="p-2 bg-rose-50 text-rose-700 rounded-lg border border-rose-100">
+              <ShieldAlert className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-bold tracking-tight text-ink-primary">{metrics.suspended}</span>
+            <span className="text-[11px] font-medium text-ink-muted">{metrics.suspended === 0 ? 'Zero Violations' : 'Review Required'}</span>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl border border-surface-border shadow-card hover:shadow-card-hover transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-ink-secondary">Authorized Roles</span>
+            <div className="p-2 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-100">
+              <KeyRound className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-bold tracking-tight text-indigo-700">{metrics.uniqueRoles}</span>
+            <span className="text-[11px] font-medium text-ink-muted">RBAC System Tiers</span>
+          </div>
+        </div>
+      </div>
+
       {/* Filter and Search Bar */}
-      <div className="bg-white p-4 rounded-xl border border-surface-border shadow-card flex flex-col md:flex-row items-center justify-between gap-3">
-        <div className="w-full md:w-80">
+      <div className="bg-white p-4 rounded-xl border border-surface-border shadow-card flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        <div className="w-full md:w-96">
           <SearchInput
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholder="Search user name or official email..."
+            placeholder="Search by name, official email, or role..."
+            className="w-full"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-          <div className="flex items-center gap-1.5 text-xs text-ink-secondary">
-            <span>Role:</span>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex items-center gap-1.5 text-xs text-ink-secondary bg-slate-50 border border-surface-border rounded-lg px-2.5 py-1">
+            <Filter className="w-3.5 h-3.5 text-ink-muted" />
+            <span className="font-medium text-ink-primary">Role:</span>
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="text-xs bg-slate-50 border border-surface-border rounded-lg px-2.5 py-1.5 text-ink-primary focus:outline-none"
+              className="text-xs bg-transparent border-0 text-ink-primary font-medium focus:outline-none cursor-pointer py-1"
             >
               <option value="ALL">All Roles</option>
               <option value="PLATFORM_ADMIN">Platform Admin</option>
               <option value="PROJECT_MANAGER">Project Manager</option>
-              <option value="VENDOR">Vendor</option>
-              <option value="FIELD_ENGINEER">Field Engineer</option>
+              <option value="VENDOR">Vendor Partner</option>
+              <option value="FIELD_ENGINEER">Field QA Engineer</option>
               <option value="FINANCE_OFFICER">Finance Officer</option>
             </select>
           </div>
 
-          <div className="flex items-center gap-1.5 text-xs text-ink-secondary">
-            <span>Status:</span>
+          <div className="flex items-center gap-1.5 text-xs text-ink-secondary bg-slate-50 border border-surface-border rounded-lg px-2.5 py-1">
+            <span className="font-medium text-ink-primary">Status:</span>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="text-xs bg-slate-50 border border-surface-border rounded-lg px-2.5 py-1.5 text-ink-primary focus:outline-none"
+              className="text-xs bg-transparent border-0 text-ink-primary font-medium focus:outline-none cursor-pointer py-1"
             >
               <option value="ALL">All Statuses</option>
               <option value="ACTIVE">Active</option>
@@ -297,95 +398,184 @@ export const UserManagementPage: React.FC = () => {
               <option value="LOCKED">Locked</option>
             </select>
           </div>
+
+          {hasActiveFilters && (
+            <button
+              onClick={resetFilters}
+              className="px-2.5 py-1.5 text-xs font-medium text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors border border-rose-200"
+            >
+              Reset Filters
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Users Table */}
+      {/* Users Table Card */}
       <div className="bg-white rounded-xl border border-surface-border shadow-card overflow-hidden">
+        {/* Table Top Header Bar */}
+        <div className="px-5 py-3.5 bg-slate-50/75 border-b border-surface-border flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-teal-600" />
+            <h2 className="text-xs font-bold text-ink-primary tracking-wide uppercase">
+              Platform Operator Directory
+            </h2>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-teal-100 text-teal-800">
+              {filteredUsers.length} {filteredUsers.length === 1 ? 'Operator' : 'Operators'}
+            </span>
+          </div>
+          <span className="text-[11px] text-ink-muted hidden sm:inline">
+            Role-Based Access Control (RBAC) Governed
+          </span>
+        </div>
+
         {loading ? (
-          <div className="p-12 text-center text-xs text-ink-secondary flex items-center justify-center gap-2">
-            <div className="w-4 h-4 border-2 border-teal-600 border-t-transparent rounded-full animate-spin" />
-            <span>Loading user directory...</span>
+          <div className="p-16 text-center text-xs text-ink-secondary flex flex-col items-center justify-center gap-3">
+            <div className="w-6 h-6 border-2 border-teal-600 border-t-transparent rounded-full animate-spin" />
+            <span className="font-medium">Loading user directory...</span>
           </div>
         ) : filteredUsers.length === 0 ? (
-          <div className="p-12 text-center space-y-2">
-            <Users className="w-8 h-8 text-ink-muted mx-auto" />
-            <p className="text-xs font-semibold text-ink-primary">No users match your filters</p>
-            <p className="text-[11px] text-ink-secondary">Try adjusting your search query or reset status filters.</p>
+          <div className="p-16 text-center space-y-3">
+            <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-ink-muted">
+              <Users className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-ink-primary">No users match your filters</p>
+              <p className="text-xs text-ink-secondary mt-1">Try adjusting your search query or reset role and status filters.</p>
+            </div>
+            {hasActiveFilters && (
+              <button
+                onClick={resetFilters}
+                className="mt-2 px-3 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-ink-primary rounded-lg transition-colors"
+              >
+                Clear All Filters
+              </button>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+            <table className="w-full text-left border-collapse text-xs table-auto sm:table-fixed">
               <thead>
-                <tr className="bg-slate-50 border-b border-surface-border text-ink-secondary font-semibold">
-                  <th className="py-3 px-4">Operator / User</th>
-                  <th className="py-3 px-4">Contact Phone</th>
-                  <th className="py-3 px-4">Assigned Role</th>
-                  <th className="py-3 px-4">Account Status</th>
-                  <th className="py-3 px-4">Last Activity</th>
-                  <th className="py-3 px-4 text-right">Administrative Actions</th>
+                <tr className="bg-slate-100/60 border-b border-surface-border text-ink-secondary text-[11px] font-semibold uppercase tracking-wider">
+                  <th className="py-3.5 px-5 sm:w-[30%]">Operator / User</th>
+                  <th className="py-3.5 px-4 sm:w-[18%]">Contact Phone</th>
+                  <th className="py-3.5 px-4 sm:w-[18%]">Assigned Role</th>
+                  <th className="py-3.5 px-4 sm:w-[12%]">Account Status</th>
+                  <th className="py-3.5 px-4 sm:w-[12%]">Last Activity</th>
+                  <th className="py-3.5 px-5 text-right sm:w-[10%]">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-border">
-                {filteredUsers.map((u) => (
-                  <tr key={u.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="py-3 px-4">
-                      <div className="font-semibold text-ink-primary">{u.fullName}</div>
-                      <div className="text-[11px] text-ink-muted">{u.email}</div>
-                    </td>
-                    <td className="py-3 px-4 text-ink-secondary">
-                      {u.phoneNumber || '&mdash;'}
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${getRoleBadgeStyle(u.role)}`}>
-                        {u.role}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <StatusBadge status={u.status} />
-                    </td>
-                    <td className="py-3 px-4 text-ink-muted text-[11px]">
-                      {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : 'Never logged in'}
-                    </td>
-                    <td className="py-3 px-4 text-right space-x-1.5 whitespace-nowrap">
-                      <button
-                        onClick={() => {
-                          setSelectedUser(u);
-                          setTargetRole(u.role);
-                          setActionError(null);
-                          setEditRoleModalOpen(true);
-                        }}
-                        className="px-2.5 py-1 text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-ink-primary rounded transition-colors inline-flex items-center gap-1"
-                        title="Change user role"
-                      >
-                        <Edit3 className="w-3 h-3 text-ink-muted" />
-                        <span>Role</span>
-                      </button>
+                {filteredUsers.map((u) => {
+                  const initials = getUserInitials(u.fullName);
+                  return (
+                    <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
+                      {/* Operator / User with Avatar */}
+                      <td className="py-3.5 px-5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-navy-900 text-teal-300 font-bold text-xs flex items-center justify-center shrink-0 border border-navy-700 shadow-2xs">
+                            {initials}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-semibold text-ink-primary text-xs truncate" title={u.fullName}>
+                              {u.fullName}
+                            </div>
+                            <div className="text-[11px] text-ink-muted truncate" title={u.email}>
+                              {u.email}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
 
-                      <button
-                        onClick={() => {
-                          setSelectedUser(u);
-                          setTargetStatus(u.status);
-                          setActionError(null);
-                          setStatusModalOpen(true);
-                        }}
-                        className={`px-2.5 py-1 text-[11px] font-medium rounded transition-colors inline-flex items-center gap-1 ${
-                          u.status === 'ACTIVE' 
-                            ? 'bg-rose-50 hover:bg-rose-100 text-rose-700' 
-                            : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700'
-                        }`}
-                        title="Modify account status"
-                      >
-                        {u.status === 'ACTIVE' ? <XCircle className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
-                        <span>{u.status === 'ACTIVE' ? 'Suspend' : 'Activate'}</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      {/* Contact Phone */}
+                      <td className="py-3.5 px-4 text-ink-secondary">
+                        <div className="flex items-center gap-1.5 text-[11px]">
+                          <Phone className="w-3 h-3 text-ink-muted shrink-0" />
+                          <span className="font-mono">{u.phoneNumber || '—'}</span>
+                        </div>
+                      </td>
+
+                      {/* Assigned Role */}
+                      <td className="py-3.5 px-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${getRoleBadgeStyle(u.role)}`}>
+                          {formatRoleLabel(u.role)}
+                        </span>
+                      </td>
+
+                      {/* Account Status */}
+                      <td className="py-3.5 px-4">
+                        <StatusBadge status={u.status} size="sm" />
+                      </td>
+
+                      {/* Last Activity */}
+                      <td className="py-3.5 px-4 text-ink-muted text-[11px]">
+                        <div className="flex items-center gap-1 text-[11px]">
+                          <Clock className="w-3 h-3 text-ink-muted shrink-0" />
+                          <span>
+                            {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString(undefined, {
+                              year: 'numeric',
+                              month: 'numeric',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            }) : 'Never'}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Administrative Actions */}
+                      <td className="py-3.5 px-5 text-right whitespace-nowrap">
+                        <div className="inline-flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => {
+                              setSelectedUser(u);
+                              setTargetRole(u.role);
+                              setActionError(null);
+                              setEditRoleModalOpen(true);
+                            }}
+                            className="px-2.5 py-1 text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-ink-primary rounded-md transition-colors inline-flex items-center gap-1 border border-surface-border"
+                            title="Change assigned role"
+                          >
+                            <Edit3 className="w-3 h-3 text-ink-secondary" />
+                            <span>Role</span>
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setSelectedUser(u);
+                              setTargetStatus(u.status);
+                              setActionError(null);
+                              setStatusModalOpen(true);
+                            }}
+                            className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition-colors inline-flex items-center gap-1 border ${
+                              u.status === 'ACTIVE' 
+                                ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200' 
+                                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
+                            }`}
+                            title="Modify operational account status"
+                          >
+                            {u.status === 'ACTIVE' ? <XCircle className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
+                            <span>{u.status === 'ACTIVE' ? 'Suspend' : 'Activate'}</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
+
+        {/* Table Bottom Footer Summary */}
+        <div className="px-5 py-3 bg-slate-50/75 border-t border-surface-border flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-ink-secondary">
+          <div>
+            Showing <span className="font-semibold text-ink-primary">{filteredUsers.length}</span> of <span className="font-semibold text-ink-primary">{users.length}</span> registered platform operators
+          </div>
+          <div className="flex items-center gap-1.5 text-teal-700 font-medium">
+            <ShieldCheck className="w-3.5 h-3.5 text-teal-600" />
+            <span>Tokens cryptographically signed via HS512 JWT</span>
+          </div>
+        </div>
       </div>
 
       {/* Provision User Modal */}
@@ -470,14 +660,14 @@ export const UserManagementPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setAddModalOpen(false)}
-              className="px-3 py-2 text-xs text-ink-secondary hover:bg-slate-100 rounded-lg"
+              className="px-3 py-2 text-xs text-ink-secondary hover:bg-slate-100 rounded-lg transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 text-xs bg-navy-900 hover:bg-navy-800 text-white rounded-lg font-medium shadow-sm disabled:opacity-50"
+              className="px-4 py-2 text-xs bg-navy-900 hover:bg-navy-800 text-white rounded-lg font-medium shadow-sm disabled:opacity-50 transition-colors"
             >
               {submitting ? 'Creating User...' : 'Provision User'}
             </button>
@@ -507,11 +697,11 @@ export const UserManagementPage: React.FC = () => {
               onChange={(e) => setTargetRole(e.target.value as UserRole)}
               className="w-full px-3 py-2 text-xs border border-surface-border rounded-lg outline-none bg-white"
             >
-              <option value="PLATFORM_ADMIN">PLATFORM_ADMIN</option>
-              <option value="PROJECT_MANAGER">PROJECT_MANAGER</option>
-              <option value="VENDOR">VENDOR</option>
-              <option value="FIELD_ENGINEER">FIELD_ENGINEER</option>
-              <option value="FINANCE_OFFICER">FINANCE_OFFICER</option>
+              <option value="PLATFORM_ADMIN">PLATFORM_ADMIN &mdash; Full Platform Governance</option>
+              <option value="PROJECT_MANAGER">PROJECT_MANAGER &mdash; Projects &amp; Allocation</option>
+              <option value="VENDOR">VENDOR &mdash; Execution &amp; Evidence</option>
+              <option value="FIELD_ENGINEER">FIELD_ENGINEER &mdash; Field Inspections &amp; QA</option>
+              <option value="FINANCE_OFFICER">FINANCE_OFFICER &mdash; Escrow &amp; Disbursements</option>
             </select>
           </div>
 
@@ -523,14 +713,14 @@ export const UserManagementPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setEditRoleModalOpen(false)}
-              className="px-3 py-2 text-xs text-ink-secondary hover:bg-slate-100 rounded-lg"
+              className="px-3 py-2 text-xs text-ink-secondary hover:bg-slate-100 rounded-lg transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 text-xs bg-navy-900 hover:bg-navy-800 text-white rounded-lg font-medium disabled:opacity-50"
+              className="px-4 py-2 text-xs bg-navy-900 hover:bg-navy-800 text-white rounded-lg font-medium disabled:opacity-50 transition-colors"
             >
               {submitting ? 'Updating...' : 'Save Role Assignment'}
             </button>
@@ -570,20 +760,20 @@ export const UserManagementPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setStatusModalOpen(false)}
-              className="px-3 py-2 text-xs text-ink-secondary hover:bg-slate-100 rounded-lg"
+              className="px-3 py-2 text-xs text-ink-secondary hover:bg-slate-100 rounded-lg transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 text-xs bg-navy-900 hover:bg-navy-800 text-white rounded-lg font-medium disabled:opacity-50"
+              className="px-4 py-2 text-xs bg-navy-900 hover:bg-navy-800 text-white rounded-lg font-medium disabled:opacity-50 transition-colors"
             >
               {submitting ? 'Updating...' : 'Save Status'}
             </button>
           </div>
         </form>
       </Modal>
-    </div>
+    </PageContainer>
   );
 };

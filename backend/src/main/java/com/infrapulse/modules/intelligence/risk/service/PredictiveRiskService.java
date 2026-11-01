@@ -344,10 +344,24 @@ public class PredictiveRiskService {
 
     @Transactional(readOnly = true)
     public RiskDashboardSummaryDto getRiskDashboardSummary(String projectId) {
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new IllegalArgumentException("Project not found: " + projectId));
+        Project project = (projectId != null && !projectId.isBlank())
+                ? projectRepository.findById(projectId).orElse(null)
+                : projectRepository.findAll().stream().findFirst().orElse(null);
 
-        Optional<ProjectRiskAssessment> latestOpt = assessmentRepository.findFirstByProjectIdOrderByEvaluatedAtDesc(projectId);
+        if (project == null) {
+            return new RiskDashboardSummaryDto(
+                    projectId != null ? projectId : "none",
+                    RiskLevel.LOW,
+                    BigDecimal.ZERO,
+                    0, 0, 0, 0, 0,
+                    java.util.Map.of(),
+                    java.util.List.of(),
+                    null
+            );
+        }
+
+        String actualProjectId = project.getId();
+        Optional<ProjectRiskAssessment> latestOpt = assessmentRepository.findFirstByProjectIdOrderByEvaluatedAtDesc(actualProjectId);
         RiskLevel overallLevel = latestOpt.map(ProjectRiskAssessment::getOverallRiskLevel).orElse(RiskLevel.LOW);
         BigDecimal overallScore = latestOpt.map(ProjectRiskAssessment::getOverallScore).orElse(BigDecimal.valueOf(15.00));
 

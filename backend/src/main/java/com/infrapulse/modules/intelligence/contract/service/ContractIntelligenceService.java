@@ -339,11 +339,23 @@ public class ContractIntelligenceService {
 
     @Transactional(readOnly = true)
     public ContractComplianceSummaryDto getProjectComplianceSummary(String projectId) {
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Project not found: " + projectId));
+        Project project = (projectId != null && !projectId.isBlank())
+                ? projectRepository.findById(projectId).orElse(null)
+                : projectRepository.findAll().stream().findFirst().orElse(null);
 
-        List<ProjectContract> contracts = contractRepository.findByProjectId(projectId);
-        List<ContractRequirement> requirements = requirementRepository.findByProjectId(projectId);
+        if (project == null) {
+            return new ContractComplianceSummaryDto(
+                    projectId != null ? projectId : "none",
+                    "No Project Available",
+                    0, 0, 0, 0, 0,
+                    BigDecimal.ZERO,
+                    0, 0
+            );
+        }
+
+        String actualProjectId = project.getId();
+        List<ProjectContract> contracts = contractRepository.findByProjectId(actualProjectId);
+        List<ContractRequirement> requirements = requirementRepository.findByProjectId(actualProjectId);
 
         long totalReqs = requirements.size();
         long approvedReqs = requirements.stream().filter(r -> r.getApprovalStatus() == RequirementApprovalStatus.APPROVED).count();

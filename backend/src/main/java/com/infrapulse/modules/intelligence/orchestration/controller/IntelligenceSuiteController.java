@@ -20,7 +20,7 @@ public class IntelligenceSuiteController {
     @GetMapping("/overview")
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'PROJECT_MANAGER', 'VENDOR', 'FIELD_ENGINEER', 'FINANCE_OFFICER') or hasAuthority('INTELLIGENCE_VIEW')")
     public ResponseEntity<ApiResponse<IntelligenceOverviewDto>> getProjectIntelligenceOverview(
-            @RequestParam String projectId
+            @RequestParam(required = false) String projectId
     ) {
         IntelligenceOverviewDto res = orchestrationService.getProjectIntelligenceOverview(projectId);
         return ResponseEntity.ok(ApiResponse.success("Project intelligence overview retrieved", res));

@@ -81,7 +81,7 @@ public class PredictiveRiskController {
     @GetMapping("/dashboard")
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'PROJECT_MANAGER', 'VENDOR', 'FIELD_ENGINEER', 'FINANCE_OFFICER') or hasAuthority('RISK_VIEW')")
     public ResponseEntity<ApiResponse<RiskDashboardSummaryDto>> getRiskDashboardSummary(
-            @RequestParam String projectId
+            @RequestParam(required = false) String projectId
     ) {
         RiskDashboardSummaryDto res = riskService.getRiskDashboardSummary(projectId);
         return ResponseEntity.ok(ApiResponse.success("Risk dashboard summary retrieved", res));

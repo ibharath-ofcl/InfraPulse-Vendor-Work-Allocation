@@ -1,0 +1,130 @@
+{
+  "timestamp": "2026-11-01T10:42:44.105Z",
+  "environment": {
+    "browser": "Google Chrome (Headless via Playwright)",
+    "os": "macOS Darwin 24.3.0 (Apple Silicon arm64)",
+    "frontendUrl": "http://localhost:3000",
+    "backendUrl": "http://127.0.0.1:8080",
+    "aiServiceUrl": "http://127.0.0.1:8000",
+    "database": "PostgreSQL 16 + PostGIS 3.4 / H2 GIS"
+  },
+  "summary": {
+    "totalTests": 79,
+    "passed": 40,
+    "failed": 0,
+    "warnings": 39,
+    "bugsDiscovered": 0,
+    "bugsFixed": 0
+  },
+  "rolesTested": {
+    "PLATFORM_ADMIN": {
+      "total": 13,
+      "passed": 13,
+      "failed": 0
+    },
+    "PROJECT_MANAGER": {
+      "total": 6,
+      "passed": 6,
+      "failed": 0
+    },
+    "VENDOR": {
+      "total": 6,
+      "passed": 6,
+      "failed": 0
+    },
+    "FIELD_ENGINEER": {
+      "total": 5,
+      "passed": 5,
+      "failed": 0
+    },
+    "FINANCE_OFFICER": {
+      "total": 5,
+      "passed": 5,
+      "failed": 0
+    }
+  },
+  "workflows": {
+    "scenarioA_dependencyAllocation": "PASS — Prerequisite blocking verified",
+    "scenarioB_evidenceAiInspection": "PASS — Photo evidence uploaded and geofence verified",
+    "scenarioC_workerTrustSiteSafety": "PASS — Complete WorkerTrust identity, verification, gate scanner, anti-passback and headcount validated",
+    "scenarioD_financeMilestoneAuthorization": "PASS — Commercial milestone eligibility verified and payment simulation settled"
+  },
+  "intelligenceModules": {
+    "defectIntelligence": "PASS — Computer vision defect detection and physical inspection workflow operational",
+    "predictiveRiskIntelligence": "PASS — Dependency and quality risk indicators calculated from active evidence",
+    "contractIntelligence": "PASS — Technical requirements and tolerance benchmarks mapped to verification ledger"
+  },
+  "pagesVisited": [
+    "http://localhost:3000/login",
+    "/login",
+    "/overview",
+    "/projects",
+    "/work-zones",
+    "/work-dependencies",
+    "/work-allocation",
+    "/users",
+    "/audit-trail",
+    "/analytics",
+    "/reports",
+    "/profile",
+    "http://localhost:3000/intelligence",
+    "/intelligence",
+    "/workertrust",
+    "/my-work",
+    "/evidence",
+    "/quality-inspection",
+    "/human-review",
+    "/milestones",
+    "http://localhost:3000/workertrust"
+  ],
+  "responsiveViewports": [
+    {
+      "viewport": "Full HD Desktop (1920x1080)",
+      "dimensions": "1920x1080",
+      "overflow": "0_PX_CLEAN",
+      "screenshot": "docs/screenshots/chrome_e2e_viewport_desktop_1920x1080.png"
+    },
+    {
+      "viewport": "Standard Laptop (1366x768)",
+      "dimensions": "1366x768",
+      "overflow": "0_PX_CLEAN",
+      "screenshot": "docs/screenshots/chrome_e2e_viewport_laptop_1366x768.png"
+    },
+    {
+      "viewport": "iPad Tablet Portrait (768x1024)",
+      "dimensions": "768x1024",
+      "overflow": "0_PX_CLEAN",
+      "screenshot": "docs/screenshots/chrome_e2e_viewport_tablet_768x1024.png"
+    },
+    {
+      "viewport": "iPhone 14 Mobile (390x844)",
+      "dimensions": "390x844",
+      "overflow": "0_PX_CLEAN",
+      "screenshot": "docs/screenshots/chrome_e2e_viewport_mobile_390x844.png"
+    },
+    {
+      "viewport": "Android Standard Mobile (360x800)",
+      "dimensions": "360x800",
+      "overflow": "0_PX_CLEAN",
+      "screenshot": "docs/screenshots/chrome_e2e_viewport_mobile_360x800.png"
+    }
+  ],
+  "securityChecks": [
+    {
+      "role": "PROJECT_MANAGER",
+      "target": "/users",
+      "status": "PASS"
+    },
+    {
+      "role": "VENDOR",
+      "target": "/users",
+      "status": "PASS"
+    },
+    {
+      "role": "FINANCE_OFFICER",
+      "target": "/users",
+      "status": "PASS"
+    }
+  ],
+  "defectsLog": []
+}

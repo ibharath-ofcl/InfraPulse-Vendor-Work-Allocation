@@ -367,6 +367,7 @@ export const WorkZonesPage: React.FC = () => {
                 return (
                   <div
                     key={zone.id}
+                    data-zone-item={zone.zoneCode}
                     onClick={() => setSelectedZone(zone)}
                     className={`p-3.5 rounded-lg border transition-all cursor-pointer ${
                       isSelected

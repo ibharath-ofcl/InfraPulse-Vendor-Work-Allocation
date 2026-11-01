@@ -91,7 +91,7 @@ public class DefectIntelligenceController {
     @GetMapping("/summary")
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'PROJECT_MANAGER', 'VENDOR', 'FIELD_ENGINEER', 'FINANCE_OFFICER') or hasAuthority('DEFECT_VIEW')")
     public ResponseEntity<ApiResponse<DefectDashboardSummaryDto>> getDefectDashboardSummary(
-            @RequestParam String projectId
+            @RequestParam(required = false) String projectId
     ) {
         DefectDashboardSummaryDto res = defectService.getDefectDashboardSummary(projectId);
         return ResponseEntity.ok(ApiResponse.success("Defect dashboard summary retrieved", res));

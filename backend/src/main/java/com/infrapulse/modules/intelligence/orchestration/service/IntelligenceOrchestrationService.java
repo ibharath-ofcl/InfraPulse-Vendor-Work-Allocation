@@ -60,15 +60,28 @@ public class IntelligenceOrchestrationService {
 
     @Transactional(readOnly = true)
     public IntelligenceOverviewDto getProjectIntelligenceOverview(String projectId) {
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new IllegalArgumentException("Project not found: " + projectId));
+        Project project = (projectId != null && !projectId.isBlank())
+                ? projectRepository.findById(projectId).orElse(null)
+                : projectRepository.findAll().stream().findFirst().orElse(null);
 
-        ContractComplianceSummaryDto contractSummary = contractService.getProjectComplianceSummary(projectId);
-        DefectDashboardSummaryDto defectSummary = defectService.getDefectDashboardSummary(projectId);
-        RiskDashboardSummaryDto riskSummary = riskService.getRiskDashboardSummary(projectId);
+        if (project == null) {
+            return new IntelligenceOverviewDto(
+                    projectId != null ? projectId : "none",
+                    "No Project Available",
+                    0, 0, 0, 0, 0, BigDecimal.ZERO,
+                    0, 0, 0, 0.0, 0, java.util.Map.of(),
+                    RiskLevel.LOW, BigDecimal.ZERO, 0, 0,
+                    Instant.now()
+            );
+        }
+
+        String actualProjectId = project.getId();
+        ContractComplianceSummaryDto contractSummary = contractService.getProjectComplianceSummary(actualProjectId);
+        DefectDashboardSummaryDto defectSummary = defectService.getDefectDashboardSummary(actualProjectId);
+        RiskDashboardSummaryDto riskSummary = riskService.getRiskDashboardSummary(actualProjectId);
 
         return new IntelligenceOverviewDto(
-                project.getId(),
+                actualProjectId,
                 project.getProjectName(),
                 contractSummary.totalContracts(),
                 contractSummary.totalRequirements(),

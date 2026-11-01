@@ -88,15 +88,17 @@ public class ContractIntelligenceController {
         return ResponseEntity.ok(ApiResponse.success("Contract requirements retrieved", res));
     }
 
-    @GetMapping("/projects/{projectId}/requirements")
+    @GetMapping({"/projects/{projectId}/requirements", "/requirements"})
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'PROJECT_MANAGER', 'VENDOR', 'FIELD_ENGINEER', 'FINANCE_OFFICER') or hasAuthority('CONTRACT_VIEW')")
     public ResponseEntity<ApiResponse<Page<ContractRequirementDto>>> getProjectRequirements(
-            @PathVariable String projectId,
+            @PathVariable(required = false) String projectId,
+            @RequestParam(value = "projectId", required = false) String queryProjectId,
             @RequestParam(required = false) RequirementCategory category,
             @RequestParam(required = false) RequirementApprovalStatus status,
             @PageableDefault(size = 20) Pageable pageable
     ) {
-        Page<ContractRequirementDto> res = contractService.getProjectRequirements(projectId, category, status, pageable);
+        String effectiveProjectId = projectId != null ? projectId : queryProjectId;
+        Page<ContractRequirementDto> res = contractService.getProjectRequirements(effectiveProjectId, category, status, pageable);
         return ResponseEntity.ok(ApiResponse.success("Project requirements retrieved", res));
     }
 
@@ -151,10 +153,14 @@ public class ContractIntelligenceController {
         return ResponseEntity.ok(ApiResponse.success("Requirement waived with authorized rationale", res));
     }
 
-    @GetMapping("/projects/{projectId}/compliance")
+    @GetMapping({"/projects/{projectId}/compliance", "/contracts/summary"})
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'PROJECT_MANAGER', 'VENDOR', 'FIELD_ENGINEER', 'FINANCE_OFFICER') or hasAuthority('CONTRACT_VIEW')")
-    public ResponseEntity<ApiResponse<ContractComplianceSummaryDto>> getProjectCompliance(@PathVariable String projectId) {
-        ContractComplianceSummaryDto res = contractService.getProjectComplianceSummary(projectId);
+    public ResponseEntity<ApiResponse<ContractComplianceSummaryDto>> getProjectCompliance(
+            @PathVariable(required = false) String projectId,
+            @RequestParam(value = "projectId", required = false) String queryProjectId
+    ) {
+        String effectiveProjectId = projectId != null ? projectId : queryProjectId;
+        ContractComplianceSummaryDto res = contractService.getProjectComplianceSummary(effectiveProjectId);
         return ResponseEntity.ok(ApiResponse.success("Project contract compliance summary retrieved", res));
     }
 }

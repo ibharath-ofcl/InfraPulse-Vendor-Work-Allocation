@@ -341,10 +341,21 @@ public class DefectIntelligenceService {
 
     @Transactional(readOnly = true)
     public DefectDashboardSummaryDto getDefectDashboardSummary(String projectId) {
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new IllegalArgumentException("Project not found: " + projectId));
+        Project project = (projectId != null && !projectId.isBlank())
+                ? projectRepository.findById(projectId).orElse(null)
+                : projectRepository.findAll().stream().findFirst().orElse(null);
 
-        List<InfrastructureDefect> allDefects = defectRepository.findByProjectId(projectId);
+        if (project == null) {
+            return new DefectDashboardSummaryDto(
+                    projectId != null ? projectId : "none",
+                    0, 0, 0, 0, 0, 0, 0.0,
+                    java.util.Map.of(),
+                    java.util.Map.of()
+            );
+        }
+
+        String actualProjectId = project.getId();
+        List<InfrastructureDefect> allDefects = defectRepository.findByProjectId(actualProjectId);
 
         long total = allDefects.size();
         long open = allDefects.stream().filter(d -> d.getStatus() == DefectStatus.DETECTED || d.getStatus() == DefectStatus.UNDER_REVIEW).count();

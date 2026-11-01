@@ -271,6 +271,7 @@ export const ProjectsPage: React.FC = () => {
             {projects.map((project) => (
               <div
                 key={project.id}
+                data-project-item={project.projectCode}
                 onClick={() => navigate(`/projects/${project.id}`)}
                 className="bg-white rounded-xl p-5 border border-surface-border shadow-card hover:shadow-card-hover hover:border-teal-500/30 transition-all cursor-pointer flex flex-col justify-between group"
               >

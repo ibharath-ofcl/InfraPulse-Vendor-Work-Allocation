@@ -50,7 +50,7 @@ public class AuditController {
     }
 
     @GetMapping("/audit-events")
-    @PreAuthorize("hasAnyAuthority('VIEW_AUDIT_TRAIL', 'PLATFORM_ADMIN')")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN') or hasAuthority('VIEW_AUDIT_TRAIL')")
     public ResponseEntity<ApiResponse<Page<AuditEvent>>> getAuditEvents(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) AuditCategory category,

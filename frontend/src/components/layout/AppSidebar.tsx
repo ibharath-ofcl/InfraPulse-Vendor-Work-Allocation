@@ -65,6 +65,12 @@ const navGroups: NavGroupDef[] = [
     ],
   },
   {
+    groupTitle: 'WORKERTRUST & SAFETY',
+    items: [
+      { label: 'WorkerTrust Workforce', path: '/workertrust', icon: ShieldCheck, highlight: true, requiredPermission: 'WORKER_VIEW' },
+    ],
+  },
+  {
     groupTitle: 'FIELD OPERATIONS',
     items: [
       { label: 'My Work Orders', path: '/my-work', icon: Briefcase, highlight: true, requiredPermission: 'WORK_ASSIGNMENT_ACCEPT' },

@@ -1,0 +1,15 @@
+package com.infrapulse.modules.workertrust.enums;
+
+public enum SiteBlockingReason {
+    WORKER_NOT_APPROVED,
+    WORKER_SUSPENDED,
+    INVALID_OR_REVOKED_QR,
+    NO_ACTIVE_ASSIGNMENT,
+    WRONG_PROJECT,
+    WRONG_WORK_ZONE,
+    CERTIFICATION_EXPIRED,
+    ASSIGNMENT_EXPIRED,
+    VENDOR_INACTIVE,
+    ALREADY_CHECKED_IN,
+    ACCESS_POLICY_VIOLATION
+}

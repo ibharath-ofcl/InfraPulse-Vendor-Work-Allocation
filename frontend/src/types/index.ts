@@ -249,7 +249,16 @@ export type Permission =
   | 'VIEW_ANALYTICS'
   | 'VERIFY_AUDIT_INTEGRITY'
   | 'MANAGE_SCORING_CONFIG'
-  | 'EXPORT_REPORTS';
+  | 'EXPORT_REPORTS'
+  | 'WORKER_VIEW'
+  | 'WORKER_REGISTER'
+  | 'WORKER_VERIFY'
+  | 'WORKER_APPROVE'
+  | 'WORKER_ASSIGN'
+  | 'WORKER_SITE_ACCESS'
+  | 'WORKER_SAFETY'
+  | 'WORKER_HEADCOUNT'
+  | 'WORKER_ANALYTICS';
 
 export interface AuthUser {
   id: string;

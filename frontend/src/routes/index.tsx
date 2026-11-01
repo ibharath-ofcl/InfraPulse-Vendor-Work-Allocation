@@ -27,6 +27,7 @@ import { VendorComparisonPage } from '../pages/VendorComparisonPage';
 import { ProjectAnalyticsPage } from '../pages/ProjectAnalyticsPage';
 import { ReportsPage } from '../pages/ReportsPage';
 import { AuditTrailPage } from '../pages/AuditTrailPage';
+import { WorkerTrustDashboardPage } from '../pages/workertrust/WorkerTrustDashboardPage';
 import { UserManagementPage } from '../pages/UserManagementPage';
 import { ProfilePage } from '../pages/ProfilePage';
 import { LoginPage } from '../pages/LoginPage';
@@ -174,6 +175,16 @@ export const AppRoutes: React.FC = () => {
             element={
               <PermissionGuard requiredPermission="VIEW_ASSIGNED_WORK">
                 <VendorActivityPage />
+              </PermissionGuard>
+            } 
+          />
+
+          {/* WorkerTrust Workforce Management & Site Safety */}
+          <Route 
+            path="workertrust" 
+            element={
+              <PermissionGuard requiredPermission="WORKER_VIEW">
+                <WorkerTrustDashboardPage />
               </PermissionGuard>
             } 
           />

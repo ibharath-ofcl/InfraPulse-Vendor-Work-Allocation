@@ -94,3 +94,4 @@ public class WorkerAccessSuspension {
     public String getResolutionNotes() { return resolutionNotes; }
     public void setResolutionNotes(String resolutionNotes) { this.resolutionNotes = resolutionNotes; }
 }
+

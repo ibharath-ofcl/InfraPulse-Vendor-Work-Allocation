@@ -10,3 +10,4 @@ import java.util.List;
 public interface WorkerConsentRepository extends JpaRepository<WorkerConsent, String> {
     List<WorkerConsent> findByWorkerId(String workerId);
 }
+

@@ -10,3 +10,4 @@ public enum VerificationStatus {
     REQUIRES_CORRECTION,
     UNAVAILABLE
 }
+

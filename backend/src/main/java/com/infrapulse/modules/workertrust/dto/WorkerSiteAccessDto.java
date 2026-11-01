@@ -23,3 +23,4 @@ public record WorkerSiteAccessDto(
     String recordingOfficerName,
     boolean isCurrentlyOnSite
 ) {}
+

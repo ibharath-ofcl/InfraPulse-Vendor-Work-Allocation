@@ -335,3 +335,4 @@ public class WorkerTrustDemoSeedRunner implements ApplicationRunner {
         log.info("Successfully seeded 5 realistic WorkerTrust demonstration records across various lifecycles!");
     }
 }
+

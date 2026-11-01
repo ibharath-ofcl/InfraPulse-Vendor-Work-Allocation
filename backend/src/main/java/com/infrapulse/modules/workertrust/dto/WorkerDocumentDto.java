@@ -17,3 +17,4 @@ public record WorkerDocumentDto(
     Instant uploadedAt,
     String uploadedByName
 ) {}
+

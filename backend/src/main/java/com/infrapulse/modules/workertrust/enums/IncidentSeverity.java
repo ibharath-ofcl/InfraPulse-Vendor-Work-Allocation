@@ -6,3 +6,4 @@ public enum IncidentSeverity {
     HIGH,
     CRITICAL
 }
+

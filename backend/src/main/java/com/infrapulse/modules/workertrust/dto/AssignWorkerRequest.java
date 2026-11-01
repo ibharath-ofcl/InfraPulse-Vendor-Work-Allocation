@@ -20,3 +20,4 @@ public record AssignWorkerRequest(
 
     String requiredRole
 ) {}
+

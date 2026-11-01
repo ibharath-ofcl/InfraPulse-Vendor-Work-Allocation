@@ -6,3 +6,4 @@ public enum AssignmentStatus {
     CANCELLED,
     SUSPENDED
 }
+

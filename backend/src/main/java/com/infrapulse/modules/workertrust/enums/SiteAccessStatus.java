@@ -4,3 +4,4 @@ public enum SiteAccessStatus {
     ALLOW_ENTRY,
     BLOCK_ENTRY
 }
+

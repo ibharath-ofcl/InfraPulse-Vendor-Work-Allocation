@@ -4,3 +4,4 @@ public enum SuspensionStatus {
     ACTIVE,
     LIFTED
 }
+

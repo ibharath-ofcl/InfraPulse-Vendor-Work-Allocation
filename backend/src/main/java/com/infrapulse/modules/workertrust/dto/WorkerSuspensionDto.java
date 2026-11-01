@@ -16,3 +16,4 @@ public record WorkerSuspensionDto(
     String resolutionNotes,
     boolean isActive
 ) {}
+

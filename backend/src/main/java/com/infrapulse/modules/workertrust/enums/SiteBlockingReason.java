@@ -13,3 +13,4 @@ public enum SiteBlockingReason {
     ALREADY_CHECKED_IN,
     ACCESS_POLICY_VIOLATION
 }
+

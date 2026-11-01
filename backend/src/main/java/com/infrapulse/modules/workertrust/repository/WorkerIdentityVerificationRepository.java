@@ -14,3 +14,4 @@ public interface WorkerIdentityVerificationRepository extends JpaRepository<Work
 
     long countByVerificationStatus(VerificationStatus status);
 }
+

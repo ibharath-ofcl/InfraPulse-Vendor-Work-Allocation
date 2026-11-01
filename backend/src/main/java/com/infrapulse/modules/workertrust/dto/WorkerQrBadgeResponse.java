@@ -22,3 +22,4 @@ public record WorkerQrBadgeResponse(
     Instant expiresAt,
     boolean isValid
 ) {}
+

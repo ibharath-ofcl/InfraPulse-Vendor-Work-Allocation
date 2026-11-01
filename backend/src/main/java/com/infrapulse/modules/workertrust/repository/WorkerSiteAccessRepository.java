@@ -49,3 +49,4 @@ public interface WorkerSiteAccessRepository extends JpaRepository<WorkerSiteAcce
            "WHERE wsa.accessStatus = 'ALLOW_ENTRY' AND wsa.exitTime IS NULL")
     long countCurrentlyOnSite();
 }
+

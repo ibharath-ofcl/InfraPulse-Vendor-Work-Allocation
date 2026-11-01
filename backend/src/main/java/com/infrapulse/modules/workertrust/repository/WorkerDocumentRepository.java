@@ -14,3 +14,4 @@ public interface WorkerDocumentRepository extends JpaRepository<WorkerDocument, 
 
     long countByDocumentStatus(DocumentStatus status);
 }
+

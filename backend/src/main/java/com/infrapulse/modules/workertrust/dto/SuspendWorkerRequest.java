@@ -10,3 +10,4 @@ public record SuspendWorkerRequest(
 
     LocalDate reviewDate
 ) {}
+

@@ -8,3 +8,4 @@ public enum VerificationMethod {
     DRIVING_LICENSE,
     POLICE_CLEARANCE_CERT
 }
+

@@ -48,3 +48,4 @@ public interface WorkerRepository extends JpaRepository<Worker, String> {
 
     long countByCurrentStatus(WorkerStatus status);
 }
+

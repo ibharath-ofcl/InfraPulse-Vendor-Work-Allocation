@@ -7,3 +7,4 @@ public enum DocumentType {
     SAFETY_TRAINING_RECORD,
     MEDICAL_FITNESS
 }
+

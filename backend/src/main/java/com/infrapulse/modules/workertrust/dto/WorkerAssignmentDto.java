@@ -22,3 +22,4 @@ public record WorkerAssignmentDto(
     String assignedByName,
     Instant createdAt
 ) {}
+

@@ -11,3 +11,4 @@ public enum CertificationType {
     FIRST_AID,
     HEAVY_EQUIPMENT_OPERATION
 }
+

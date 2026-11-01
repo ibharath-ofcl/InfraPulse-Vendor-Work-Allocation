@@ -13,3 +13,4 @@ public record SiteCheckInRequest(
 
     String deviceReference
 ) {}
+

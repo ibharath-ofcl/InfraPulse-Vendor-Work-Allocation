@@ -34,3 +34,4 @@ public record RegisterWorkerRequest(
 
     String verificationReference
 ) {}
+

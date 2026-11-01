@@ -81,3 +81,4 @@ public class WorkerConsent {
     public User getRecordedBy() { return recordedBy; }
     public void setRecordedBy(User recordedBy) { this.recordedBy = recordedBy; }
 }
+

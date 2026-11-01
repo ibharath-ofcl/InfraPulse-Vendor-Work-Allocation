@@ -9,3 +9,4 @@ public enum IncidentType {
     NEAR_MISS,
     CERTIFICATION_BREACH
 }
+

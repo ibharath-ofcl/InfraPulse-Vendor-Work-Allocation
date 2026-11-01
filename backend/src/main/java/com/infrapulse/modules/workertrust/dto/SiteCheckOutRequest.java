@@ -6,3 +6,4 @@ public record SiteCheckOutRequest(
     @NotBlank(message = "Site access ID or Worker Code is required")
     String identifier
 ) {}
+

@@ -41,3 +41,4 @@ public interface WorkerIncidentRepository extends JpaRepository<WorkerIncident, 
 
     long countBySeverity(IncidentSeverity severity);
 }
+

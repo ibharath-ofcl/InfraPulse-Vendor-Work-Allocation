@@ -11,3 +11,4 @@ public record ResolveIncidentRequest(
     @NotNull(message = "Incident target status is required")
     IncidentStatus incidentStatus
 ) {}
+

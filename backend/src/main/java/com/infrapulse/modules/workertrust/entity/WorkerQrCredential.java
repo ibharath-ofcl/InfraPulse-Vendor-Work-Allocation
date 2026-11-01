@@ -97,3 +97,4 @@ public class WorkerQrCredential {
     public User getIssuedBy() { return issuedBy; }
     public void setIssuedBy(User issuedBy) { this.issuedBy = issuedBy; }
 }
+

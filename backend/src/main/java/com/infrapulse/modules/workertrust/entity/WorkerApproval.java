@@ -70,3 +70,4 @@ public class WorkerApproval {
     public Instant getDecidedAt() { return decidedAt; }
     public void setDecidedAt(Instant decidedAt) { this.decidedAt = decidedAt; }
 }
+

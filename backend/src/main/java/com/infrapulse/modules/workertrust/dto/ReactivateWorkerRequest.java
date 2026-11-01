@@ -6,3 +6,4 @@ public record ReactivateWorkerRequest(
     @NotBlank(message = "Documented reactivation justification notes are mandatory")
     String resolutionNotes
 ) {}
+

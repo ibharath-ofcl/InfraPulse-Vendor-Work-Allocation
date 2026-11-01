@@ -241,3 +241,4 @@ CREATE TABLE IF NOT EXISTS worker_notifications (
 
 CREATE INDEX IF NOT EXISTS idx_worker_notif_recipient ON worker_notifications(recipient_user_id);
 CREATE INDEX IF NOT EXISTS idx_worker_notif_read ON worker_notifications(read_at);
+

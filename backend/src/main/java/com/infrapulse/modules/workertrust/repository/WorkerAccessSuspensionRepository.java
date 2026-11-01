@@ -19,3 +19,4 @@ public interface WorkerAccessSuspensionRepository extends JpaRepository<WorkerAc
 
     long countBySuspensionStatus(SuspensionStatus suspensionStatus);
 }
+

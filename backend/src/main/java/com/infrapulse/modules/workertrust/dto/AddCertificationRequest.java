@@ -22,3 +22,4 @@ public record AddCertificationRequest(
 
     String documentReference
 ) {}
+

@@ -156,3 +156,4 @@ class WorkerServiceTest {
         verify(qrCredentialRepository, times(1)).save(any());
     }
 }
+

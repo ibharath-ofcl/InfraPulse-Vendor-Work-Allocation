@@ -19,3 +19,4 @@ public record WorkerCertificationDto(
     Instant verifiedAt,
     String verifiedByName
 ) {}
+

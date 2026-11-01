@@ -6,3 +6,4 @@ public enum DocumentStatus {
     REJECTED,
     REQUIRES_CORRECTION
 }
+

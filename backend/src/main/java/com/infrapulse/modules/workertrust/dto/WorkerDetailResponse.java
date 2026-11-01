@@ -39,3 +39,4 @@ public record WorkerDetailResponse(
     Instant createdAt,
     Instant updatedAt
 ) {}
+

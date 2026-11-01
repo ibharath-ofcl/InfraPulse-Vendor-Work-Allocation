@@ -46,3 +46,4 @@ public interface WorkerProjectAssignmentRepository extends JpaRepository<WorkerP
 
     long countByAssignmentStatus(AssignmentStatus status);
 }
+

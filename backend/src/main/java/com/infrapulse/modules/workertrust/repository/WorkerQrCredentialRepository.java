@@ -19,3 +19,4 @@ public interface WorkerQrCredentialRepository extends JpaRepository<WorkerQrCred
 
     List<WorkerQrCredential> findByWorkerId(String workerId);
 }
+

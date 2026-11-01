@@ -308,3 +308,4 @@ public class WorkerTrustController {
         return ResponseEntity.ok(ApiResponse.success("Workforce analytics retrieved successfully", response));
     }
 }
+

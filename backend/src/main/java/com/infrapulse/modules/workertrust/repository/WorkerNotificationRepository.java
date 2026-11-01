@@ -17,3 +17,4 @@ public interface WorkerNotificationRepository extends JpaRepository<WorkerNotifi
 
     long countByRecipientIdAndReadAtIsNull(String recipientId);
 }
+

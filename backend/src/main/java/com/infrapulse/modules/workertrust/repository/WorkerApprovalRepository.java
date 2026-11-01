@@ -11,3 +11,4 @@ public interface WorkerApprovalRepository extends JpaRepository<WorkerApproval, 
 
     List<WorkerApproval> findByWorkerIdOrderByDecidedAtDesc(String workerId);
 }
+

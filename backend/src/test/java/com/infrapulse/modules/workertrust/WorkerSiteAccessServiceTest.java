@@ -174,3 +174,4 @@ class WorkerSiteAccessServiceTest {
         assertEquals(WorkerStatus.APPROVED, approvedWorker.getCurrentStatus());
     }
 }
+

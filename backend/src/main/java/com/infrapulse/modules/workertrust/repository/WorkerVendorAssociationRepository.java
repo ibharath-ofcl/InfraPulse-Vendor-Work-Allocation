@@ -18,3 +18,4 @@ public interface WorkerVendorAssociationRepository extends JpaRepository<WorkerV
 
     boolean existsByWorkerIdAndVendorIdAndAssociationStatus(String workerId, String vendorId, String associationStatus);
 }
+

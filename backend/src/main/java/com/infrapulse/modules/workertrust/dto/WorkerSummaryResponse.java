@@ -27,3 +27,4 @@ public record WorkerSummaryResponse(
     boolean isSuspended,
     Instant createdAt
 ) {}
+

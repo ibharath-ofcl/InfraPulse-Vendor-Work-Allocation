@@ -138,3 +138,4 @@ All endpoints are hosted under `/api/v1/workertrust` (and aliased to `/api/worke
 - `GET /incidents` — List safety incidents with filters
 - `PATCH /incidents/{id}/resolve` — Record investigation outcome & closure
 - `GET /analytics` — Real-time workforce metrics & 7-day attendance trend
+

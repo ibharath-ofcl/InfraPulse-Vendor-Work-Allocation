@@ -11,3 +11,4 @@ public record WorkerApprovalRequest(
     @NotBlank(message = "A documented reason or review justification is required")
     String reason
 ) {}
+

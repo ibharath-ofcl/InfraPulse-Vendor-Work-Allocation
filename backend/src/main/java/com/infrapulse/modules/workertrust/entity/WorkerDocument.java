@@ -107,3 +107,4 @@ public class WorkerDocument {
     public User getUploadedBy() { return uploadedBy; }
     public void setUploadedBy(User uploadedBy) { this.uploadedBy = uploadedBy; }
 }
+

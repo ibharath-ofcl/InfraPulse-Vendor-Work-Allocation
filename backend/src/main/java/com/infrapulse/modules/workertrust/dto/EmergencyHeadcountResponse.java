@@ -12,3 +12,4 @@ public record EmergencyHeadcountResponse(
     List<WorkerSiteAccessDto> activePersonnel,
     Instant generatedAt
 ) {}
+

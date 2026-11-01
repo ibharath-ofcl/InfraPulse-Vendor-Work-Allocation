@@ -101,6 +101,8 @@ def assess_image_quality(img_bgr: np.ndarray, orientation: int = 1) -> ImageQual
 
         quality_status = "LOW_IMAGE_QUALITY" if len(warnings) > 0 else "ACCEPTABLE_FOR_ANALYSIS"
 
+    p_hash = compute_dhash(gray)
+
     return ImageQualityResult(
         resolution_width=width,
         resolution_height=height,
@@ -108,6 +110,23 @@ def assess_image_quality(img_bgr: np.ndarray, orientation: int = 1) -> ImageQual
         brightness_score=round(brightness_score, 2),
         contrast_score=round(contrast_score, 2),
         orientation=orientation,
+        perceptual_hash=p_hash,
         quality_status=quality_status,
         warnings=warnings,
     )
+
+
+def compute_dhash(gray_img: np.ndarray) -> str:
+    """
+    Computes 64-bit difference hash (dHash) from grayscale image.
+    Resizes to 9x8 and compares horizontal adjacent pixel gradients.
+    """
+    try:
+        resized = cv2.resize(gray_img, (9, 8), interpolation=cv2.INTER_AREA)
+        diff = resized[:, 1:] > resized[:, :-1]
+        hash_val = 0
+        for val in diff.flatten():
+            hash_val = (hash_val << 1) | int(val)
+        return f"{hash_val:016x}"
+    except Exception:
+        return ""

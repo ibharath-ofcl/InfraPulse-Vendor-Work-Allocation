@@ -44,6 +44,18 @@ public class WorkConflictDetectionService {
         LocalDate targetEndDate,
         String excludeAssignmentId
     ) {
+        return detectConflicts(projectId, workZoneId, workType, plannedStartDate, targetEndDate, excludeAssignmentId, false);
+    }
+
+    public List<SchedulingConflictDetail> detectConflicts(
+        String projectId,
+        String workZoneId,
+        WorkType workType,
+        LocalDate plannedStartDate,
+        LocalDate targetEndDate,
+        String excludeAssignmentId,
+        boolean isExclusiveZoneLock
+    ) {
         List<SchedulingConflictDetail> conflicts = new ArrayList<>();
 
         List<WorkAssignment> activeAssignments = workAssignmentRepository.findActiveInZone(
@@ -71,6 +83,25 @@ public class WorkConflictDetectionService {
                     "Duplicate activity: An active assignment for " + workType.getDisplayName() +
                     " (" + active.getAssignmentCode() + ") is already in progress in this work zone (Status: " +
                     active.getStatus() + ")."
+                ));
+                continue;
+            }
+
+            // 2. Exclusive Work Zone Spatial Lock Violation
+            if (isExclusiveZoneLock) {
+                conflicts.add(new SchedulingConflictDetail(
+                    "EXCLUSIVE_ZONE_LOCK_VIOLATION",
+                    active.getAssignmentCode(),
+                    active.getWorkType(),
+                    active.getWorkType().getDisplayName(),
+                    active.getStatus(),
+                    active.getVendor() != null ? active.getVendor().getCompanyName() : null,
+                    active.getPlannedStartDate(),
+                    active.getTargetEndDate(),
+                    "Exclusive spatial lock active: Work zone has exclusive multi-vendor locking enabled. Active assignment " +
+                    active.getAssignmentCode() + " (" + active.getWorkType().getDisplayName() + ") is currently active with " +
+                    (active.getVendor() != null ? active.getVendor().getCompanyName() : "another vendor") +
+                    ". Concurrent work is prohibited until the current assignment is completed and released."
                 ));
                 continue;
             }

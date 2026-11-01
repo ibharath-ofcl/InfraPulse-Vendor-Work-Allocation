@@ -47,6 +47,15 @@ public class WorkZone {
     @Column(name = "center_longitude", precision = 10, scale = 6)
     private BigDecimal centerLongitude;
 
+    @Column(name = "geofence_radius_meters", nullable = false)
+    private Integer geofenceRadiusMeters = 500;
+
+    @Column(name = "boundary_polygon_json", columnDefinition = "TEXT")
+    private String boundaryPolygonJson;
+
+    @Column(name = "is_exclusive_lock_enabled", nullable = false)
+    private boolean isExclusiveLockEnabled = false;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50, nullable = false)
     private ZoneStatus status = ZoneStatus.AVAILABLE;
@@ -187,6 +196,30 @@ public class WorkZone {
 
     public void setCenterLongitude(BigDecimal centerLongitude) {
         this.centerLongitude = centerLongitude;
+    }
+
+    public Integer getGeofenceRadiusMeters() {
+        return geofenceRadiusMeters;
+    }
+
+    public void setGeofenceRadiusMeters(Integer geofenceRadiusMeters) {
+        this.geofenceRadiusMeters = geofenceRadiusMeters != null ? geofenceRadiusMeters : 500;
+    }
+
+    public String getBoundaryPolygonJson() {
+        return boundaryPolygonJson;
+    }
+
+    public void setBoundaryPolygonJson(String boundaryPolygonJson) {
+        this.boundaryPolygonJson = boundaryPolygonJson;
+    }
+
+    public boolean isExclusiveLockEnabled() {
+        return isExclusiveLockEnabled;
+    }
+
+    public void setExclusiveLockEnabled(boolean exclusiveLockEnabled) {
+        isExclusiveLockEnabled = exclusiveLockEnabled;
     }
 
     public ZoneStatus getStatus() {

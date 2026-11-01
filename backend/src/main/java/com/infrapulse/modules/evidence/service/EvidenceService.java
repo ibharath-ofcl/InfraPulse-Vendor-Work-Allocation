@@ -32,6 +32,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import com.infrapulse.modules.evidence.model.DeviceIntegrityStatus;
+import com.infrapulse.modules.evidence.model.DuplicateStatus;
+import com.infrapulse.modules.evidence.model.GeofenceStatus;
+
 @Service
 public class EvidenceService {
 
@@ -45,6 +49,8 @@ public class EvidenceService {
     private final EvidenceMetadataService metadataService;
     private final EvidenceProcessingService processingService;
     private final AuditService auditService;
+    private final GeofenceVerificationService geofenceService;
+    private final DuplicateEvidenceDetectionService duplicateService;
 
     public EvidenceService(
             WorkEvidenceRepository evidenceRepository,
@@ -54,7 +60,9 @@ public class EvidenceService {
             EvidenceValidationService validationService,
             EvidenceMetadataService metadataService,
             EvidenceProcessingService processingService,
-            AuditService auditService
+            AuditService auditService,
+            GeofenceVerificationService geofenceService,
+            DuplicateEvidenceDetectionService duplicateService
     ) {
         this.evidenceRepository = evidenceRepository;
         this.assignmentRepository = assignmentRepository;
@@ -64,6 +72,8 @@ public class EvidenceService {
         this.metadataService = metadataService;
         this.processingService = processingService;
         this.auditService = auditService;
+        this.geofenceService = geofenceService;
+        this.duplicateService = duplicateService;
     }
 
     @Transactional
@@ -160,13 +170,57 @@ public class EvidenceService {
                 evidence.setLongitude(request.getLongitude());
             }
 
+            // Accuracy & Server Receipt Timestamp
+            if (request.getGpsAccuracyMeters() != null) {
+                evidence.setGpsAccuracyMeters(request.getGpsAccuracyMeters());
+            }
+            Instant now = Instant.now();
+            evidence.setServerReceiptTimestamp(now);
+
+            // Device orientation & integrity status
+            evidence.setDeviceOrientationJson(request.getDeviceOrientationJson());
+            if (request.getDeviceOrientationJson() != null && !request.getDeviceOrientationJson().isBlank()) {
+                evidence.setDeviceIntegrityStatus(DeviceIntegrityStatus.SENSOR_RECORDED);
+            } else {
+                evidence.setDeviceIntegrityStatus(DeviceIntegrityStatus.WEB_UNATTESTED);
+            }
+
+            // GPS Geofence Verification
+            GeofenceVerificationService.GeofenceVerificationResult geoResult = geofenceService.verifyGeofence(
+                    evidence.getLatitude(),
+                    evidence.getLongitude(),
+                    evidence.getGpsAccuracyMeters(),
+                    assignment.getWorkZone()
+            );
+            evidence.setGeofenceStatus(geoResult.status());
+            evidence.setDistanceFromZoneCenterMeters(geoResult.distanceMeters());
+
+            // Compute Perceptual Hash (dHash)
+            String dHash = duplicateService.computeDHash(validated.bufferedImage());
+            if (dHash == null && request.getPerceptualHash() != null && !request.getPerceptualHash().isBlank()) {
+                dHash = request.getPerceptualHash().trim();
+            }
+            evidence.setPerceptualHash(dHash);
+
+            // Duplicate Evidence Evaluation
+            DuplicateEvidenceDetectionService.DuplicateCheckResult dupResult = duplicateService.evaluateDuplicate(
+                    assignment.getProject() != null ? assignment.getProject().getId() : null,
+                    null,
+                    evidence.getChecksumSha256(),
+                    dHash,
+                    evidence.getCaptureTimestamp(),
+                    now
+            );
+            evidence.setDuplicateStatus(dupResult.status());
+            evidence.setDuplicateOfEvidenceId(dupResult.duplicateOfEvidenceId());
+
             evidence.setMetadataJson(extracted.metadataJson());
             evidence.setProcessingStatus(EvidenceProcessingStatus.READY);
             evidence.setReviewStatus(EvidenceReviewStatus.NOT_REVIEWED);
 
             WorkEvidence saved = evidenceRepository.save(evidence);
 
-            // Audit Event
+            // Audit Event: Base Evidence Upload
             auditService.logEvent(
                     currentUser,
                     "EVIDENCE_UPLOADED",
@@ -176,8 +230,34 @@ public class EvidenceService {
                     request.getDescription()
             );
 
-            log.info("Photo evidence uploaded: code={}, assignment={}, vendor={}, category={}",
-                    saved.getEvidenceCode(), assignment.getAssignmentCode(), assignment.getVendor().getVendorCode(), saved.getEvidenceCategory());
+            // Audit Event: GPS Geofence Verification
+            auditService.logEvent(
+                    currentUser,
+                    "GPS_VERIFICATION_" + saved.getGeofenceStatus().name(),
+                    "WorkEvidence",
+                    saved.getId(),
+                    String.format("GPS Geofence status: %s (distance: %s m, accuracy: %s m)",
+                            saved.getGeofenceStatus(),
+                            saved.getDistanceFromZoneCenterMeters(),
+                            saved.getGpsAccuracyMeters()),
+                    geoResult.message()
+            );
+
+            // Audit Event: Duplicate / Anti-Fraud Alert if flagged
+            if (saved.getDuplicateStatus() != DuplicateStatus.UNIQUE) {
+                auditService.logEvent(
+                        currentUser,
+                        "EVIDENCE_DUPLICATE_FLAGGED",
+                        "WorkEvidence",
+                        saved.getId(),
+                        String.format("Evidence flagged as %s (matched: %s)", saved.getDuplicateStatus(), saved.getDuplicateOfEvidenceId()),
+                        dupResult.details()
+                );
+            }
+
+            log.info("Photo evidence uploaded: code={}, assignment={}, vendor={}, category={}, geofence={}, duplicate={}",
+                    saved.getEvidenceCode(), assignment.getAssignmentCode(), assignment.getVendor().getVendorCode(),
+                    saved.getEvidenceCategory(), saved.getGeofenceStatus(), saved.getDuplicateStatus());
 
             results.add(EvidenceDetailResponse.fromEntity(saved));
         }

@@ -185,6 +185,72 @@ def detect_infrastructure_features(img_bgr: np.ndarray) -> List[DetectionItem]:
                 )
             )
 
+    # 5. Safety Barrier & Traffic Demarcation Detection via Chromatic HSV Analysis
+    # Orange/Yellow/Red high-visibility barricades, cones, and safety demarcation tape
+    hsv = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2HSV)
+    lower_hi_vis = np.array([8, 110, 100])
+    upper_hi_vis = np.array([28, 255, 255])
+    mask_hi_vis = cv2.inRange(hsv, lower_hi_vis, upper_hi_vis)
+    kernel_barr = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+    morph_barr = cv2.morphologyEx(mask_hi_vis, cv2.MORPH_CLOSE, kernel_barr)
+    contours_barr, _ = cv2.findContours(morph_barr, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    for cnt in contours_barr:
+        area = cv2.contourArea(cnt)
+        if area < 200 or area > 0.40 * total_area:
+            continue
+        x, y, w, h = cv2.boundingRect(cnt)
+        aspect = max(w, h) / (min(w, h) + 1e-5)
+        if aspect < 6.0:
+            confidence = min(0.95, max(0.65, 0.60 + (area / total_area) * 3.0))
+            detections.append(
+                DetectionItem(
+                    detection_id=f"det-{uuid.uuid4().hex[:12]}",
+                    class_id="SAFETY_BARRIER",
+                    class_label="Safety Barrier / Traffic Perimeter",
+                    confidence=round(confidence, 3),
+                    bounding_box=BoundingBox(
+                        ymin=round(y / height, 4),
+                        xmin=round(x / width, 4),
+                        ymax=round(min(height, y + h) / height, 4),
+                        xmax=round(min(width, x + w) / width, 4),
+                    ),
+                    model_id=MODEL_ID,
+                    model_version=MODEL_VERSION,
+                )
+            )
+
+    # 6. Construction Equipment / Machinery Contour Detection
+    lower_equip = np.array([20, 80, 80])
+    upper_equip = np.array([38, 255, 255])
+    mask_equip = cv2.inRange(hsv, lower_equip, upper_equip)
+    kernel_eq = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 15))
+    morph_eq = cv2.morphologyEx(mask_equip, cv2.MORPH_CLOSE, kernel_eq)
+    contours_eq, _ = cv2.findContours(morph_eq, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    for cnt in contours_eq:
+        area = cv2.contourArea(cnt)
+        if area < 0.03 * total_area or area > 0.60 * total_area:
+            continue
+        x, y, w, h = cv2.boundingRect(cnt)
+        confidence = min(0.93, max(0.68, 0.65 + (area / total_area) * 1.5))
+        detections.append(
+            DetectionItem(
+                detection_id=f"det-{uuid.uuid4().hex[:12]}",
+                class_id="CONSTRUCTION_EQUIPMENT",
+                class_label="Visible Construction Equipment / Plant",
+                confidence=round(confidence, 3),
+                bounding_box=BoundingBox(
+                    ymin=round(y / height, 4),
+                    xmin=round(x / width, 4),
+                    ymax=round(min(height, y + h) / height, 4),
+                    xmax=round(min(width, x + w) / width, 4),
+                ),
+                model_id=MODEL_ID,
+                model_version=MODEL_VERSION,
+            )
+        )
+
     # Sort detections by confidence descending, limit to top 15 most salient
     detections.sort(key=lambda d: d.confidence, reverse=True)
     return detections[:15]

@@ -17,6 +17,12 @@ public class EvidenceUploadRequest {
 
     private BigDecimal longitude;
 
+    private BigDecimal gpsAccuracyMeters;
+
+    private String deviceOrientationJson;
+
+    private String perceptualHash;
+
     public EvidenceUploadRequest() {}
 
     public EvidenceUploadRequest(EvidenceCategory category, String description, String captureTimestamp, BigDecimal latitude, BigDecimal longitude) {
@@ -65,5 +71,29 @@ public class EvidenceUploadRequest {
 
     public void setLongitude(BigDecimal longitude) {
         this.longitude = longitude;
+    }
+
+    public BigDecimal getGpsAccuracyMeters() {
+        return gpsAccuracyMeters;
+    }
+
+    public void setGpsAccuracyMeters(BigDecimal gpsAccuracyMeters) {
+        this.gpsAccuracyMeters = gpsAccuracyMeters;
+    }
+
+    public String getDeviceOrientationJson() {
+        return deviceOrientationJson;
+    }
+
+    public void setDeviceOrientationJson(String deviceOrientationJson) {
+        this.deviceOrientationJson = deviceOrientationJson;
+    }
+
+    public String getPerceptualHash() {
+        return perceptualHash;
+    }
+
+    public void setPerceptualHash(String perceptualHash) {
+        this.perceptualHash = perceptualHash;
     }
 }

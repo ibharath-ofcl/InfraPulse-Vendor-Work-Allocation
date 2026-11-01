@@ -137,3 +137,43 @@ def test_corrupted_image_rejected():
     files = {"file": ("bad.jpg", io.BytesIO(b"not an image file at all"), "image/jpeg")}
     res = client.post("/api/v1/inference/image-quality", files=files)
     assert res.status_code == 400
+
+
+def test_safety_barrier_detection_and_perceptual_hash():
+    # Synthetic image with orange safety barrier
+    img = np.full((600, 800, 3), 110, dtype=np.uint8)
+    # Bright orange safety barricade (BGR: B=10, G=120, R=240 -> HSV orange)
+    cv2.rectangle(img, (200, 250), (600, 350), (10, 120, 240), -1)
+    # Add white reflective stripes
+    cv2.rectangle(img, (280, 250), (320, 350), (255, 255, 255), -1)
+    cv2.rectangle(img, (480, 250), (520, 350), (255, 255, 255), -1)
+
+    _, buf = cv2.imencode(".jpg", img)
+    files = {"file": ("barrier.jpg", io.BytesIO(buf.tobytes()), "image/jpeg")}
+
+    res = client.post("/api/v1/inference/analyze", files=files)
+    assert res.status_code == 200
+    data = res.json()
+
+    # Perceptual hash check
+    assert data["image_quality"]["perceptual_hash"] is not None
+    assert len(data["image_quality"]["perceptual_hash"]) == 16
+
+    # Verify detection of safety barrier
+    barrier_dets = [d for d in data["detections"] if d["class_id"] == "SAFETY_BARRIER"]
+    assert len(barrier_dets) >= 1
+    assert barrier_dets[0]["class_label"] == "Safety Barrier / Traffic Perimeter"
+
+    # Verify segmentation masks
+    assert len(data["segmentation_masks"]) >= 1
+    mask = data["segmentation_masks"][0]
+    assert len(mask["polygon_points"]) >= 3
+    assert 0.0 < mask["coverage_ratio"] <= 1.0
+
+    # Verify monocular depth estimate and disclaimer
+    assert data["monocular_depth"] is not None
+    depth = data["monocular_depth"]
+    assert depth["relative_depth_map_available"] is True
+    assert depth["mean_relative_depth_disparity"] > 0
+    assert "NOT A CERTIFIED PHYSICAL MEASUREMENT" in depth["certification_disclaimer"]
+

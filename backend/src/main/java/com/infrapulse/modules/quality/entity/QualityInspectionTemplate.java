@@ -32,6 +32,18 @@ public class QualityInspectionTemplate {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "contract_reference", length = 128)
+    private String contractReference;
+
+    @Column(name = "effective_start_date")
+    private java.time.LocalDate effectiveStartDate;
+
+    @Column(name = "effective_end_date")
+    private java.time.LocalDate effectiveEndDate;
+
+    @Column(name = "passing_score_threshold", precision = 5, scale = 2, nullable = false)
+    private java.math.BigDecimal passingScoreThreshold = new java.math.BigDecimal("85.00");
+
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
 
@@ -80,6 +92,20 @@ public class QualityInspectionTemplate {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public String getContractReference() { return contractReference; }
+    public void setContractReference(String contractReference) { this.contractReference = contractReference; }
+
+    public java.time.LocalDate getEffectiveStartDate() { return effectiveStartDate; }
+    public void setEffectiveStartDate(java.time.LocalDate effectiveStartDate) { this.effectiveStartDate = effectiveStartDate; }
+
+    public java.time.LocalDate getEffectiveEndDate() { return effectiveEndDate; }
+    public void setEffectiveEndDate(java.time.LocalDate effectiveEndDate) { this.effectiveEndDate = effectiveEndDate; }
+
+    public java.math.BigDecimal getPassingScoreThreshold() { return passingScoreThreshold; }
+    public void setPassingScoreThreshold(java.math.BigDecimal passingScoreThreshold) {
+        this.passingScoreThreshold = passingScoreThreshold != null ? passingScoreThreshold : new java.math.BigDecimal("85.00");
+    }
 
     public boolean isActive() { return isActive; }
     public void setActive(boolean active) { isActive = active; }

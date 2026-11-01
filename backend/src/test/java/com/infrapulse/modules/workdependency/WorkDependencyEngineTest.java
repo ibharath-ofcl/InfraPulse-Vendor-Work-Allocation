@@ -536,6 +536,48 @@ class WorkDependencyEngineTest {
             .andExpect(jsonPath("$.data.releaseStatus").value("PENDING_RELEASE"));
     }
 
+    @Test
+    @DisplayName("Exclusive Spatial Zone Locking: Rejects concurrent assignment in exclusive work zone while an active assignment exists")
+    void testExclusiveSpatialZoneLockingRejection() throws Exception {
+        // Clear dependency rules to isolate spatial locking from DAG prerequisites
+        dependencyRepository.deleteAll();
+
+        // Enable exclusive locking on zone2Project1
+        zone2Project1.setExclusiveLockEnabled(true);
+        workZoneRepository.save(zone2Project1);
+
+        // Create an active assignment in zone2Project1
+        WorkAssignment activeAssignment = new WorkAssignment(
+            UUID.randomUUID().toString(), "INF-WA-2026-000999", project1, zone2Project1, vendor1,
+            WorkType.TRENCHING, "Active Trenching", "Desc", LocalDate.now(), LocalDate.now().plusDays(10),
+            AssignmentPriority.HIGH, AssignmentStatus.IN_PROGRESS, "Instructions", adminUser
+        );
+        workAssignmentRepository.save(activeAssignment);
+
+        // Attempt another assignment in the same exclusive locked zone with different work type
+        CreateWorkAssignmentRequest secondReq = new CreateWorkAssignmentRequest(
+            project1.getId(),
+            zone2Project1.getId(),
+            vendor1.getId(),
+            WorkType.UNDERGROUND_CABLE_INSTALLATION,
+            "Parallel Work Attempt",
+            "Should be blocked by exclusive spatial locking",
+            LocalDate.now().plusDays(1),
+            LocalDate.now().plusDays(5),
+            AssignmentPriority.MEDIUM,
+            "None"
+        );
+
+        mockMvc.perform(post("/api/v1/work-assignments")
+                .header("Authorization", pmToken1)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(secondReq)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("SCHEDULING_CONFLICT"))
+            .andExpect(jsonPath("$.schedulingConflicts[0].conflictType").value("EXCLUSIVE_ZONE_LOCK_VIOLATION"))
+            .andExpect(jsonPath("$.message").value(containsString("scheduling or activity conflicts")));
+    }
+
     // =========================================================================
     // SCOPE AND ISOLATION TESTS
     // =========================================================================

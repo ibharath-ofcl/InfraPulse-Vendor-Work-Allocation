@@ -208,7 +208,8 @@ public class WorkAssignmentValidationService {
             workType,
             plannedStartDate,
             targetEndDate,
-            excludeAssignmentId
+            excludeAssignmentId,
+            workZone.isExclusiveLockEnabled()
         );
 
         if (!conflicts.isEmpty()) {
@@ -254,7 +255,8 @@ public class WorkAssignmentValidationService {
             workType,
             plannedStartDate,
             targetEndDate,
-            excludeAssignmentId
+            excludeAssignmentId,
+            workZone.isExclusiveLockEnabled()
         );
 
         boolean eligible = blocked.isEmpty() && conflicts.isEmpty();

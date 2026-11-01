@@ -115,6 +115,19 @@ export interface QualityInspection {
   inspectorNotes?: string;
 }
 
+export type GeofenceStatus = 'VERIFIED' | 'OUT_OF_BOUNDS' | 'ACCURACY_TOO_LOW' | 'UNVERIFIED_NO_GPS';
+export type EvidenceStageCategory = 
+  | 'BEFORE_WORK' 
+  | 'WORK_IN_PROGRESS' 
+  | 'COMPLETION' 
+  | 'CORRECTIVE_ACTION' 
+  | 'PRE_WORK' 
+  | 'EXCAVATION_DEPTH' 
+  | 'CONDUIT_PLACEMENT' 
+  | 'BACKFILL_COMPACT' 
+  | 'SURFACE_FINISH';
+export type DuplicateStatus = 'UNIQUE' | 'DUPLICATE_SUSPECTED' | 'DUPLICATE_CONFIRMED' | 'STALE_CAPTURE_TIMESTAMP';
+
 export interface EvidenceItem {
   id: string;
   assignmentId: string;
@@ -122,11 +135,18 @@ export interface EvidenceItem {
   pinCode: string;
   vendorName: string;
   submissionDate: string;
-  evidenceType: 'PRE_WORK' | 'EXCAVATION_DEPTH' | 'CONDUIT_PLACEMENT' | 'BACKFILL_COMPACT' | 'SURFACE_FINISH';
+  evidenceType: EvidenceStageCategory;
   verificationStatus: 'VERIFIED' | 'PENDING' | 'FLAGGED' | 'REJECTED';
+  geofenceStatus?: GeofenceStatus;
+  gpsAccuracyMeters?: number;
+  duplicateStatus?: DuplicateStatus;
+  perceptualHash?: string;
   imageUrl: string;
   coordinates: { lat: number; lng: number };
   fileSize: string;
+  deviceIntegrityStatus?: string;
+  monocularDepthEstimate?: string;
+  physicalMeasurementStatus?: string;
 }
 
 export interface Milestone {

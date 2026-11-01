@@ -1,10 +1,7 @@
 package com.infrapulse.modules.evidence.entity;
 
 import com.infrapulse.modules.auth.model.User;
-import com.infrapulse.modules.evidence.model.EvidenceCategory;
-import com.infrapulse.modules.evidence.model.EvidenceProcessingStatus;
-import com.infrapulse.modules.evidence.model.EvidenceReviewStatus;
-import com.infrapulse.modules.evidence.model.StorageProvider;
+import com.infrapulse.modules.evidence.model.*;
 import com.infrapulse.modules.project.entity.Project;
 import com.infrapulse.modules.vendor.entity.Vendor;
 import com.infrapulse.modules.workassignment.entity.WorkAssignment;
@@ -93,6 +90,36 @@ public class WorkEvidence {
     @Column(name = "longitude", precision = 10, scale = 6)
     private BigDecimal longitude;
 
+    @Column(name = "gps_accuracy_meters", precision = 8, scale = 2)
+    private BigDecimal gpsAccuracyMeters;
+
+    @Column(name = "server_receipt_timestamp", nullable = false)
+    private Instant serverReceiptTimestamp = Instant.now();
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "geofence_status", length = 32, nullable = false)
+    private GeofenceStatus geofenceStatus = GeofenceStatus.UNVERIFIED_NO_GPS;
+
+    @Column(name = "distance_from_zone_center_meters", precision = 10, scale = 2)
+    private BigDecimal distanceFromZoneCenterMeters;
+
+    @Column(name = "perceptual_hash", length = 64)
+    private String perceptualHash;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "duplicate_status", length = 32, nullable = false)
+    private DuplicateStatus duplicateStatus = DuplicateStatus.UNIQUE;
+
+    @Column(name = "duplicate_of_evidence_id", length = 36)
+    private String duplicateOfEvidenceId;
+
+    @Column(name = "device_orientation_json", columnDefinition = "TEXT")
+    private String deviceOrientationJson;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "device_integrity_status", length = 32, nullable = false)
+    private DeviceIntegrityStatus deviceIntegrityStatus = DeviceIntegrityStatus.WEB_UNATTESTED;
+
     @Column(name = "metadata_json", columnDefinition = "TEXT")
     private String metadataJson;
 
@@ -152,6 +179,18 @@ public class WorkEvidence {
         }
         if (this.storageProvider == null) {
             this.storageProvider = StorageProvider.LOCAL;
+        }
+        if (this.serverReceiptTimestamp == null) {
+            this.serverReceiptTimestamp = Instant.now();
+        }
+        if (this.geofenceStatus == null) {
+            this.geofenceStatus = GeofenceStatus.UNVERIFIED_NO_GPS;
+        }
+        if (this.duplicateStatus == null) {
+            this.duplicateStatus = DuplicateStatus.UNIQUE;
+        }
+        if (this.deviceIntegrityStatus == null) {
+            this.deviceIntegrityStatus = DeviceIntegrityStatus.WEB_UNATTESTED;
         }
     }
 
@@ -408,6 +447,78 @@ public class WorkEvidence {
 
     public void setUpdatedAt(Instant updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public BigDecimal getGpsAccuracyMeters() {
+        return gpsAccuracyMeters;
+    }
+
+    public void setGpsAccuracyMeters(BigDecimal gpsAccuracyMeters) {
+        this.gpsAccuracyMeters = gpsAccuracyMeters;
+    }
+
+    public Instant getServerReceiptTimestamp() {
+        return serverReceiptTimestamp;
+    }
+
+    public void setServerReceiptTimestamp(Instant serverReceiptTimestamp) {
+        this.serverReceiptTimestamp = serverReceiptTimestamp;
+    }
+
+    public GeofenceStatus getGeofenceStatus() {
+        return geofenceStatus;
+    }
+
+    public void setGeofenceStatus(GeofenceStatus geofenceStatus) {
+        this.geofenceStatus = geofenceStatus != null ? geofenceStatus : GeofenceStatus.UNVERIFIED_NO_GPS;
+    }
+
+    public BigDecimal getDistanceFromZoneCenterMeters() {
+        return distanceFromZoneCenterMeters;
+    }
+
+    public void setDistanceFromZoneCenterMeters(BigDecimal distanceFromZoneCenterMeters) {
+        this.distanceFromZoneCenterMeters = distanceFromZoneCenterMeters;
+    }
+
+    public String getPerceptualHash() {
+        return perceptualHash;
+    }
+
+    public void setPerceptualHash(String perceptualHash) {
+        this.perceptualHash = perceptualHash;
+    }
+
+    public DuplicateStatus getDuplicateStatus() {
+        return duplicateStatus;
+    }
+
+    public void setDuplicateStatus(DuplicateStatus duplicateStatus) {
+        this.duplicateStatus = duplicateStatus != null ? duplicateStatus : DuplicateStatus.UNIQUE;
+    }
+
+    public String getDuplicateOfEvidenceId() {
+        return duplicateOfEvidenceId;
+    }
+
+    public void setDuplicateOfEvidenceId(String duplicateOfEvidenceId) {
+        this.duplicateOfEvidenceId = duplicateOfEvidenceId;
+    }
+
+    public String getDeviceOrientationJson() {
+        return deviceOrientationJson;
+    }
+
+    public void setDeviceOrientationJson(String deviceOrientationJson) {
+        this.deviceOrientationJson = deviceOrientationJson;
+    }
+
+    public DeviceIntegrityStatus getDeviceIntegrityStatus() {
+        return deviceIntegrityStatus;
+    }
+
+    public void setDeviceIntegrityStatus(DeviceIntegrityStatus deviceIntegrityStatus) {
+        this.deviceIntegrityStatus = deviceIntegrityStatus != null ? deviceIntegrityStatus : DeviceIntegrityStatus.WEB_UNATTESTED;
     }
 
     @Override

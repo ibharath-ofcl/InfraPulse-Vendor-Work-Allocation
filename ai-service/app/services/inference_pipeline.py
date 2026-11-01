@@ -4,6 +4,7 @@ from app.schemas.inference import FullAnalysisResponse, QualityAnalysisResponse,
 from app.models.model_registry import UNSUPPORTED_CATEGORIES, MODEL_ID, MODEL_VERSION
 from app.services.image_quality_service import decode_and_normalize_image, assess_image_quality
 from app.services.detection_service import detect_infrastructure_features
+from app.services.depth_segmentation_service import generate_segmentation_masks, estimate_monocular_depth
 
 
 def run_full_analysis(image_bytes: bytes, evidence_id: Optional[str] = None) -> FullAnalysisResponse:
@@ -16,15 +17,23 @@ def run_full_analysis(image_bytes: bytes, evidence_id: Optional[str] = None) -> 
     quality_result = assess_image_quality(img_bgr, orientation)
 
     detections = []
+    segmentation_masks = []
+    depth_estimate = None
     warnings = list(quality_result.warnings)
 
-    # 3. Detection pipeline (run only if image is usable)
+    # 3. Detection & Vision pipeline (run only if image is usable)
     if quality_result.quality_status != "UNUSABLE_IMAGE":
         detections = detect_infrastructure_features(img_bgr)
         if len(detections) == 0:
             warnings.append("No supported infrastructure surface defects detected in this image.")
+        else:
+            # Generate genuine polygon segmentation masks for detected structures
+            segmentation_masks = generate_segmentation_masks(img_bgr, detections)
+
+        # Monocular depth relative gradient proxy with disclaimer
+        depth_estimate = estimate_monocular_depth(img_bgr)
     else:
-        warnings.append("Detection skipped due to unusable image quality.")
+        warnings.append("Detection and depth analysis skipped due to unusable image quality.")
 
     duration_ms = int((time.time() - start_time) * 1000)
 
@@ -36,6 +45,8 @@ def run_full_analysis(image_bytes: bytes, evidence_id: Optional[str] = None) -> 
         image_quality=quality_result,
         detections=detections,
         total_detections=len(detections),
+        segmentation_masks=segmentation_masks,
+        monocular_depth=depth_estimate,
         processing_duration_ms=duration_ms,
         warnings=warnings,
         unsupported_categories=UNSUPPORTED_CATEGORIES,

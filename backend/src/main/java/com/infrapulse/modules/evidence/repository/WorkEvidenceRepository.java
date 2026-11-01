@@ -33,6 +33,10 @@ public interface WorkEvidenceRepository extends JpaRepository<WorkEvidence, Stri
 
     Page<WorkEvidence> findByVendorIdAndIsDeletedFalseOrderByUploadedAtDesc(String vendorId, Pageable pageable);
 
+    List<WorkEvidence> findByChecksumSha256AndIsDeletedFalse(String checksumSha256);
+
+    List<WorkEvidence> findByProjectIdAndPerceptualHashIsNotNullAndIsDeletedFalse(String projectId);
+
     @Query(value = "SELECT nextval('work_evidence_seq')", nativeQuery = true)
     Long getNextEvidenceSequence();
 }

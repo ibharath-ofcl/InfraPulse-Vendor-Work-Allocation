@@ -25,6 +25,7 @@ import com.infrapulse.modules.humanreview.repository.HumanInspectionDecisionRepo
 import com.infrapulse.modules.humanreview.repository.PhysicalMeasurementRepository;
 import com.infrapulse.modules.project.repository.ProjectVendorRepository;
 import com.infrapulse.modules.quality.entity.QualityAssessment;
+import com.infrapulse.modules.quality.model.AssessmentStatus;
 import com.infrapulse.modules.quality.repository.QualityAssessmentRepository;
 import com.infrapulse.modules.workassignment.entity.WorkAssignment;
 import com.infrapulse.modules.workassignment.enums.AssignmentStatus;
@@ -176,6 +177,23 @@ public class MilestoneEligibilityService {
                 blockingConditions.add("Assignment " + assignment.getAssignmentCode() + " is missing mandatory Stage 10 Quality Assessment");
             } else {
                 QualityAssessment latestAssessment = assessments.get(0);
+
+                // Configurable Contract/Project Quality Score Policy Check (85% baseline)
+                if (latestAssessment.getTotalCriteriaEvaluated() > 0 || (latestAssessment.getEvidenceCompletenessScore() != null && latestAssessment.getEvidenceCompletenessScore() > 0.0)) {
+                    double threshold = (latestAssessment.getTemplate() != null && latestAssessment.getTemplate().getPassingScoreThreshold() != null)
+                            ? latestAssessment.getTemplate().getPassingScoreThreshold().doubleValue()
+                            : 85.0;
+                    double actualScore = latestAssessment.getEvidenceCompletenessScore() != null ? latestAssessment.getEvidenceCompletenessScore() : 0.0;
+                    if (actualScore < threshold) {
+                        blockingConditions.add(String.format(
+                                "Assignment %s quality compliance score (%.1f%%) does not meet contract policy threshold (%.1f%%)",
+                                assignment.getAssignmentCode(), actualScore, threshold));
+                    }
+                } else if (latestAssessment.getStatus() != AssessmentStatus.PASS) {
+                    blockingConditions.add(String.format(
+                            "Assignment %s quality assessment status is %s (PASS required)",
+                            assignment.getAssignmentCode(), latestAssessment.getStatus()));
+                }
 
                 // Stage 11 Human Inspection Decision check (MANDATORY human approval)
                 Optional<HumanInspectionDecision> decisionOpt = humanInspectionDecisionRepository

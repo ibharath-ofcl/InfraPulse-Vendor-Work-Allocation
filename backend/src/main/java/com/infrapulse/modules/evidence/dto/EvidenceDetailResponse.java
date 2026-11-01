@@ -51,6 +51,16 @@ public class EvidenceDetailResponse {
     private String fileDownloadUrl;
     private String previewUrl;
 
+    private BigDecimal gpsAccuracyMeters;
+    private Instant serverReceiptTimestamp;
+    private String geofenceStatus;
+    private BigDecimal distanceFromZoneCenterMeters;
+    private String perceptualHash;
+    private String duplicateStatus;
+    private String duplicateOfEvidenceId;
+    private String deviceOrientationJson;
+    private String deviceIntegrityStatus;
+
     public EvidenceDetailResponse() {}
 
     public static EvidenceDetailResponse fromEntity(WorkEvidence e) {
@@ -109,6 +119,22 @@ public class EvidenceDetailResponse {
         r.setLatitude(e.getLatitude());
         r.setLongitude(e.getLongitude());
         r.setMetadataJson(e.getMetadataJson());
+
+        r.setGpsAccuracyMeters(e.getGpsAccuracyMeters());
+        r.setServerReceiptTimestamp(e.getServerReceiptTimestamp());
+        if (e.getGeofenceStatus() != null) {
+            r.setGeofenceStatus(e.getGeofenceStatus().name());
+        }
+        r.setDistanceFromZoneCenterMeters(e.getDistanceFromZoneCenterMeters());
+        r.setPerceptualHash(e.getPerceptualHash());
+        if (e.getDuplicateStatus() != null) {
+            r.setDuplicateStatus(e.getDuplicateStatus().name());
+        }
+        r.setDuplicateOfEvidenceId(e.getDuplicateOfEvidenceId());
+        r.setDeviceOrientationJson(e.getDeviceOrientationJson());
+        if (e.getDeviceIntegrityStatus() != null) {
+            r.setDeviceIntegrityStatus(e.getDeviceIntegrityStatus().name());
+        }
 
         if (e.getProcessingStatus() != null) {
             r.setProcessingStatus(e.getProcessingStatus().name());
@@ -274,4 +300,31 @@ public class EvidenceDetailResponse {
 
     public String getPreviewUrl() { return previewUrl; }
     public void setPreviewUrl(String previewUrl) { this.previewUrl = previewUrl; }
+
+    public BigDecimal getGpsAccuracyMeters() { return gpsAccuracyMeters; }
+    public void setGpsAccuracyMeters(BigDecimal gpsAccuracyMeters) { this.gpsAccuracyMeters = gpsAccuracyMeters; }
+
+    public Instant getServerReceiptTimestamp() { return serverReceiptTimestamp; }
+    public void setServerReceiptTimestamp(Instant serverReceiptTimestamp) { this.serverReceiptTimestamp = serverReceiptTimestamp; }
+
+    public String getGeofenceStatus() { return geofenceStatus; }
+    public void setGeofenceStatus(String geofenceStatus) { this.geofenceStatus = geofenceStatus; }
+
+    public BigDecimal getDistanceFromZoneCenterMeters() { return distanceFromZoneCenterMeters; }
+    public void setDistanceFromZoneCenterMeters(BigDecimal distanceFromZoneCenterMeters) { this.distanceFromZoneCenterMeters = distanceFromZoneCenterMeters; }
+
+    public String getPerceptualHash() { return perceptualHash; }
+    public void setPerceptualHash(String perceptualHash) { this.perceptualHash = perceptualHash; }
+
+    public String getDuplicateStatus() { return duplicateStatus; }
+    public void setDuplicateStatus(String duplicateStatus) { this.duplicateStatus = duplicateStatus; }
+
+    public String getDuplicateOfEvidenceId() { return duplicateOfEvidenceId; }
+    public void setDuplicateOfEvidenceId(String duplicateOfEvidenceId) { this.duplicateOfEvidenceId = duplicateOfEvidenceId; }
+
+    public String getDeviceOrientationJson() { return deviceOrientationJson; }
+    public void setDeviceOrientationJson(String deviceOrientationJson) { this.deviceOrientationJson = deviceOrientationJson; }
+
+    public String getDeviceIntegrityStatus() { return deviceIntegrityStatus; }
+    public void setDeviceIntegrityStatus(String deviceIntegrityStatus) { this.deviceIntegrityStatus = deviceIntegrityStatus; }
 }

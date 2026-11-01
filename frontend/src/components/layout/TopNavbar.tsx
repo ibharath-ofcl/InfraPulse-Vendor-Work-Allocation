@@ -115,7 +115,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ onOpenMobile, collapsed })
         </div>
 
         {/* Center: Global Search Bar */}
-        <div className="flex-1 max-w-md hidden md:block">
+        <div className="flex-1 max-w-xs xl:max-w-md hidden lg:block">
           <button
             onClick={() => setSearchModalOpen(true)}
             className="w-full flex items-center justify-between px-3 py-1.5 text-xs text-ink-muted bg-slate-50 hover:bg-slate-100 border border-surface-border rounded-lg transition-colors text-left"
@@ -131,12 +131,12 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ onOpenMobile, collapsed })
         </div>
 
         {/* Right Section: Project Scope, Notifications, User Profile */}
-        <div className="flex items-center gap-2 md:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 shrink-0">
           {/* Project Scope Selector */}
           <div className="relative" ref={projectRef}>
             <button
               onClick={() => setProjectDropdownOpen(!projectDropdownOpen)}
-              className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-ink-primary bg-slate-50 hover:bg-slate-100 border border-surface-border rounded-lg transition-colors max-w-[180px] sm:max-w-[220px]"
+              className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1.5 text-xs text-ink-primary bg-slate-50 hover:bg-slate-100 border border-surface-border rounded-lg transition-colors max-w-[140px] sm:max-w-[180px] lg:max-w-[220px]"
               title="Filter by Project Scope"
             >
               <Layers className="w-3.5 h-3.5 text-teal-600 shrink-0" />

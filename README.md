@@ -1,7 +1,7 @@
 # InfraPulse AI — Intelligent Infrastructure Lifecycle, Vendor Coordination & Quality Assurance Platform
 
-[![Release: v1.0.0](https://img.shields.io/badge/Release-v1.0.0%20GA-brightgreen)](docs/RELEASE_NOTES_v1.0.0.md)
-[![Stage 15: Final Production Release & Deployment](https://img.shields.io/badge/Stage%2015-Final%20Release%20%26%20Handover%20Complete-brightgreen)](docs/FINAL_RELEASE_REPORT.md)
+[![Release: v1.1.0](https://img.shields.io/badge/Release-v1.1.0%20GA-brightgreen)](docs/FINAL_FIVE_ROLE_BROWSER_TEST_REPORT.md)
+[![Verification: Use Case 2 & 5-Role Automated QA](https://img.shields.io/badge/Verification-Use%20Case%202%20%26%205--Role%20QA%20Complete-brightgreen)](docs/FINAL_FIVE_ROLE_BROWSER_TEST_REPORT.md)
 [![Java](https://img.shields.io/badge/Java-21%20LTS-orange)](https://openjdk.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-brightgreen)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-18.3-blue)](https://react.dev/)

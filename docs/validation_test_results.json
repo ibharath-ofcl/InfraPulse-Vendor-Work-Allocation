@@ -1,0 +1,762 @@
+[
+  {
+    "timestamp": "2026-11-01T04:35:53.972Z",
+    "status": "INFO",
+    "phase": "PHASE_2",
+    "role": "SYSTEM",
+    "feature": "Navigation",
+    "message": "Loading initial page http://localhost:3000/login"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:54.335Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/login",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:54.336Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/login",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.276Z",
+    "status": "PASS",
+    "phase": "PHASE_2",
+    "role": "SYSTEM",
+    "feature": "Login Page",
+    "message": "Login page loaded successfully with branding and quick-login buttons"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.276Z",
+    "status": "INFO",
+    "phase": "PHASE_4",
+    "role": "ADMIN",
+    "feature": "Auth",
+    "message": "Logging in as Platform Administrator"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.484Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/login",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.525Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/overview",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.525Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/overview",
+    "message": "Failed to load project list for selector AxiosError: Request failed with status code 500\n    at settle (http://localhost:3000/node_modules/.vite/deps/axios.js?v=43c6b1a5:1884:12)\n    at XMLHttpRequest.onloadend (http://localhost:3000/node_modules/.vite/deps/axios.js?v=43c6b1a5:2555:7)\n    at Axios.request (http://localhost:3000/node_modules/.vite/deps/axios.js?v=43c6b1a5:3779:43)\n    at async Object.getProjects (http://localhost:3000/src/services/projectService.ts:12:22)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.526Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/overview",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.526Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/overview",
+    "message": "Failed to load dashboard data AxiosError: Request failed with status code 500\n    at settle (http://localhost:3000/node_modules/.vite/deps/axios.js?v=43c6b1a5:1884:12)\n    at XMLHttpRequest.onloadend (http://localhost:3000/node_modules/.vite/deps/axios.js?v=43c6b1a5:2555:7)\n    at Axios.request (http://localhost:3000/node_modules/.vite/deps/axios.js?v=43c6b1a5:3779:43)\n    at async Object.getSummary (http://localhost:3000/src/services/dashboardService.ts:13:22)\n    at async Promise.all (index 0)\n    at async http://localhost:3000/src/pages/OverviewPage.tsx:99:11"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.528Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/overview",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.528Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/overview",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.528Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/overview",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.528Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/overview",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.542Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/overview",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.542Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/overview",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.542Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/overview",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.543Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/overview",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.543Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/overview",
+    "message": "Failed to load project list for selector AxiosError: Request failed with status code 500\n    at settle (http://localhost:3000/node_modules/.vite/deps/axios.js?v=43c6b1a5:1884:12)\n    at XMLHttpRequest.onloadend (http://localhost:3000/node_modules/.vite/deps/axios.js?v=43c6b1a5:2555:7)\n    at Axios.request (http://localhost:3000/node_modules/.vite/deps/axios.js?v=43c6b1a5:3779:43)\n    at async Object.getProjects (http://localhost:3000/src/services/projectService.ts:12:22)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.543Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/overview",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.543Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/overview",
+    "message": "Failed to load dashboard data AxiosError: Request failed with status code 500\n    at settle (http://localhost:3000/node_modules/.vite/deps/axios.js?v=43c6b1a5:1884:12)\n    at XMLHttpRequest.onloadend (http://localhost:3000/node_modules/.vite/deps/axios.js?v=43c6b1a5:2555:7)\n    at Axios.request (http://localhost:3000/node_modules/.vite/deps/axios.js?v=43c6b1a5:3779:43)\n    at async Object.getSummary (http://localhost:3000/src/services/dashboardService.ts:13:22)\n    at async Promise.all (index 0)\n    at async http://localhost:3000/src/pages/OverviewPage.tsx:99:11"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.543Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/overview",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.543Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/overview",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.543Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/overview",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.543Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/overview",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.543Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/overview",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.543Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/overview",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:55.544Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/overview",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:56.548Z",
+    "status": "PASS",
+    "phase": "PHASE_4",
+    "role": "ADMIN",
+    "feature": "Dashboard",
+    "message": "Admin redirected to /overview successfully"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:56.562Z",
+    "status": "PASS",
+    "phase": "PHASE_4",
+    "role": "ADMIN",
+    "feature": "KPI Cards",
+    "message": "Found 15 KPI/Metric cards on dashboard"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:56.562Z",
+    "status": "INFO",
+    "phase": "PHASE_4",
+    "role": "ADMIN",
+    "feature": "Projects",
+    "message": "Navigating to /projects"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:56.683Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/projects",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:56.689Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/login",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:58.053Z",
+    "status": "PASS",
+    "phase": "PHASE_4",
+    "role": "ADMIN",
+    "feature": "Projects",
+    "message": "Projects directory loaded with search and filter controls"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:58.053Z",
+    "status": "INFO",
+    "phase": "PHASE_4",
+    "role": "ADMIN",
+    "feature": "Work Zones",
+    "message": "Navigating to /work-zones"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:58.105Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/work-zones",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:58.105Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/work-zones",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:59.474Z",
+    "status": "PASS",
+    "phase": "PHASE_4",
+    "role": "ADMIN",
+    "feature": "Work Zones",
+    "message": "Spatial Work Zones page loaded with map and polygon zone ledger"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:59.474Z",
+    "status": "INFO",
+    "phase": "PHASE_4",
+    "role": "ADMIN",
+    "feature": "Work Allocation",
+    "message": "Navigating to /work-allocation"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:59.536Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/work-allocation",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:35:59.537Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/work-allocation",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:00.914Z",
+    "status": "PASS",
+    "phase": "PHASE_4",
+    "role": "ADMIN",
+    "feature": "Work Allocation",
+    "message": "Work Allocation ledger loaded with sequential dependencies"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:00.914Z",
+    "status": "INFO",
+    "phase": "PHASE_4",
+    "role": "ADMIN",
+    "feature": "Work Dependencies",
+    "message": "Navigating to /work-dependencies"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:00.991Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/work-dependencies",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:00.992Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/work-dependencies",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:02.365Z",
+    "status": "PASS",
+    "phase": "PHASE_4",
+    "role": "ADMIN",
+    "feature": "Work Dependencies",
+    "message": "DAG Dependency rules matrix loaded with conflict prevention rules"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:02.365Z",
+    "status": "INFO",
+    "phase": "PHASE_4",
+    "role": "ADMIN",
+    "feature": "Vendors",
+    "message": "Navigating to /vendors"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:02.444Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/vendors",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:02.449Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/login",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:03.832Z",
+    "status": "PASS",
+    "phase": "PHASE_4",
+    "role": "ADMIN",
+    "feature": "Vendors",
+    "message": "Vendor directory loaded with service categories and performance metrics"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:03.832Z",
+    "status": "INFO",
+    "phase": "PHASE_4",
+    "role": "ADMIN",
+    "feature": "User Management",
+    "message": "Navigating to /users"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:03.937Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/users",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:03.938Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/users",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:05.303Z",
+    "status": "PASS",
+    "phase": "PHASE_4",
+    "role": "ADMIN",
+    "feature": "User Management",
+    "message": "Admin User Management portal loaded with role assignment and status controls"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:05.303Z",
+    "status": "INFO",
+    "phase": "PHASE_4",
+    "role": "ADMIN",
+    "feature": "Audit Trail",
+    "message": "Navigating to /audit-trail"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:05.380Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/audit-trail",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:05.382Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/audit-trail",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:06.754Z",
+    "status": "PASS",
+    "phase": "PHASE_4",
+    "role": "ADMIN",
+    "feature": "Audit Trail",
+    "message": "Append-only SHA-256 cryptographic audit trail ledger loaded"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:06.754Z",
+    "status": "INFO",
+    "phase": "PHASE_4",
+    "role": "ADMIN",
+    "feature": "Analytics",
+    "message": "Navigating to /analytics"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:06.822Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/analytics",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:06.823Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/analytics",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:08.182Z",
+    "status": "PASS",
+    "phase": "PHASE_4",
+    "role": "ADMIN",
+    "feature": "Analytics",
+    "message": "Executive analytics dashboard loaded with multi-vendor KPIs and trend graphs"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:08.182Z",
+    "status": "INFO",
+    "phase": "PHASE_4",
+    "role": "ADMIN",
+    "feature": "Profile",
+    "message": "Navigating to /profile"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:08.242Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/profile",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:08.242Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/profile",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:09.627Z",
+    "status": "PASS",
+    "phase": "PHASE_4",
+    "role": "ADMIN",
+    "feature": "Profile",
+    "message": "Operator Profile page loaded with security attributes and permissions list"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:09.627Z",
+    "status": "INFO",
+    "phase": "PHASE_4",
+    "role": "ADMIN",
+    "feature": "Logout",
+    "message": "Logging out Admin"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:09.757Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/login",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:09.757Z",
+    "status": "WARN",
+    "phase": "CONSOLE_ERROR",
+    "role": "GLOBAL",
+    "feature": "http://localhost:3000/login",
+    "message": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:10.296Z",
+    "status": "INFO",
+    "phase": "PHASE_5",
+    "role": "PROJECT_MANAGER",
+    "feature": "Auth",
+    "message": "Logging in as Project Manager (pm@infrapulse.gov.in)"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:13.312Z",
+    "status": "PASS",
+    "phase": "PHASE_5",
+    "role": "PROJECT_MANAGER",
+    "feature": "Dashboard",
+    "message": "Project Manager authenticated and loaded overview"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:14.510Z",
+    "status": "PASS",
+    "phase": "PHASE_5",
+    "role": "PROJECT_MANAGER",
+    "feature": "Projects",
+    "message": "PM accessible projects verified"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:15.636Z",
+    "status": "PASS",
+    "phase": "PHASE_5",
+    "role": "PROJECT_MANAGER",
+    "feature": "Work Allocation",
+    "message": "PM accessible work allocation ledger verified"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:15.636Z",
+    "status": "INFO",
+    "phase": "PHASE_5",
+    "role": "PROJECT_MANAGER",
+    "feature": "Security",
+    "message": "Testing PM unauthorized access to /users"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:16.752Z",
+    "status": "PASS",
+    "phase": "PHASE_5",
+    "role": "PROJECT_MANAGER",
+    "feature": "Security",
+    "message": "PM successfully blocked from /users (URL: http://localhost:3000/login)"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:16.829Z",
+    "status": "INFO",
+    "phase": "PHASE_6",
+    "role": "VENDOR",
+    "feature": "Auth",
+    "message": "Logging in as Vendor (vendor@infrapulse.gov.in)"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:20.225Z",
+    "status": "PASS",
+    "phase": "PHASE_6",
+    "role": "VENDOR",
+    "feature": "Dashboard",
+    "message": "Vendor landed on http://localhost:3000/my-work (My Work Orders portal)"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:21.685Z",
+    "status": "PASS",
+    "phase": "PHASE_6",
+    "role": "VENDOR",
+    "feature": "Evidence Center",
+    "message": "Vendor Photo Evidence Management & Upload Center loaded"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:22.811Z",
+    "status": "PASS",
+    "phase": "PHASE_6",
+    "role": "VENDOR",
+    "feature": "Corrective Actions",
+    "message": "Vendor assigned corrective actions page loaded"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:22.811Z",
+    "status": "INFO",
+    "phase": "PHASE_6",
+    "role": "VENDOR",
+    "feature": "Security",
+    "message": "Testing Vendor unauthorized access to /users"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:23.928Z",
+    "status": "PASS",
+    "phase": "PHASE_6",
+    "role": "VENDOR",
+    "feature": "Security",
+    "message": "Vendor successfully blocked from /users (URL: http://localhost:3000/login)"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:23.949Z",
+    "status": "INFO",
+    "phase": "PHASE_7",
+    "role": "FIELD_ENGINEER",
+    "feature": "Auth",
+    "message": "Logging in as Field Engineer (field@infrapulse.gov.in)"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:26.738Z",
+    "status": "PASS",
+    "phase": "PHASE_7",
+    "role": "FIELD_ENGINEER",
+    "feature": "Quality Inspection",
+    "message": "Field Engineer quality inspection dashboard loaded"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:28.223Z",
+    "status": "PASS",
+    "phase": "PHASE_7",
+    "role": "FIELD_ENGINEER",
+    "feature": "Human Review Queue",
+    "message": "Mandatory human quality review queue loaded"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:29.660Z",
+    "status": "PASS",
+    "phase": "PHASE_7",
+    "role": "FIELD_ENGINEER",
+    "feature": "Corrective Actions",
+    "message": "Field Engineer corrective actions management loaded"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:29.666Z",
+    "status": "INFO",
+    "phase": "PHASE_8",
+    "role": "FINANCE_OFFICER",
+    "feature": "Auth",
+    "message": "Logging in as Finance Officer (finance@infrapulse.gov.in)"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:32.073Z",
+    "status": "PASS",
+    "phase": "PHASE_8",
+    "role": "FINANCE_OFFICER",
+    "feature": "Milestones & Payments",
+    "message": "Finance Officer commercial milestones & payment authorization loaded"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:33.522Z",
+    "status": "PASS",
+    "phase": "PHASE_8",
+    "role": "FINANCE_OFFICER",
+    "feature": "Analytics",
+    "message": "Finance operational analytics and disbursement summaries loaded"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:33.527Z",
+    "status": "INFO",
+    "phase": "PHASE_10",
+    "role": "MOBILE",
+    "feature": "Responsiveness",
+    "message": "Running mobile viewport responsiveness tests across 6 display resolutions"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:35.852Z",
+    "status": "PASS",
+    "phase": "PHASE_10",
+    "role": "MOBILE",
+    "feature": "Android Standard",
+    "message": "Clean viewport fit with zero horizontal overflow at 360x800"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:37.927Z",
+    "status": "PASS",
+    "phase": "PHASE_10",
+    "role": "MOBILE",
+    "feature": "iPhone X/11/12 Mini",
+    "message": "Clean viewport fit with zero horizontal overflow at 375x812"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:40.318Z",
+    "status": "PASS",
+    "phase": "PHASE_10",
+    "role": "MOBILE",
+    "feature": "iPhone 12/13/14",
+    "message": "Clean viewport fit with zero horizontal overflow at 390x844"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:42.592Z",
+    "status": "PASS",
+    "phase": "PHASE_10",
+    "role": "MOBILE",
+    "feature": "iPhone 14/15 Pro Max",
+    "message": "Clean viewport fit with zero horizontal overflow at 430x932"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:44.776Z",
+    "status": "WARN",
+    "phase": "PHASE_10",
+    "role": "MOBILE",
+    "feature": "iPad Portrait",
+    "message": "Horizontal scroll detected at 768x1024"
+  },
+  {
+    "timestamp": "2026-11-01T04:36:47.695Z",
+    "status": "PASS",
+    "phase": "PHASE_10",
+    "role": "MOBILE",
+    "feature": "iPad Landscape",
+    "message": "Clean viewport fit with zero horizontal overflow at 1024x768"
+  }
+]

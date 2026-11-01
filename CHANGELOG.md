@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2026-11-01
+
+### Use Case 2 Verification Enhancements & Master Five-Role Browser Automation
+
+#### Added
+- **Perceptual Duplicate Evidence Detection**: Multi-layer cryptographic (SHA-256) and perceptual difference hashing (`dHash` 64-bit with Hamming distance threshold $\le 5$) preventing fraudulent contractor photo resubmissions.
+- **Geofencing & Freshness Verification**: Haversine distance geofence validation ($\le 500\text{m}$, GPS accuracy $\le 50\text{m}$) and 72-hour freshness window with clock skew protection.
+- **Monocular Depth Proxy & Defect Segmentation**: AI vision relative optical disparity estimation with explicit advisory disclaimers and normalized polygon segmentation masks.
+- **Master Five-Role Browser Automation Suite**: Automated Playwright test harness testing all 5 roles (`PLATFORM_ADMIN`, `PROJECT_MANAGER`, `VENDOR`, `FIELD_ENGINEER`, `FINANCE_OFFICER`) on actual Google Chrome.
+- **Responsive Mobile Viewport Validation**: Automated viewport tests across 6 display resolutions (360×800, 375×812, 390×844, 430×932, 768×1024, 1024×768).
+
+#### Fixed
+- **TopNavbar 768px Horizontal Overflow**: Resolved iPad Portrait layout squeezing by making the center search bar responsive (`hidden lg:block`) and compacting project scope selector, eliminating the 6px horizontal scrollbar defect.
+- **Vite Backend API Proxy**: Updated proxy target to `http://127.0.0.1:8080` and `http://127.0.0.1:8000` to prevent Node.js IPv6 `::1` DNS lookup conflicts and `EPERM` socket restrictions.
+- **Mockito Subclass Mock Maker**: Configured `mock-maker-subclass` extension to ensure backend unit and integration test suites execute reliably without dynamic ByteBuddy attachment conflicts.
+
+---
+
 ## [1.0.0] - 2026-10-31
 
 ### Initial Official Production Release (Stages 1 through 15 Complete)

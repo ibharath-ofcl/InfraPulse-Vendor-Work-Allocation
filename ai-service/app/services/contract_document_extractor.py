@@ -210,3 +210,4 @@ def extract_requirements_from_text(
         extraction_duration_ms=duration_ms,
         extractor_version=EXTRACTOR_VERSION,
     )
+

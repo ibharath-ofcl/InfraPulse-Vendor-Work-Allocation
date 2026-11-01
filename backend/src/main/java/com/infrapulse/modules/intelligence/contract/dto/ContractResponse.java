@@ -27,3 +27,4 @@ public record ContractResponse(
     double compliancePercentage,
     Instant createdAt
 ) {}
+

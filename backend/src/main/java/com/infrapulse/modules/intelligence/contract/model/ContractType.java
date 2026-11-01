@@ -7,3 +7,4 @@ public enum ContractType {
     WATER_SUPPLY_DRAINAGE,
     ELECTRICAL_GRID
 }
+

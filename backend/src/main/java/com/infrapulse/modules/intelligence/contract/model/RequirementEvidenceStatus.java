@@ -11,3 +11,4 @@ public enum RequirementEvidenceStatus {
     VERIFIED,
     WAIVED_WITH_AUTHORIZATION
 }
+

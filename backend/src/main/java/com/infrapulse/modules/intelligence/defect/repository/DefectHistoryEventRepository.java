@@ -11,3 +11,4 @@ public interface DefectHistoryEventRepository extends JpaRepository<DefectHistor
 
     List<DefectHistoryEvent> findByDefectIdOrderByCreatedAtAsc(String defectId);
 }
+

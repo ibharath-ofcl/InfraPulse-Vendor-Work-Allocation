@@ -32,3 +32,4 @@ public record ProjectRiskAlertDto(
     Instant resolvedAt,
     Instant createdAt
 ) {}
+

@@ -16,3 +16,4 @@ public record DefectDashboardSummaryDto(
     Map<String, Long> defectsBySeverity,
     Map<String, Long> defectsByZone
 ) {}
+

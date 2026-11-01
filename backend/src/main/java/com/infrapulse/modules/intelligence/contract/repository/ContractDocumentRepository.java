@@ -14,3 +14,4 @@ public interface ContractDocumentRepository extends JpaRepository<ContractDocume
 
     Optional<ContractDocument> findBySha256Hash(String sha256Hash);
 }
+

@@ -6,3 +6,4 @@ public record WaiverRequest(
     @NotBlank(message = "Documented waiver rationale is mandatory")
     String waiverReason
 ) {}
+

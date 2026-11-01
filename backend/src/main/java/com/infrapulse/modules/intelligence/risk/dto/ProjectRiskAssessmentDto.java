@@ -22,3 +22,4 @@ public record ProjectRiskAssessmentDto(
     Instant evaluatedAt,
     long activeAlertsCount
 ) {}
+

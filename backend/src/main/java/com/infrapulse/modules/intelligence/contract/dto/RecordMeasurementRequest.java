@@ -13,3 +13,4 @@ public record RecordMeasurementRequest(
 
     String measurementNotes
 ) {}
+

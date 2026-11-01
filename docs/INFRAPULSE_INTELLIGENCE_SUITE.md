@@ -152,3 +152,4 @@ If any critical alert is unaddressed or mandatory contract specification is pend
   7. `defect_history_events`: Audit trail for defect lifecycle status transitions.
   8. `project_risk_assessments`: Historical multi-dimensional risk scores.
   9. `project_risk_alerts`: Explainable risk alerts with resolution tracking.
+

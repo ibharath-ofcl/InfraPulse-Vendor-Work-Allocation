@@ -17,3 +17,4 @@ public record VendorDefectScorecardDto(
     double averageResolutionDays,
     Map<String, Long> defectsByCategory
 ) {}
+

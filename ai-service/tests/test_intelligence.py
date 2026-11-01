@@ -69,3 +69,4 @@ def test_compare_defects_recurrence():
     assert top_match["candidate_id"] == "DEF-OLD-001"
     assert top_match["is_probable_recurrence"] is True
     assert top_match["similarity_score"] >= 0.70
+

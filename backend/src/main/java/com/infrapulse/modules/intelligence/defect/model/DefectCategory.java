@@ -10,3 +10,4 @@ public enum DefectCategory {
     MATERIAL_IRREGULARITY,
     UNAUTHORIZED_DEVIATION
 }
+

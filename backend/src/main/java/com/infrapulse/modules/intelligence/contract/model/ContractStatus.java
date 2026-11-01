@@ -7,3 +7,4 @@ public enum ContractStatus {
     COMPLETED,
     TERMINATED
 }
+

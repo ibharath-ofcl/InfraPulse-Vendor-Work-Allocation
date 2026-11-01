@@ -17,3 +17,4 @@ public record ContractComplianceSummaryDto(
     Map<String, Long> requirementsByCategory,
     Map<String, Long> statusBreakdown
 ) {}
+

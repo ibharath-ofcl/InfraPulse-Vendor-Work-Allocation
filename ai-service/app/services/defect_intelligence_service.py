@@ -146,3 +146,4 @@ def evaluate_defect_recurrence(
         results=results,
         comparison_engine_version=COMPARISON_ENGINE_VERSION,
     )
+

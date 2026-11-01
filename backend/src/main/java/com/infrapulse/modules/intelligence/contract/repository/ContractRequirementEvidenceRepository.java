@@ -30,3 +30,4 @@ public interface ContractRequirementEvidenceRepository extends JpaRepository<Con
     @Query("SELECT COUNT(e) FROM ContractRequirementEvidence e WHERE e.requirement.project.id = :projectId")
     long countTotalByProjectId(@Param("projectId") String projectId);
 }
+

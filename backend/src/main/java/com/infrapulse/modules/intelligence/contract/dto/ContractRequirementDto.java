@@ -34,3 +34,4 @@ public record ContractRequirementDto(
     long linkedEvidenceCount,
     Instant createdAt
 ) {}
+

@@ -18,3 +18,4 @@ public record RiskDashboardSummaryDto(
     Map<String, Long> alertsByCategory,
     List<ProjectRiskAlertDto> topAlerts
 ) {}
+

@@ -13,3 +13,4 @@ public interface DefectSimilarityCandidateRepository extends JpaRepository<Defec
 
     List<DefectSimilarityCandidate> findByCandidateDefectId(String candidateDefectId);
 }
+

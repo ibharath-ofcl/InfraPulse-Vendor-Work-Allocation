@@ -126,3 +126,4 @@ export const WaiverModal: React.FC<WaiverModalProps> = ({
     </div>
   );
 };
+

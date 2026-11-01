@@ -47,3 +47,4 @@ public interface ProjectRiskAlertRepository extends JpaRepository<ProjectRiskAle
     @Query(value = "SELECT nextval('risk_alert_seq')", nativeQuery = true)
     Long getNextAlertSeq();
 }
+

@@ -17,3 +17,4 @@ public record DefectRecurrenceCandidateDto(
     Boolean humanConfirmed,
     Instant createdAt
 ) {}
+

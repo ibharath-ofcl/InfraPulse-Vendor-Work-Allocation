@@ -7,3 +7,4 @@ public enum RiskLevel {
     CRITICAL,
     INSUFFICIENT_DATA
 }
+

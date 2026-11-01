@@ -6,3 +6,4 @@ public enum DefectSeverity {
     HIGH,
     CRITICAL
 }
+

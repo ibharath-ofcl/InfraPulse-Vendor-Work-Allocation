@@ -62,3 +62,4 @@ class DefectComparisonResponse(BaseModel):
     probable_recurrences_found: int
     results: List[DefectMatchCandidateResult]
     comparison_engine_version: str = "1.0.0"
+

@@ -9,3 +9,4 @@ public record RiskResolutionRequest(
 
     String resolutionNotes
 ) {}
+

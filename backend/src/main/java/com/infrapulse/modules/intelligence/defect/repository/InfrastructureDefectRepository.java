@@ -60,3 +60,4 @@ public interface InfrastructureDefectRepository extends JpaRepository<Infrastruc
     @Query(value = "SELECT nextval('defect_code_seq')", nativeQuery = true)
     Long getNextDefectSeq();
 }
+

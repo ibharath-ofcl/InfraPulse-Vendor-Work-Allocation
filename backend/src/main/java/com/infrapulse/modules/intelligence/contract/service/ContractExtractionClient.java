@@ -160,3 +160,4 @@ public class ContractExtractionClient {
         return fallback;
     }
 }
+

@@ -28,3 +28,4 @@ public record CreateDefectRequest(
     @NotBlank(message = "Defect description is mandatory")
     String description
 ) {}
+

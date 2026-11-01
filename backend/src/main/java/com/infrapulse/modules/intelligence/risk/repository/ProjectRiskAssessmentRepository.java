@@ -25,3 +25,4 @@ public interface ProjectRiskAssessmentRepository extends JpaRepository<ProjectRi
     @Query(value = "SELECT nextval('risk_assessment_seq')", nativeQuery = true)
     Long getNextAssessmentSeq();
 }
+

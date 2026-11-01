@@ -29,3 +29,4 @@ public record CreateRequirementRequest(
     Boolean requiresPhysicalMeasurement,
     VerificationMethod verificationMethod
 ) {}
+

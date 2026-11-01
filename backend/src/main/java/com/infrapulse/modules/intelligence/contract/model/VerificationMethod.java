@@ -6,3 +6,4 @@ public enum VerificationMethod {
     LAB_REPORT_VERIFICATION,
     ON_SITE_AUDIT
 }
+

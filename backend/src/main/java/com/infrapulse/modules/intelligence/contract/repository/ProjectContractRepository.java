@@ -27,3 +27,4 @@ public interface ProjectContractRepository extends JpaRepository<ProjectContract
     @Query(value = "SELECT nextval('contract_code_seq')", nativeQuery = true)
     Long getNextContractSeq();
 }
+

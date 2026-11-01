@@ -224,3 +224,4 @@ CREATE INDEX IF NOT EXISTS idx_risk_alerts_project ON project_risk_alerts(projec
 CREATE INDEX IF NOT EXISTS idx_risk_alerts_category ON project_risk_alerts(risk_category);
 CREATE INDEX IF NOT EXISTS idx_risk_alerts_level ON project_risk_alerts(risk_level);
 CREATE INDEX IF NOT EXISTS idx_risk_alerts_status ON project_risk_alerts(alert_status);
+

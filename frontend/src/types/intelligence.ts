@@ -339,3 +339,4 @@ export interface IntelligenceOverview {
   criticalRiskAlerts: number;
   lastEvaluatedAt: string;
 }
+

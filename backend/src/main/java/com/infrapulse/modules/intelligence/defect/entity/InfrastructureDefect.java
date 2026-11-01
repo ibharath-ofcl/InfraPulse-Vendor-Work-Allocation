@@ -193,3 +193,4 @@ public class InfrastructureDefect {
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 }
+

@@ -7,3 +7,4 @@ public enum RiskCategory {
     RESOURCE_RISK,
     DEPENDENCY_RISK
 }
+

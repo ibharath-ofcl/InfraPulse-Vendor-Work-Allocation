@@ -45,3 +45,4 @@ public interface ContractRequirementRepository extends JpaRepository<ContractReq
     @Query(value = "SELECT nextval('requirement_code_seq')", nativeQuery = true)
     Long getNextRequirementSeq();
 }
+

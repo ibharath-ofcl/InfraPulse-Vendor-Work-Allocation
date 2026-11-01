@@ -29,3 +29,4 @@ public record IntelligenceOverviewDto(
     long criticalRiskAlerts,
     Instant lastEvaluatedAt
 ) {}
+

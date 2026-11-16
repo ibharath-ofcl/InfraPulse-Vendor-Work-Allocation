@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { intelligenceService } from '../../services/intelligenceService';
 import { projectService } from '../../services/projectService';
+import { mockProjects } from '../../data/mockProjects';
+import { PageContainer } from '../../components/layout/PageContainer';
 import {
   ProjectContract,
   ContractRequirement,
@@ -81,14 +83,25 @@ export const IntelligenceSuitePage: React.FC = () => {
   const loadProjects = async () => {
     try {
       const res: any = await projectService.getProjects();
-      const list = res.content || res.data?.content || res.data || [];
+      const list = (res?.content && res.content.length > 0)
+        ? res.content
+        : (res?.data?.content && res.data.content.length > 0)
+        ? res.data.content
+        : (Array.isArray(res?.data) && res.data.length > 0)
+        ? res.data
+        : mockProjects;
       setProjects(list);
       if (list.length > 0) {
         setSelectedProjectId(list[0].id);
         setSelectedProjectName(list[0].projectName || list[0].name || 'Project');
       }
     } catch (e) {
-      console.error('Failed to load projects', e);
+      console.error('Failed to load projects, using mock projects fallback', e);
+      setProjects(mockProjects);
+      if (mockProjects.length > 0) {
+        setSelectedProjectId(mockProjects[0].id);
+        setSelectedProjectName(mockProjects[0].name);
+      }
     }
   };
 
@@ -206,32 +219,32 @@ export const IntelligenceSuitePage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <PageContainer className="space-y-6">
       {/* Header and Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-900 border border-slate-800/90 p-5 sm:p-6 rounded-2xl shadow-xl">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-cyan-500/10 rounded-lg text-cyan-400">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-cyan-500/10 border border-cyan-500/20 rounded-xl text-cyan-400 shadow-inner">
               <Sparkles className="w-6 h-6" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold text-white tracking-tight">InfraPulse Intelligence Suite</h1>
-                <span className="px-2 py-0.5 text-[10px] uppercase font-semibold bg-cyan-950 text-cyan-300 border border-cyan-800 rounded-full">
+              <div className="flex items-center gap-2.5">
+                <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">InfraPulse Intelligence Suite</h1>
+                <span className="px-2.5 py-0.5 text-[10px] uppercase font-bold tracking-wide bg-cyan-950 text-cyan-300 border border-cyan-800 rounded-full shadow-xs">
                   Triple-Engine AI
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-300 mt-0.5">
                 Connected Contract Extraction + Computer Vision Defect Recurrence + Predictive Risk Engine
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-3">
           {/* Project Selector */}
-          <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5">
-            <Building2 className="w-4 h-4 text-slate-400" />
+          <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 min-w-[240px] shadow-inner">
+            <Building2 className="w-4 h-4 text-cyan-400 shrink-0" />
             <select
               value={selectedProjectId}
               onChange={(e) => {
@@ -239,7 +252,7 @@ export const IntelligenceSuitePage: React.FC = () => {
                 setSelectedProjectId(e.target.value);
                 setSelectedProjectName(p?.projectName || p?.name || 'Project');
               }}
-              className="bg-transparent text-xs text-white focus:outline-hidden"
+              className="bg-transparent text-xs text-white focus:outline-hidden w-full cursor-pointer truncate"
             >
               {projects.map((p) => (
                 <option key={p.id} value={p.id} className="bg-slate-900 text-white">
@@ -252,7 +265,7 @@ export const IntelligenceSuitePage: React.FC = () => {
           <button
             onClick={handleEvaluateRisk}
             disabled={loading}
-            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-medium transition flex items-center gap-1.5 border border-slate-700"
+            className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 border border-slate-700 shadow-sm cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             <span>Evaluate Project Risk</span>
@@ -260,7 +273,7 @@ export const IntelligenceSuitePage: React.FC = () => {
 
           <button
             onClick={() => setIsContractModalOpen(true)}
-            className="px-3.5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-md shadow-cyan-950"
+            className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-md shadow-cyan-950/60 cursor-pointer"
           >
             <Upload className="w-3.5 h-3.5" />
             <span>Upload Contract / BOQ</span>
@@ -269,7 +282,7 @@ export const IntelligenceSuitePage: React.FC = () => {
       </div>
 
       {/* Navigation Sub-Tabs */}
-      <div className="flex border-b border-slate-800 gap-2">
+      <div className="bg-slate-900/90 backdrop-blur-sm border border-slate-800 rounded-xl p-1.5 flex flex-wrap gap-1.5 shadow-md">
         {[
           { id: 'overview', label: 'Suite Overview', icon: Sparkles },
           { id: 'contracts', label: 'Module A: Contract Intelligence', icon: FileText, count: requirements.length },
@@ -282,17 +295,17 @@ export const IntelligenceSuitePage: React.FC = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition -mb-px ${
+              className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                 isActive
-                  ? 'border-cyan-500 text-cyan-400 bg-cyan-950/20'
-                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+                  ? 'bg-cyan-600 text-white shadow-md shadow-cyan-950/40'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-850'
               }`}
             >
               <Icon className="w-4 h-4" />
               <span>{tab.label}</span>
               {tab.count !== undefined && tab.count > 0 && (
                 <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                  isActive ? 'bg-cyan-500 text-slate-950' : 'bg-slate-800 text-slate-300'
+                  isActive ? 'bg-white text-cyan-900' : 'bg-slate-800 text-slate-300'
                 }`}>
                   {tab.count}
                 </span>
@@ -307,186 +320,232 @@ export const IntelligenceSuitePage: React.FC = () => {
         <div className="space-y-6">
           {/* Top 4 Real Intelligence KPIs */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-2">
+            <div className="p-4 sm:p-5 bg-slate-900 border border-slate-800/90 hover:border-slate-700/80 rounded-xl shadow-md flex flex-col justify-between space-y-3 transition-all min-h-[135px]">
               <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
-                <span>Contract Compliance</span>
-                <FileText className="w-4 h-4 text-cyan-400" />
+                <span className="font-semibold text-slate-300">Contract Compliance</span>
+                <div className="p-1.5 rounded-lg bg-cyan-950/80 border border-cyan-800/50 text-cyan-400">
+                  <FileText className="w-4 h-4" />
+                </div>
               </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-white">
-                  {complianceSummary ? `${complianceSummary.overallCompliancePercentage.toFixed(1)}%` : '85.0%'}
-                </span>
-                <span className="text-[11px] text-emerald-400 font-semibold">
-                  {complianceSummary ? `${complianceSummary.verifiedEvidenceRequirements}/${complianceSummary.totalRequirements} Verified` : 'Active'}
-                </span>
-              </div>
-              <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                <div
-                  className="bg-cyan-500 h-full rounded-full transition-all"
-                  style={{ width: `${complianceSummary?.overallCompliancePercentage || 85}%` }}
-                />
+              <div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                    {complianceSummary ? `${complianceSummary.overallCompliancePercentage.toFixed(1)}%` : '85.0%'}
+                  </span>
+                  <span className="text-[11px] text-emerald-400 font-semibold px-2 py-0.5 rounded-md bg-emerald-950/80 border border-emerald-800/60">
+                    {complianceSummary ? `${complianceSummary.verifiedEvidenceRequirements}/${complianceSummary.totalRequirements} Verified` : 'Active'}
+                  </span>
+                </div>
+                <div className="w-full bg-slate-800/80 h-2 rounded-full overflow-hidden mt-3">
+                  <div
+                    className="bg-gradient-to-r from-cyan-500 to-emerald-400 h-full rounded-full transition-all duration-500"
+                    style={{ width: `${complianceSummary?.overallCompliancePercentage || 85}%` }}
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-2">
+            <div className="p-4 sm:p-5 bg-slate-900 border border-slate-800/90 hover:border-slate-700/80 rounded-xl shadow-md flex flex-col justify-between space-y-3 transition-all min-h-[135px]">
               <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
-                <span>Computer Vision Defects</span>
-                <AlertTriangle className="w-4 h-4 text-amber-400" />
+                <span className="font-semibold text-slate-300">Computer Vision Defects</span>
+                <div className="p-1.5 rounded-lg bg-amber-950/80 border border-amber-800/50 text-amber-400">
+                  <AlertTriangle className="w-4 h-4" />
+                </div>
               </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-white">{defects.length}</span>
-                <span className="text-[11px] text-amber-400 font-medium">
-                  {defects.filter((d) => d.status !== 'RESOLVED').length} Unresolved
-                </span>
+              <div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl sm:text-3xl font-bold text-white tracking-tight">{defects.length}</span>
+                  <span className="text-[11px] text-amber-400 font-medium px-2 py-0.5 rounded-md bg-amber-950/80 border border-amber-800/60">
+                    {defects.filter((d) => d.status !== 'RESOLVED').length} Unresolved
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-2 truncate">
+                  {defects.filter((d) => d.severity === 'CRITICAL' || d.severity === 'HIGH').length} High/Critical Severity
+                </p>
               </div>
-              <p className="text-[11px] text-slate-400 truncate">
-                {defects.filter((d) => d.severity === 'CRITICAL' || d.severity === 'HIGH').length} High/Critical Severity
-              </p>
             </div>
 
-            <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-2">
+            <div className="p-4 sm:p-5 bg-slate-900 border border-slate-800/90 hover:border-slate-700/80 rounded-xl shadow-md flex flex-col justify-between space-y-3 transition-all min-h-[135px]">
               <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
-                <span>Defect Recurrence Rate</span>
-                <Repeat className="w-4 h-4 text-purple-400" />
+                <span className="font-semibold text-slate-300">Defect Recurrence Rate</span>
+                <div className="p-1.5 rounded-lg bg-purple-950/80 border border-purple-800/50 text-purple-400">
+                  <Repeat className="w-4 h-4" />
+                </div>
               </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-purple-300">
-                  {defects.length > 0
-                    ? `${((defects.filter((d) => d.recurring).length * 100) / defects.length).toFixed(1)}%`
-                    : '0.0%'}
-                </span>
-                <span className="text-[11px] text-purple-400 font-medium">
-                  {defects.filter((d) => d.recurring).length} Recurring Cluster(s)
-                </span>
+              <div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl sm:text-3xl font-bold text-purple-300 tracking-tight">
+                    {defects.length > 0
+                      ? `${((defects.filter((d) => d.recurring).length * 100) / defects.length).toFixed(1)}%`
+                      : '0.0%'}
+                  </span>
+                  <span className="text-[11px] text-purple-400 font-medium px-2 py-0.5 rounded-md bg-purple-950/80 border border-purple-800/60">
+                    {defects.filter((d) => d.recurring).length} Recurring Cluster(s)
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-2 truncate">Spatial proximity & category congruent</p>
               </div>
-              <p className="text-[11px] text-slate-400">Spatial proximity & category congruent</p>
             </div>
 
-            <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-2">
+            <div className="p-4 sm:p-5 bg-slate-900 border border-slate-800/90 hover:border-slate-700/80 rounded-xl shadow-md flex flex-col justify-between space-y-3 transition-all min-h-[135px]">
               <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
-                <span>Predictive Risk Score</span>
-                <TrendingUp className="w-4 h-4 text-rose-400" />
+                <span className="font-semibold text-slate-300">Predictive Risk Score</span>
+                <div className="p-1.5 rounded-lg bg-rose-950/80 border border-rose-800/50 text-rose-400">
+                  <TrendingUp className="w-4 h-4" />
+                </div>
               </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-white">
-                  {riskAssessment ? riskAssessment.overallScore : 35.0} / 100
-                </span>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold ${riskBadge(riskAssessment?.overallRiskLevel || 'LOW')}`}>
-                  {riskAssessment?.overallRiskLevel || 'LOW'}
-                </span>
+              <div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                    {riskAssessment ? riskAssessment.overallScore : 35.0} / 100
+                  </span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold ${riskBadge(riskAssessment?.overallRiskLevel || 'LOW')}`}>
+                    {riskAssessment?.overallRiskLevel || 'LOW'}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-2 truncate">
+                  {riskAlerts.filter((a) => a.alertStatus === 'ACTIVE').length} Active Actionable Alerts
+                </p>
               </div>
-              <p className="text-[11px] text-slate-400">
-                {riskAlerts.filter((a) => a.alertStatus === 'ACTIVE').length} Active Actionable Alerts
-              </p>
             </div>
           </div>
 
           {/* Connected Flow Banner */}
-          <div className="p-4 bg-gradient-to-r from-slate-900 via-cyan-950/20 to-slate-900 border border-slate-800 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="space-y-1">
-              <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-cyan-400" />
+          <div className="p-5 sm:p-6 bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border border-slate-800 rounded-2xl shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-5">
+            <div className="space-y-1.5 max-w-3xl">
+              <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2.5">
+                <div className="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
                 Cross-Module Quality & Milestone Payment Gate
               </h3>
-              <p className="text-xs text-slate-400 max-w-2xl">
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
                 Finance milestone payouts are automatically locked unless: 1) all mandatory contract specifications are verified or authorized by waiver, 2) physical measurement records are calibrated, and 3) zero unacknowledged CRITICAL predictive risk alerts remain.
               </p>
             </div>
             <button
               onClick={() => setActiveTab('risk')}
-              className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-800/60 rounded-lg text-xs font-semibold transition shrink-0 flex items-center gap-1"
+              className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-800/60 rounded-xl text-xs font-semibold transition shrink-0 flex items-center gap-1.5 hover:shadow-md cursor-pointer self-start md:self-center"
             >
               <span>Inspect Risk Alerts</span>
-              <ChevronRight className="w-3.5 h-3.5" />
+              <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
           {/* Quick Preview Grid: Contracts, Defects, Alerts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Top Defects */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-amber-400" />
-                  Recent Infrastructure Defects
-                </h3>
-                <button
-                  onClick={() => setActiveTab('defects')}
-                  className="text-xs text-cyan-400 hover:underline"
-                >
-                  View all ({defects.length})
-                </button>
-              </div>
-
-              <div className="space-y-2">
-                {defects.slice(0, 4).map((d) => (
-                  <div
-                    key={d.id}
-                    onClick={() => {
-                      setSelectedDefect(d);
-                      setIsDefectModalOpen(true);
-                    }}
-                    className="p-3 bg-slate-950 border border-slate-800/80 hover:border-slate-700 rounded-xl cursor-pointer transition flex items-center justify-between gap-3 text-xs"
+            <div className="bg-slate-900 border border-slate-800/90 rounded-2xl p-5 sm:p-6 flex flex-col justify-between min-h-[260px] shadow-lg">
+              <div>
+                <div className="flex items-center justify-between pb-3.5 border-b border-slate-800 mb-4">
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-400" />
+                    Recent Infrastructure Defects
+                  </h3>
+                  <button
+                    onClick={() => setActiveTab('defects')}
+                    className="text-xs text-cyan-400 hover:text-cyan-300 hover:underline font-semibold cursor-pointer"
                   >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-semibold text-cyan-400">{d.defectCode}</span>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-sm border font-semibold ${riskBadge(d.severity)}`}>
-                          {d.severity}
-                        </span>
-                        {d.recurring && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-sm bg-purple-950 text-purple-300 border border-purple-800 flex items-center gap-1 font-semibold">
-                            <Repeat className="w-2.5 h-2.5" /> Recurrent
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-slate-300 truncate max-w-md">{d.description}</p>
+                    View all ({defects.length})
+                  </button>
+                </div>
+
+                {defects.length === 0 ? (
+                  <div className="py-10 flex flex-col items-center justify-center text-center space-y-2.5">
+                    <div className="w-11 h-11 rounded-full bg-emerald-950/80 border border-emerald-800/60 flex items-center justify-center text-emerald-400 shadow-sm">
+                      <Check className="w-5 h-5" />
                     </div>
-                    <span className="text-slate-400 font-mono text-[11px] shrink-0">{d.status}</span>
+                    <div>
+                      <p className="text-xs font-bold text-slate-200">Zero Critical Defects Detected</p>
+                      <p className="text-[11px] text-slate-400 mt-1 max-w-xs">All spatial zones and submitted photo evidence currently satisfy quality thresholds.</p>
+                    </div>
                   </div>
-                ))}
+                ) : (
+                  <div className="space-y-2.5">
+                    {defects.slice(0, 4).map((d) => (
+                      <div
+                        key={d.id}
+                        onClick={() => {
+                          setSelectedDefect(d);
+                          setIsDefectModalOpen(true);
+                        }}
+                        className="p-3.5 bg-slate-950 border border-slate-800/80 hover:border-slate-700 rounded-xl cursor-pointer transition flex items-center justify-between gap-3 text-xs shadow-xs"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-semibold text-cyan-400">{d.defectCode}</span>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-sm border font-semibold ${riskBadge(d.severity)}`}>
+                              {d.severity}
+                            </span>
+                            {d.recurring && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-sm bg-purple-950 text-purple-300 border border-purple-800 flex items-center gap-1 font-semibold">
+                                <Repeat className="w-2.5 h-2.5" /> Recurrent
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-slate-300 truncate max-w-md">{d.description}</p>
+                        </div>
+                        <span className="text-slate-400 font-mono text-[11px] shrink-0">{d.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Active Risk Alerts */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-rose-400" />
-                  Predictive Risk Alerts
-                </h3>
-                <button
-                  onClick={() => setActiveTab('risk')}
-                  className="text-xs text-cyan-400 hover:underline"
-                >
-                  View all ({riskAlerts.length})
-                </button>
-              </div>
-
-              <div className="space-y-2">
-                {riskAlerts.slice(0, 4).map((a) => (
-                  <div
-                    key={a.id}
-                    onClick={() => {
-                      setSelectedAlert(a);
-                      setIsRiskModalOpen(true);
-                    }}
-                    className="p-3 bg-slate-950 border border-slate-800/80 hover:border-slate-700 rounded-xl cursor-pointer transition flex items-center justify-between gap-3 text-xs"
+            <div className="bg-slate-900 border border-slate-800/90 rounded-2xl p-5 sm:p-6 flex flex-col justify-between min-h-[260px] shadow-lg">
+              <div>
+                <div className="flex items-center justify-between pb-3.5 border-b border-slate-800 mb-4">
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-rose-400" />
+                    Predictive Risk Alerts
+                  </h3>
+                  <button
+                    onClick={() => setActiveTab('risk')}
+                    className="text-xs text-cyan-400 hover:text-cyan-300 hover:underline font-semibold cursor-pointer"
                   >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-sm border font-semibold ${riskBadge(a.riskLevel)}`}>
-                          {a.riskLevel}
-                        </span>
-                        <span className="text-[11px] text-slate-400 font-medium">{a.riskCategory.replace(/_/g, ' ')}</span>
-                      </div>
-                      <p className="text-slate-200 font-medium truncate max-w-md">{a.title}</p>
+                    View all ({riskAlerts.length})
+                  </button>
+                </div>
+
+                {riskAlerts.length === 0 ? (
+                  <div className="py-10 flex flex-col items-center justify-center text-center space-y-2.5">
+                    <div className="w-11 h-11 rounded-full bg-cyan-950/80 border border-cyan-800/60 flex items-center justify-center text-cyan-400 shadow-sm">
+                      <ShieldCheck className="w-5 h-5" />
                     </div>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${a.alertStatus === 'ACTIVE' ? 'bg-red-950 text-red-300' : 'bg-slate-800 text-slate-400'}`}>
-                      {a.alertStatus}
-                    </span>
+                    <div>
+                      <p className="text-xs font-bold text-slate-200">All Risk Indicators Nominal</p>
+                      <p className="text-[11px] text-slate-400 mt-1 max-w-xs">Multi-dimensional risk engine detects zero schedule, vendor, or safety anomalies.</p>
+                    </div>
                   </div>
-                ))}
+                ) : (
+                  <div className="space-y-2.5">
+                    {riskAlerts.slice(0, 4).map((a) => (
+                      <div
+                        key={a.id}
+                        onClick={() => {
+                          setSelectedAlert(a);
+                          setIsRiskModalOpen(true);
+                        }}
+                        className="p-3.5 bg-slate-950 border border-slate-800/80 hover:border-slate-700 rounded-xl cursor-pointer transition flex items-center justify-between gap-3 text-xs shadow-xs"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-sm border font-semibold ${riskBadge(a.riskLevel)}`}>
+                              {a.riskLevel}
+                            </span>
+                            <span className="text-[11px] text-slate-400 font-medium">{a.riskCategory.replace(/_/g, ' ')}</span>
+                          </div>
+                          <p className="text-slate-200 font-medium truncate max-w-md">{a.title}</p>
+                        </div>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${a.alertStatus === 'ACTIVE' ? 'bg-red-950 text-red-300' : 'bg-slate-800 text-slate-400'}`}>
+                          {a.alertStatus}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1025,6 +1084,6 @@ export const IntelligenceSuitePage: React.FC = () => {
         onSuccess={() => loadProjectIntelligence(selectedProjectId)}
         alert={selectedAlert}
       />
-    </div>
+    </PageContainer>
   );
 };

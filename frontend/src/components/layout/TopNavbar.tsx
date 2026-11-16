@@ -65,6 +65,8 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ onOpenMobile, collapsed })
       case '/milestones': return 'Milestones & Payments';
       case '/analytics': return 'Performance Analytics';
       case '/audit-trail': return 'Compliance Audit Trail';
+      case '/intelligence': return 'Intelligence Suite & Quality Gates';
+      case '/workertrust': return 'WorkerTrust Workforce & Site Safety';
       case '/users': return 'Platform User Management';
       case '/profile': return 'Operator Profile & Identity';
       default: return 'Command Center';

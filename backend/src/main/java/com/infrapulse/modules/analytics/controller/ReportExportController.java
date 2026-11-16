@@ -37,7 +37,7 @@ public class ReportExportController {
         return principal.getUser();
     }
 
-    @GetMapping
+    @GetMapping({"", "/jobs"})
     @PreAuthorize("hasAnyAuthority('EXPORT_REPORTS', 'VIEW_ANALYTICS', 'PLATFORM_ADMIN')")
     public ResponseEntity<ApiResponse<Page<ReportJobResponseDto>>> getReportJobs(
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
@@ -59,7 +59,7 @@ public class ReportExportController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(job));
     }
 
-    @GetMapping("/{reportId}")
+    @GetMapping({"/{reportId}", "/jobs/{reportId}"})
     @PreAuthorize("hasAnyAuthority('EXPORT_REPORTS', 'VIEW_ANALYTICS', 'PLATFORM_ADMIN')")
     public ResponseEntity<ApiResponse<ReportJobResponseDto>> getReportJob(
             @PathVariable String reportId,
@@ -70,7 +70,7 @@ public class ReportExportController {
         return ResponseEntity.ok(ApiResponse.success(job));
     }
 
-    @GetMapping("/{reportId}/download")
+    @GetMapping({"/{reportId}/download", "/jobs/{reportId}/download"})
     @PreAuthorize("hasAnyAuthority('EXPORT_REPORTS', 'VIEW_ANALYTICS', 'PLATFORM_ADMIN')")
     public ResponseEntity<byte[]> downloadReport(
             @PathVariable String reportId,

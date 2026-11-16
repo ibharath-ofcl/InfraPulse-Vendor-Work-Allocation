@@ -144,7 +144,10 @@ public class WorkZoneService {
             }
 
             if (projectId != null && !projectId.isBlank() && !"ALL".equalsIgnoreCase(projectId)) {
-                predicates.add(cb.equal(root.get("project").get("id"), projectId));
+                predicates.add(cb.or(
+                    cb.equal(root.get("project").get("id"), projectId),
+                    cb.equal(root.get("project").get("projectCode"), projectId)
+                ));
             }
 
             if (pincode != null && !pincode.isBlank()) {

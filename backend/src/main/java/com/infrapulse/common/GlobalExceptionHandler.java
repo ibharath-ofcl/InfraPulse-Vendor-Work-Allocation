@@ -16,6 +16,8 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(com.infrapulse.common.exception.DependencyValidationException.class)
     public ResponseEntity<Map<String, Object>> handleDependencyValidationException(com.infrapulse.common.exception.DependencyValidationException ex) {
         Map<String, Object> body = new java.util.LinkedHashMap<>();
@@ -89,6 +91,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGeneralException(Exception ex) {
+        log.error("Unhandled exception caught in GlobalExceptionHandler", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("An unexpected error occurred: " + ex.getMessage()));
     }

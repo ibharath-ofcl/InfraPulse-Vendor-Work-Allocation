@@ -47,7 +47,14 @@ public enum UserRole {
         Permission.WORKER_SITE_ACCESS,
         Permission.WORKER_SAFETY,
         Permission.WORKER_HEADCOUNT,
-        Permission.WORKER_ANALYTICS
+        Permission.WORKER_ANALYTICS,
+        Permission.INTELLIGENCE_VIEW,
+        Permission.CONTRACT_MANAGE,
+        Permission.CONTRACT_VIEW,
+        Permission.DEFECT_VIEW,
+        Permission.DEFECT_MANAGE,
+        Permission.RISK_VIEW,
+        Permission.RISK_MANAGE
     )),
     
     VENDOR(EnumSet.of(
@@ -68,7 +75,10 @@ public enum UserRole {
         Permission.VIEW_ANALYTICS,
         Permission.WORKER_VIEW,
         Permission.WORKER_REGISTER,
-        Permission.WORKER_SAFETY
+        Permission.WORKER_SAFETY,
+        Permission.INTELLIGENCE_VIEW,
+        Permission.CONTRACT_VIEW,
+        Permission.DEFECT_VIEW
     )),
     
     FIELD_ENGINEER(EnumSet.of(
@@ -91,7 +101,12 @@ public enum UserRole {
         Permission.WORKER_VIEW,
         Permission.WORKER_SITE_ACCESS,
         Permission.WORKER_SAFETY,
-        Permission.WORKER_HEADCOUNT
+        Permission.WORKER_HEADCOUNT,
+        Permission.INTELLIGENCE_VIEW,
+        Permission.CONTRACT_VIEW,
+        Permission.DEFECT_VIEW,
+        Permission.DEFECT_MANAGE,
+        Permission.RISK_VIEW
     )),
     
     FINANCE_OFFICER(EnumSet.of(
@@ -110,7 +125,10 @@ public enum UserRole {
         Permission.VIEW_ANALYTICS,
         Permission.EXPORT_REPORTS,
         Permission.WORKER_VIEW,
-        Permission.WORKER_ANALYTICS
+        Permission.WORKER_ANALYTICS,
+        Permission.INTELLIGENCE_VIEW,
+        Permission.CONTRACT_VIEW,
+        Permission.RISK_VIEW
     ));
 
 

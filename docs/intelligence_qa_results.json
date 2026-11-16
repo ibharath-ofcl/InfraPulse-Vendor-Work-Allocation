@@ -1,0 +1,130 @@
+[
+  {
+    "timestamp": "2026-11-01T09:06:18.696Z",
+    "status": "PASS",
+    "role": "PLATFORM_ADMIN",
+    "feature": "Authentication",
+    "message": "Successfully authenticated as admin@infrapulse.gov.in",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T09:06:20.914Z",
+    "status": "PASS",
+    "role": "PLATFORM_ADMIN",
+    "feature": "Navigation",
+    "message": "Intelligence Suite loaded with Triple-Engine AI badge",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T09:06:21.029Z",
+    "status": "PASS",
+    "role": "PLATFORM_ADMIN",
+    "feature": "Overview KPIs",
+    "message": "Verified Contract Compliance, Computer Vision Defects, Defect Recurrence Rate, and Predictive Risk Score cards",
+    "evidence": "docs/screenshots/intel_01_admin_suite_overview.png"
+  },
+  {
+    "timestamp": "2026-11-01T09:06:22.266Z",
+    "status": "PASS",
+    "role": "PLATFORM_ADMIN",
+    "feature": "Contract Intelligence",
+    "message": "Extracted specifications table loaded with tolerances & verification methods",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T09:06:22.311Z",
+    "status": "INFO",
+    "role": "PLATFORM_ADMIN",
+    "feature": "Evidence Mapping",
+    "message": "Inspected attached evidence and calibrated physical measurement records",
+    "evidence": "docs/screenshots/intel_02_admin_contract_intelligence.png"
+  },
+  {
+    "timestamp": "2026-11-01T09:06:23.547Z",
+    "status": "PASS",
+    "role": "PLATFORM_ADMIN",
+    "feature": "Defect Intelligence",
+    "message": "Defects table loaded with computer vision classifications and recurrence flags",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T09:06:28.173Z",
+    "status": "PASS",
+    "role": "PROJECT_MANAGER",
+    "feature": "Authentication",
+    "message": "Successfully authenticated as pm@infrapulse.gov.in",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T09:06:32.069Z",
+    "status": "PASS",
+    "role": "PROJECT_MANAGER",
+    "feature": "Risk Evaluation",
+    "message": "Triggered on-demand multi-dimensional heuristic risk calculation",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T09:06:32.183Z",
+    "status": "INFO",
+    "role": "PROJECT_MANAGER",
+    "feature": "Risk Dashboard",
+    "message": "Project Manager reviewed risk posture and mitigation pacing",
+    "evidence": "docs/screenshots/intel_05_pm_risk_evaluation.png"
+  },
+  {
+    "timestamp": "2026-11-01T09:06:35.660Z",
+    "status": "PASS",
+    "role": "VENDOR",
+    "feature": "Authentication",
+    "message": "Successfully authenticated as vendor@infrapulse.gov.in",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T09:06:38.751Z",
+    "status": "PASS",
+    "role": "VENDOR",
+    "feature": "Vendor Scorecard",
+    "message": "Vendor quality scorecard rendered with First-pass approval rate and defect recurrence index",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T09:06:38.848Z",
+    "status": "PASS",
+    "role": "VENDOR",
+    "feature": "Punchlist Access",
+    "message": "Vendor reviewed defect classifications and required rework specifications",
+    "evidence": "docs/screenshots/intel_06_vendor_defect_view.png"
+  },
+  {
+    "timestamp": "2026-11-01T09:06:42.198Z",
+    "status": "PASS",
+    "role": "FIELD_ENGINEER",
+    "feature": "Authentication",
+    "message": "Successfully authenticated as field@infrapulse.gov.in",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T09:06:45.604Z",
+    "status": "PASS",
+    "role": "FIELD_ENGINEER",
+    "feature": "Physical Measurement",
+    "message": "Field Engineer validated physical tolerance verification workflow and calibrated measurement logging",
+    "evidence": "docs/screenshots/intel_07_field_engineer_spec_verification.png"
+  },
+  {
+    "timestamp": "2026-11-01T09:06:48.925Z",
+    "status": "PASS",
+    "role": "FINANCE_OFFICER",
+    "feature": "Authentication",
+    "message": "Successfully authenticated as finance@infrapulse.gov.in",
+    "evidence": ""
+  },
+  {
+    "timestamp": "2026-11-01T09:06:51.082Z",
+    "status": "PASS",
+    "role": "FINANCE_OFFICER",
+    "feature": "Payment Gate Hook",
+    "message": "Finance officer confirmed milestone payment gates enforce contract specification compliance and absence of critical risk alerts",
+    "evidence": "docs/screenshots/intel_08_finance_milestone_payment_gate.png"
+  }
+]

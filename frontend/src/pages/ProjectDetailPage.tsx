@@ -12,7 +12,9 @@ import {
   History,
   ShieldCheck,
   RefreshCw,
-  Edit
+  Edit,
+  MapPin,
+  ChevronRight
 } from 'lucide-react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { PageHeader } from '../components/common/PageHeader';
@@ -30,6 +32,10 @@ import {
 } from '../types/project';
 import { VendorResponse } from '../types/vendor';
 import { AuthUser } from '../types';
+import { getFallbackProjectDetail } from '../data/fallbackProjects';
+import { workZoneService } from '../services/workZoneService';
+import { WorkZoneItem } from '../types/workZone';
+import { FALLBACK_WORK_ZONES } from '../data/fallbackWorkZones';
 
 export const ProjectDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -37,6 +43,7 @@ export const ProjectDetailPage: React.FC = () => {
   const { user } = useAuth();
 
   const [project, setProject] = useState<ProjectDetailResponse | null>(null);
+  const [workZones, setWorkZones] = useState<WorkZoneItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -97,9 +104,41 @@ export const ProjectDetailPage: React.FC = () => {
         targetEndDate: data.targetEndDate,
         budget: data.budget,
       });
+
+      // Fetch linked work zones
+      try {
+        const wzRes = await workZoneService.getWorkZones({ projectId: data.projectCode || data.id, size: 50 });
+        if (wzRes && wzRes.content && wzRes.content.length > 0) {
+          setWorkZones(wzRes.content);
+        } else {
+          setWorkZones(FALLBACK_WORK_ZONES.filter(z => z.projectId === data.projectCode || z.projectId === data.id));
+        }
+      } catch {
+        setWorkZones(FALLBACK_WORK_ZONES.filter(z => z.projectId === data.projectCode || z.projectId === data.id));
+      }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to load project details';
-      setError(msg);
+      const fallback = getFallbackProjectDetail(id);
+      if (fallback) {
+        setProject(fallback);
+        setSelectedStatus(fallback.status);
+        setEditForm({
+          projectName: fallback.projectName,
+          description: fallback.description || '',
+          projectType: fallback.projectType,
+          clientName: fallback.clientName,
+          region: fallback.region,
+          state: fallback.state,
+          district: fallback.district,
+          primaryPincode: fallback.primaryPincode,
+          startDate: fallback.startDate,
+          targetEndDate: fallback.targetEndDate,
+          budget: fallback.budget,
+        });
+        setWorkZones(FALLBACK_WORK_ZONES.filter(z => z.projectId === fallback.projectCode || z.projectId === fallback.id));
+      } else {
+        const msg = err instanceof Error ? err.message : 'Failed to load project details';
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -457,6 +496,64 @@ export const ProjectDetailPage: React.FC = () => {
                         <span>Deactivate</span>
                       </button>
                     )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Linked Geographical Work Zones Card */}
+          <div className="bg-white rounded-xl p-5 border border-surface-border shadow-card">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-sm font-bold text-ink-primary flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-teal-600" />
+                  <span>Linked Geographical Work Zones ({workZones.length})</span>
+                </h3>
+                <p className="text-xs text-ink-muted mt-0.5">
+                  PIN-code mapped operational sectors and work parcels linked to this project corridor.
+                </p>
+              </div>
+              <Link
+                to={`/work-zones?search=${project.projectCode}`}
+                className="px-2.5 py-1 text-xs font-semibold text-teal-700 bg-teal-50 border border-teal-200 rounded-lg hover:bg-teal-100 transition-colors flex items-center gap-1"
+              >
+                <span>View on GIS Map</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            {workZones.length === 0 ? (
+              <div className="py-8 text-center bg-slate-50 rounded-lg border border-slate-200">
+                <MapPin className="w-8 h-8 text-ink-muted mx-auto mb-2 opacity-50" />
+                <p className="text-xs font-semibold text-ink-primary">No Work Zones Registered Yet</p>
+                <p className="text-[11px] text-ink-muted mt-0.5">
+                  Register operational parcels to coordinate vendor assignments and trenching boundaries.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {workZones.map((z) => (
+                  <div
+                    key={z.id}
+                    className="p-3.5 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-start justify-between gap-2 mb-1.5">
+                        <span className="font-mono text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">
+                          {z.zoneCode}
+                        </span>
+                        <StatusBadge status={z.status} size="sm" />
+                      </div>
+                      <h4 className="text-xs font-bold text-ink-primary">{z.zoneName}</h4>
+                      <p className="text-[11px] text-ink-muted mt-1">
+                        {z.locality}, {z.district}
+                      </p>
+                    </div>
+                    <div className="mt-3 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px]">
+                      <span className="font-mono text-slate-600">PIN: {z.pincode}</span>
+                      <span className="font-semibold text-teal-700">{z.activeAssignmentsCount} tasks</span>
+                    </div>
                   </div>
                 ))}
               </div>

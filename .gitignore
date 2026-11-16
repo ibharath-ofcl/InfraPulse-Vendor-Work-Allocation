@@ -77,3 +77,6 @@ postgres-data/
 uploads/
 backend/uploads/
 *.log
+
+# Demo recordings raw files
+artifacts/demo/raw_video/

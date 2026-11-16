@@ -258,7 +258,14 @@ export type Permission =
   | 'WORKER_SITE_ACCESS'
   | 'WORKER_SAFETY'
   | 'WORKER_HEADCOUNT'
-  | 'WORKER_ANALYTICS';
+  | 'WORKER_ANALYTICS'
+  | 'INTELLIGENCE_VIEW'
+  | 'CONTRACT_MANAGE'
+  | 'CONTRACT_VIEW'
+  | 'DEFECT_VIEW'
+  | 'DEFECT_MANAGE'
+  | 'RISK_VIEW'
+  | 'RISK_MANAGE';
 
 export interface AuthUser {
   id: string;

@@ -68,6 +68,15 @@ public enum Permission {
     WORKER_SITE_ACCESS,
     WORKER_SAFETY,
     WORKER_HEADCOUNT,
-    WORKER_ANALYTICS
+    WORKER_ANALYTICS,
+
+    // InfraPulse Intelligence Suite Permissions
+    INTELLIGENCE_VIEW,
+    CONTRACT_MANAGE,
+    CONTRACT_VIEW,
+    DEFECT_VIEW,
+    DEFECT_MANAGE,
+    RISK_VIEW,
+    RISK_MANAGE
 }
 

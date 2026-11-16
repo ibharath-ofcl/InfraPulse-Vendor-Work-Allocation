@@ -21,7 +21,8 @@ import {
   Wrench,
   FileSpreadsheet,
   User,
-  LogOut
+  LogOut,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '../../auth/useAuth';
 import { Permission } from '../../types';
@@ -62,6 +63,12 @@ const navGroups: NavGroupDef[] = [
       { label: 'Work Zones', path: '/work-zones', icon: MapPin, requiredPermission: 'VIEW_WORK_ZONES' },
       { label: 'Work Allocation', path: '/work-allocation', icon: Sliders, highlight: true, requiredPermission: 'VIEW_ASSIGNED_WORK' },
       { label: 'Work Dependencies', path: '/work-dependencies', icon: GitFork, requiredPermission: 'DEPENDENCY_VIEW' },
+    ],
+  },
+  {
+    groupTitle: 'INTELLIGENCE SUITE',
+    items: [
+      { label: 'Intelligence Suite', path: '/intelligence', icon: Sparkles, highlight: true, requiredPermission: 'VIEW_PROJECTS' },
     ],
   },
   {

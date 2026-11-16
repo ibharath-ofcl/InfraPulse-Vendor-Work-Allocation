@@ -193,10 +193,15 @@ public class ProjectService {
         }
     }
 
+    private Project findProjectByIdOrCode(String id) {
+        return projectRepository.findById(id)
+            .or(() -> projectRepository.findByProjectCode(id))
+            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Project not found with id: " + id));
+    }
+
     @Transactional(readOnly = true)
     public ProjectDetailResponse getProjectDetails(String id, User currentUser) {
-        Project project = projectRepository.findById(id)
-            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Project not found with id: " + id));
+        Project project = findProjectByIdOrCode(id);
 
         validateProjectAccess(project, currentUser);
 
@@ -234,8 +239,7 @@ public class ProjectService {
 
     @Transactional
     public ProjectResponse updateProject(String id, UpdateProjectRequest request, User currentUser) {
-        Project project = projectRepository.findById(id)
-            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Project not found with id: " + id));
+        Project project = findProjectByIdOrCode(id);
 
         boolean isAdmin = currentUser.getRole() == UserRole.PLATFORM_ADMIN;
         boolean isAssignedPm = currentUser.getRole() == UserRole.PROJECT_MANAGER &&
@@ -283,8 +287,7 @@ public class ProjectService {
 
     @Transactional
     public ProjectResponse updateProjectStatus(String id, UpdateProjectStatusRequest request, User currentUser) {
-        Project project = projectRepository.findById(id)
-            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Project not found with id: " + id));
+        Project project = findProjectByIdOrCode(id);
 
         boolean isAdmin = currentUser.getRole() == UserRole.PLATFORM_ADMIN;
         boolean isAssignedPm = currentUser.getRole() == UserRole.PROJECT_MANAGER &&
@@ -326,8 +329,7 @@ public class ProjectService {
             throw new ApiException(HttpStatus.FORBIDDEN, "Only platform administrators can assign project managers");
         }
 
-        Project project = projectRepository.findById(id)
-            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Project not found with id: " + id));
+        Project project = findProjectByIdOrCode(id);
 
         User newManager = validateAndGetProjectManager(request.getManagerId());
 
@@ -361,8 +363,7 @@ public class ProjectService {
 
     @Transactional
     public ProjectVendorDto associateVendor(String projectId, AssociateVendorRequest request, User currentUser) {
-        Project project = projectRepository.findById(projectId)
-            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Project not found with id: " + projectId));
+        Project project = findProjectByIdOrCode(projectId);
 
         boolean isAdmin = currentUser.getRole() == UserRole.PLATFORM_ADMIN;
         boolean isAssignedPm = currentUser.getRole() == UserRole.PROJECT_MANAGER &&
@@ -406,8 +407,7 @@ public class ProjectService {
 
     @Transactional
     public void removeVendorAssociation(String projectId, String vendorId, User currentUser) {
-        Project project = projectRepository.findById(projectId)
-            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Project not found with id: " + projectId));
+        Project project = findProjectByIdOrCode(projectId);
 
         boolean isAdmin = currentUser.getRole() == UserRole.PLATFORM_ADMIN;
         boolean isAssignedPm = currentUser.getRole() == UserRole.PROJECT_MANAGER &&

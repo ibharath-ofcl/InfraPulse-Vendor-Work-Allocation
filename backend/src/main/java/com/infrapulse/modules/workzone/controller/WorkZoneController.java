@@ -31,7 +31,7 @@ public class WorkZoneController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('WORK_ZONE_CREATE', 'PLATFORM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('WORK_ZONE_CREATE', 'ROLE_PLATFORM_ADMIN', 'ROLE_PROJECT_MANAGER')")
     public ResponseEntity<ApiResponse<WorkZoneResponse>> createWorkZone(
         @Valid @RequestBody CreateWorkZoneRequest request,
         @AuthenticationPrincipal UserPrincipal principal
@@ -41,7 +41,7 @@ public class WorkZoneController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('WORK_ZONE_VIEW', 'VIEW_WORK_ZONES')")
+    @PreAuthorize("hasAnyAuthority('WORK_ZONE_VIEW', 'VIEW_WORK_ZONES', 'ROLE_PLATFORM_ADMIN', 'ROLE_PROJECT_MANAGER', 'ROLE_FIELD_ENGINEER', 'ROLE_VENDOR')")
     public ResponseEntity<ApiResponse<Page<WorkZoneResponse>>> getWorkZones(
         @RequestParam(required = false) String projectId,
         @RequestParam(required = false) String pincode,
@@ -56,7 +56,7 @@ public class WorkZoneController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('WORK_ZONE_VIEW', 'VIEW_WORK_ZONES')")
+    @PreAuthorize("hasAnyAuthority('WORK_ZONE_VIEW', 'VIEW_WORK_ZONES', 'ROLE_PLATFORM_ADMIN', 'ROLE_PROJECT_MANAGER', 'ROLE_FIELD_ENGINEER', 'ROLE_VENDOR')")
     public ResponseEntity<ApiResponse<WorkZoneResponse>> getWorkZoneById(
         @PathVariable String id,
         @AuthenticationPrincipal UserPrincipal principal
@@ -66,7 +66,7 @@ public class WorkZoneController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('WORK_ZONE_UPDATE', 'PLATFORM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('WORK_ZONE_UPDATE', 'ROLE_PLATFORM_ADMIN', 'ROLE_PROJECT_MANAGER')")
     public ResponseEntity<ApiResponse<WorkZoneResponse>> updateWorkZone(
         @PathVariable String id,
         @Valid @RequestBody UpdateWorkZoneRequest request,
@@ -77,7 +77,7 @@ public class WorkZoneController {
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyAuthority('WORK_ZONE_STATUS_MANAGE', 'PLATFORM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('WORK_ZONE_STATUS_MANAGE', 'ROLE_PLATFORM_ADMIN', 'ROLE_PROJECT_MANAGER')")
     public ResponseEntity<ApiResponse<WorkZoneResponse>> updateWorkZoneStatus(
         @PathVariable String id,
         @Valid @RequestBody UpdateZoneStatusRequest request,

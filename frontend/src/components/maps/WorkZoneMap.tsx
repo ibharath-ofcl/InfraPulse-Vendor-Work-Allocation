@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Maximize2, MapPin, Layers, RotateCcw } from 'lucide-react';
+import { Maximize2, MapPin, RotateCcw } from 'lucide-react';
 
 export interface MapZoneData {
   id: string;
@@ -117,7 +117,7 @@ const createMarkerIcon = (isSelected: boolean, color: string): L.DivIcon => {
 const createPopupElement = (zone: MapZoneData, color: string): HTMLElement => {
   const div = document.createElement('div');
   div.className = 'infrapulse-popup-content text-xs font-sans';
-  div.style.minWidth = '230px';
+  div.style.minWidth = '240px';
   div.style.maxWidth = '290px';
 
   div.innerHTML = `
@@ -164,12 +164,12 @@ const createPopupElement = (zone: MapZoneData, color: string): HTMLElement => {
 
     <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 6px 8px; font-size: 11px; margin-bottom: 8px;">
       <div style="color: #64748B; font-size: 10px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Associated Project</div>
-      <div style="color: #0284C7; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+      <div style="color: #0284C7; font-weight: 600; word-break: break-word;">
         ${escapeHtml(zone.projectName || 'Infrastructure Works')}
       </div>
-      <div style="margin-top: 4px; display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+      <div style="margin-top: 4px; display: flex; justify-content: space-between; align-items: baseline; gap: 6px;">
         <span style="color: #64748B; white-space: nowrap;">Assigned Vendor:</span>
-        <strong style="color: #1E293B; text-align: right; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+        <strong style="color: #1E293B; text-align: right; word-break: break-word;">
           ${escapeHtml(zone.assignedVendorName || 'Pending Allocation')}
         </strong>
       </div>
@@ -340,9 +340,14 @@ export const WorkZoneMap: React.FC<WorkZoneMapProps> = ({
 
       const popupEl = createPopupElement(zone, color);
       marker.bindPopup(popupEl, {
-        maxWidth: 320,
+        minWidth: 240,
+        maxWidth: 300,
+        maxHeight: 360,
         className: 'infrapulse-map-popup',
-        autoPan: false, // Prevents map bounds jerking when popup opens
+        autoPan: true, // Auto-pan so popup is always inside the visible canvas
+        autoPanPadding: [24, 24],
+        autoPanPaddingTopLeft: [30, 30],
+        keepInView: true,
       });
 
       marker.on('click', () => {
@@ -454,7 +459,7 @@ export const WorkZoneMap: React.FC<WorkZoneMapProps> = ({
         className="z-0"
       />
 
-      {/* Map Header Controls Overlay */}
+      {/* Map Header Controls Overlay (Top Left beside Leaflet zoom buttons) */}
       <div className="absolute top-3 left-14 z-[400] flex items-center gap-2 pointer-events-auto">
         {validZones.length > 0 && (
           <button
@@ -467,34 +472,6 @@ export const WorkZoneMap: React.FC<WorkZoneMapProps> = ({
             <span>Fit All Zones ({validZones.length})</span>
           </button>
         )}
-      </div>
-
-      {/* Map Status Legend Overlay */}
-      <div className="absolute top-3 right-3 z-[400] bg-white/95 backdrop-blur-md px-3 py-2 rounded-lg border border-surface-border shadow-dropdown text-xs flex flex-col gap-1.5 pointer-events-auto">
-        <div className="font-semibold text-ink-primary flex items-center justify-between gap-3 text-[11px]">
-          <span className="flex items-center gap-1.5">
-            <Layers className="w-3.5 h-3.5 text-teal-600" />
-            <span>Spatial Work Zones</span>
-          </span>
-          <span className="flex items-center gap-1 text-[10px] text-teal-700 font-mono font-bold bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></span>
-            OpenStreetMap
-          </span>
-        </div>
-        <div className="flex items-center gap-3 text-[11px] text-ink-secondary">
-          <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-teal-600"></span> Active
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-sky-600"></span> Available
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span> Completed
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-rose-600"></span> Blocked
-          </span>
-        </div>
       </div>
 
       {/* Empty State Overlay if no valid coordinates match */}

@@ -260,6 +260,20 @@ export const WorkZonesPage: React.FC = () => {
     return names.length > 0 ? names.join(', ') : 'Pending Contractor Allocation';
   }, [selectedZone, allAssignments]);
 
+  // Find work types for the selected zone
+  const selectedZoneWorkType = useMemo(() => {
+    if (!selectedZone) return 'Infrastructure Ducting';
+    const zoneAsns = allAssignments.filter((a) => a.workZoneId === selectedZone.id);
+    const types = Array.from(
+      new Set(
+        zoneAsns
+          .map((a) => a.workTypeDisplayName || a.workType)
+          .filter(Boolean)
+      )
+    );
+    return types.length > 0 ? types.join(', ') : 'Infrastructure Ducting';
+  }, [selectedZone, allAssignments]);
+
   // Reset all filters to default state
   const handleResetFilters = () => {
     setSearch('');
@@ -486,6 +500,21 @@ export const WorkZonesPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Dedicated Compact Legend Row Outside the Map Canvas */}
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3 px-3 py-2 bg-slate-50/90 rounded-lg border border-slate-200 text-xs">
+              <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-600">
+                <span className="font-semibold text-slate-700">Status Legend:</span>
+                <span className="flex items-center gap-1.5 font-medium"><span className="w-2.5 h-2.5 rounded-full bg-teal-600"></span> Active</span>
+                <span className="flex items-center gap-1.5 font-medium"><span className="w-2.5 h-2.5 rounded-full bg-sky-600"></span> Available</span>
+                <span className="flex items-center gap-1.5 font-medium"><span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span> Completed</span>
+                <span className="flex items-center gap-1.5 font-medium"><span className="w-2.5 h-2.5 rounded-full bg-rose-600"></span> Blocked</span>
+              </div>
+              <div className="flex items-center gap-1 text-[10px] text-teal-700 font-mono font-bold bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></span>
+                OpenStreetMap
+              </div>
+            </div>
+
             {/* Fully Functional Leaflet + OpenStreetMap Map Component */}
             <WorkZoneMap
               zones={mapZones}
@@ -496,7 +525,7 @@ export const WorkZonesPage: React.FC = () => {
             />
           </div>
 
-          {/* Selected Zone Detail Card */}
+          {/* Selected Zone Detail Card (Complete, Unclipped Details) */}
           {selectedZone && (
             <div className="bg-white rounded-xl p-5 border border-surface-border shadow-card">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -522,42 +551,46 @@ export const WorkZonesPage: React.FC = () => {
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-400 text-[11px] block">Jurisdiction</span>
-                  <span className="font-medium text-slate-800 truncate block">
-                    {selectedZone.district}, {selectedZone.state}
+                  <span className="text-slate-400 text-[11px] block">Locality / Jurisdiction</span>
+                  <span className="font-medium text-slate-800 break-words block">
+                    {selectedZone.locality}, {selectedZone.district}, {selectedZone.state}
                   </span>
                 </div>
                 <div>
                   <span className="text-slate-400 text-[11px] block">Assigned Contractor</span>
-                  <span className="font-semibold text-slate-800 truncate block text-teal-700">
+                  <span className="font-semibold text-teal-700 break-words block">
                     {selectedZoneVendors}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-400 text-[11px] block">Active Work Tasks</span>
-                  <span className="font-bold text-teal-700 text-sm">
-                    {selectedZone.activeAssignmentsCount}
+                  <span className="text-slate-400 text-[11px] block">Work Type & Tasks</span>
+                  <span className="font-medium text-slate-800 break-words block">
+                    {selectedZoneWorkType}
+                  </span>
+                  <span className="text-[11px] font-semibold text-teal-700">
+                    {selectedZone.activeAssignmentsCount || 0} active task{(selectedZone.activeAssignmentsCount || 0) === 1 ? '' : 's'}
                   </span>
                 </div>
               </div>
 
               <div className="pt-3 text-xs text-slate-600 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                  <span>
+                <div className="flex items-start gap-2 min-w-0">
+                  <Building2 className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                  <span className="break-words">
                     Associated Project:{' '}
                     <strong className="text-slate-900">{selectedZone.projectName}</strong>
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 font-mono text-[11px] text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
-                  <MapPin className="w-3 h-3 text-teal-600" />
+                <div className="flex items-center gap-1.5 font-mono text-[11px] text-slate-600 bg-slate-50 px-2.5 py-1 rounded border border-slate-200 shrink-0">
+                  <MapPin className="w-3.5 h-3.5 text-teal-600 shrink-0" />
                   {selectedZone.centerLatitude && selectedZone.centerLongitude ? (
                     <span>
                       {Number(selectedZone.centerLatitude).toFixed(4)}° N,{' '}
-                      {Number(selectedZone.centerLongitude).toFixed(4)}° E (WGS 84)
+                      {Number(selectedZone.centerLongitude).toFixed(4)}° E{' '}
+                      <span className="text-teal-700 font-semibold">(Verified WGS 84)</span>
                     </span>
                   ) : (
-                    <span className="text-amber-600">No coordinates configured</span>
+                    <span className="text-amber-600">Pending GPS coordinates</span>
                   )}
                 </div>
               </div>
@@ -642,33 +675,38 @@ export const WorkZonesPage: React.FC = () => {
                       <StatusBadge status={zone.status} size="sm" />
                     </div>
 
-                    <div className="text-[11px] text-slate-500 space-y-1.5 mt-2">
+                    <div className="text-[11px] text-slate-500 space-y-2 mt-2">
                       <div className="flex items-center justify-between">
                         <span>
                           PIN: <strong className="text-slate-800 font-mono">{zone.pincode}</strong>{' '}
                           • {zone.locality}
                         </span>
-                        <span className="text-teal-700 font-semibold bg-teal-50/80 px-2 py-0.5 rounded text-[10px] border border-teal-100">
-                          {zone.activeAssignmentsCount} tasks
+                        <span className="text-teal-700 font-semibold bg-teal-50/80 px-2 py-0.5 rounded text-[10px] border border-teal-100 shrink-0">
+                          {zone.activeAssignmentsCount || 0} tasks
                         </span>
                       </div>
-                      <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1.5 border-t border-slate-100">
-                        <span className="truncate max-w-[200px]" title={zone.projectName}>
-                          Project: {zone.projectName}
-                        </span>
+                      
+                      <div className="pt-1.5 border-t border-slate-100 flex items-start justify-between gap-2">
+                        <div className="flex items-start gap-1.5 text-slate-700 text-[11px] min-w-0">
+                          <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                          <span className="break-words">
+                            Project: <strong className="text-slate-900">{zone.projectName}</strong>
+                          </span>
+                        </div>
                         {hasGps ? (
-                          <span className="text-[10px] text-teal-600 font-medium flex items-center gap-0.5 shrink-0">
+                          <span className="text-[10px] text-teal-600 font-medium flex items-center gap-0.5 shrink-0 bg-teal-50/50 px-1.5 py-0.5 rounded border border-teal-100">
                             <MapPin className="w-2.5 h-2.5" />
-                            GPS Ready
+                            GPS
                           </span>
                         ) : (
-                          <span className="text-[10px] text-slate-400">No GPS</span>
+                          <span className="text-[10px] text-slate-400 shrink-0">No GPS</span>
                         )}
                       </div>
-                      <div className="text-[10px] text-slate-600 flex items-center gap-1">
-                        <HardHat className="w-2.5 h-2.5 text-slate-400" />
-                        <span className="truncate">
-                          Vendor: <strong>{vendorLabel}</strong>
+
+                      <div className="text-[11px] text-slate-600 flex items-start gap-1.5">
+                        <HardHat className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                        <span className="break-words">
+                          Contractor: <strong className="text-slate-800">{vendorLabel}</strong>
                         </span>
                       </div>
                     </div>

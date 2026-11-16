@@ -40,6 +40,40 @@ describe('WorkZoneMap & OpenStreetMap Integration Tests', () => {
       updatedAt: '2026-11-16T12:00:00Z',
     },
     {
+      id: 'z-3',
+      zoneCode: 'WZ-560001-001',
+      projectId: 'p-2',
+      projectName: 'Bengaluru Smart Utility Corridor',
+      zoneName: 'MG Road Metro Corridor',
+      pincode: '560001',
+      locality: 'MG Road',
+      district: 'Bengaluru Urban',
+      state: 'Karnataka',
+      centerLatitude: 12.9756,
+      centerLongitude: 77.6066,
+      status: 'ACTIVE',
+      activeAssignmentsCount: 0,
+      createdAt: '2026-11-16T12:00:00Z',
+      updatedAt: '2026-11-16T12:00:00Z',
+    },
+    {
+      id: 'z-4',
+      zoneCode: 'WZ-560001-002',
+      projectId: 'p-2',
+      projectName: 'Bengaluru Smart Utility Corridor',
+      zoneName: 'Brigade Junction Sector 2',
+      pincode: '560001',
+      locality: 'Brigade Road',
+      district: 'Bengaluru Urban',
+      state: 'Karnataka',
+      centerLatitude: 12.9716,
+      centerLongitude: 77.607,
+      status: 'AVAILABLE',
+      activeAssignmentsCount: 0,
+      createdAt: '2026-11-16T12:00:00Z',
+      updatedAt: '2026-11-16T12:00:00Z',
+    },
+    {
       id: 'z-no-coords',
       zoneCode: 'WZ-999999-001',
       projectId: 'p-1',
@@ -67,6 +101,14 @@ describe('WorkZoneMap & OpenStreetMap Integration Tests', () => {
       workTypeDisplayName: 'Mechanical Trenching',
       status: 'ACCEPTED',
     },
+    {
+      id: 'asn-2',
+      workZoneId: 'z-4',
+      vendorName: 'Southern Roadworks Pvt Ltd',
+      workType: 'ROAD_RESURFACING',
+      workTypeDisplayName: 'Asphalt Paving',
+      status: 'ASSIGNED',
+    },
   ];
 
   it('validates OpenStreetMap tile endpoint and standard attribution requirement', () => {
@@ -86,8 +128,13 @@ describe('WorkZoneMap & OpenStreetMap Integration Tests', () => {
       return !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
     });
 
-    expect(validZones).toHaveLength(2);
-    expect(validZones.map((z) => z.zoneCode)).toEqual(['WZ-600001-001', 'WZ-600040-001']);
+    expect(validZones).toHaveLength(4);
+    expect(validZones.map((z) => z.zoneCode)).toEqual([
+      'WZ-600001-001',
+      'WZ-600040-001',
+      'WZ-560001-001',
+      'WZ-560001-002',
+    ]);
   });
 
   it('correctly maps assigned contractor information from real work assignment records', () => {
@@ -133,21 +180,64 @@ describe('WorkZoneMap & OpenStreetMap Integration Tests', () => {
     expect(getMarkerColor('INACTIVE')).toBe('#64748B');
   });
 
-  it('verifies PIN-code filtering and search criteria matching', () => {
-    const pinSearch = '600001';
-    const filteredByPin = sampleZones.filter((z) => z.pincode === pinSearch);
-    expect(filteredByPin).toHaveLength(1);
-    expect(filteredByPin[0].zoneName).toBe('George Town Heritage Zone');
+  it('executes multi-filter combination simultaneously (PIN + Search + Status)', () => {
+    const pin = '560001';
+    const search = 'Brigade Road';
+    const status: string = 'AVAILABLE';
 
-    const textSearch = 'anna nagar';
-    const filteredByText = sampleZones.filter(
-      (z) =>
-        z.zoneName.toLowerCase().includes(textSearch) ||
-        z.locality.toLowerCase().includes(textSearch) ||
-        z.zoneCode.toLowerCase().includes(textSearch)
-    );
-    expect(filteredByText).toHaveLength(1);
-    expect(filteredByText[0].zoneCode).toBe('WZ-600040-001');
+    const filtered = sampleZones.filter((z) => {
+      if (pin && !z.pincode.startsWith(pin)) return false;
+      if (status !== 'ALL' && z.status !== status) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        const match =
+          z.zoneName.toLowerCase().includes(q) ||
+          z.locality.toLowerCase().includes(q) ||
+          z.zoneCode.toLowerCase().includes(q);
+        if (!match) return false;
+      }
+      return true;
+    });
+
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0].zoneCode).toBe('WZ-560001-002');
+    expect(filtered[0].locality).toBe('Brigade Road');
+  });
+
+  it('filters zones by associated project', () => {
+    const projectFilter = 'p-2';
+    const filtered = sampleZones.filter((z) => z.projectId === projectFilter);
+    expect(filtered).toHaveLength(2);
+    expect(filtered.map((z) => z.zoneCode)).toEqual(['WZ-560001-001', 'WZ-560001-002']);
+  });
+
+  it('clearing filters restores all initial registered zones and markers', () => {
+    let pinFilter = '560001';
+    let searchFilter = 'Brigade';
+    let statusFilter: string = 'AVAILABLE';
+
+    // Before reset
+    let filtered = sampleZones.filter((z) => {
+      if (pinFilter && !z.pincode.startsWith(pinFilter)) return false;
+      if (statusFilter !== 'ALL' && z.status !== statusFilter) return false;
+      if (searchFilter && !z.zoneName.includes(searchFilter)) return false;
+      return true;
+    });
+    expect(filtered).toHaveLength(1);
+
+    // Reset action
+    pinFilter = '';
+    searchFilter = '';
+    statusFilter = 'ALL';
+
+    filtered = sampleZones.filter((z) => {
+      if (pinFilter && !z.pincode.startsWith(pinFilter)) return false;
+      if (statusFilter !== 'ALL' && z.status !== statusFilter) return false;
+      if (searchFilter && !z.zoneName.includes(searchFilter)) return false;
+      return true;
+    });
+
+    expect(filtered).toHaveLength(5);
   });
 
   it('ensures MapZoneData structure contains all required popup and inspection fields', () => {

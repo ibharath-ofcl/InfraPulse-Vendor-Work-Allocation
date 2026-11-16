@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Maximize2, MapPin, Layers } from 'lucide-react';
+import { Maximize2, MapPin, Layers, RotateCcw } from 'lucide-react';
 
 export interface MapZoneData {
   id: string;
@@ -32,6 +32,7 @@ export interface WorkZoneMapProps {
   zones: MapZoneData[];
   selectedZoneId?: string;
   onSelectZone?: (zone: MapZoneData) => void;
+  onResetFilters?: () => void;
   height?: string;
 }
 
@@ -62,10 +63,10 @@ const getMarkerColor = (status: string): string => {
   }
 };
 
-const createMarkerIcon = (_zone: MapZoneData, isSelected: boolean, color: string): L.DivIcon => {
+const createMarkerIcon = (isSelected: boolean, color: string): L.DivIcon => {
   const size = isSelected ? 34 : 26;
   const pulseHtml = isSelected
-    ? `<span style="position: absolute; inset: -5px; border-radius: 50%; border: 2.5px solid ${color}; opacity: 0.75; animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>`
+    ? `<span style="position: absolute; inset: -6px; border-radius: 50%; border: 2.5px solid ${color}; opacity: 0.75; animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>`
     : '';
 
   return L.divIcon({
@@ -96,7 +97,7 @@ const createMarkerIcon = (_zone: MapZoneData, isSelected: boolean, color: string
           align-items: center;
           justify-content: center;
           transition: transform 0.2s ease, box-shadow 0.2s ease;
-          transform: ${isSelected ? 'scale(1.15)' : 'scale(1)'};
+          transform: ${isSelected ? 'scale(1.12)' : 'scale(1)'};
         ">
           <div style="
             width: ${isSelected ? '10px' : '8px'};
@@ -217,11 +218,14 @@ export const WorkZoneMap: React.FC<WorkZoneMapProps> = ({
   zones,
   selectedZoneId,
   onSelectZone,
+  onResetFilters,
   height = '450px',
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
-  const markersRef = useRef<{ [key: string]: L.Marker }>({});
+  const markersLayerRef = useRef<L.FeatureGroup | null>(null);
+  const markersMapRef = useRef<{ [key: string]: L.Marker }>({});
+  const lastZoneIdsRef = useRef<string>('');
 
   // Filter only zones that have valid numerical coordinates
   const validZones = useMemo(() => {
@@ -238,69 +242,87 @@ export const WorkZoneMap: React.FC<WorkZoneMapProps> = ({
     );
   }, [zones]);
 
-  // Initial Map Construction
+  // Initial Map Construction (Runs ONCE on mount)
   useEffect(() => {
     if (!mapContainerRef.current) return;
+    if (mapInstanceRef.current) return;
 
-    if (!mapInstanceRef.current) {
-      if ((mapContainerRef.current as any)._leaflet_id) {
-        return;
-      }
-
-      // Default fallback center: Chennai infrastructure hub
-      const defaultCenter: [number, number] = [13.0827, 80.2707];
-
-      const map = L.map(mapContainerRef.current, {
-        center: defaultCenter,
-        zoom: 12,
-        zoomControl: true,
-        attributionControl: true,
-        scrollWheelZoom: true,
-        doubleClickZoom: true,
-        touchZoom: true,
-        dragging: true,
-      });
-
-      // Standard OpenStreetMap Tile Source with visible attribution
-      const osmTileLayer = L.tileLayer(
-        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-        {
-          maxZoom: 19,
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors',
-        }
-      );
-
-      osmTileLayer.on('tileerror', (e) => {
-        console.warn('OpenStreetMap tile request notification:', e);
-      });
-
-      osmTileLayer.addTo(map);
-      mapInstanceRef.current = map;
-
-      // Ensure proper sizing after DOM render
-      const resizeTimer = setTimeout(() => {
-        map.invalidateSize();
-      }, 150);
-
-      return () => {
-        clearTimeout(resizeTimer);
-        map.remove();
-        mapInstanceRef.current = null;
-      };
+    if ((mapContainerRef.current as any)._leaflet_id) {
+      return;
     }
+
+    // Default center around Chennai corridor
+    const defaultCenter: [number, number] = [13.0827, 80.2707];
+
+    const map = L.map(mapContainerRef.current, {
+      center: defaultCenter,
+      zoom: 12,
+      zoomControl: true,
+      attributionControl: true,
+      scrollWheelZoom: true,
+      doubleClickZoom: true,
+      touchZoom: true,
+      dragging: true,
+      fadeAnimation: false, // Prevents tile flickering/fade delays
+    });
+
+    // Standard OpenStreetMap Tile Source with buffer preservation
+    const osmTileLayer = L.tileLayer(
+      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {
+        maxZoom: 19,
+        minZoom: 3,
+        keepBuffer: 6, // Keeps off-screen tiles in memory so panning does not show grey gaps
+        updateWhenIdle: true, // Loads new tiles only after panning/zooming stabilizes
+        updateWhenZooming: false, // Prevents excessive tile churn during zoom animations
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors',
+      }
+    );
+
+    osmTileLayer.on('tileerror', (e) => {
+      console.warn('OpenStreetMap tile request notice:', e);
+    });
+
+    osmTileLayer.addTo(map);
+
+    // Create a dedicated feature group for markers to avoid touching tile layers
+    const markersLayer = L.featureGroup().addTo(map);
+    markersLayerRef.current = markersLayer;
+    mapInstanceRef.current = map;
+
+    // Trigger initial layout calculation cleanly
+    const initTimer = setTimeout(() => {
+      map.invalidateSize({ pan: false });
+    }, 120);
+
+    return () => {
+      clearTimeout(initTimer);
+      map.remove();
+      mapInstanceRef.current = null;
+      markersLayerRef.current = null;
+      markersMapRef.current = {};
+    };
   }, []);
 
-  // Update Markers when validZones change
+  // Update Markers when validZones list changes
   useEffect(() => {
     const map = mapInstanceRef.current;
-    if (!map) return;
+    const markersLayer = markersLayerRef.current;
+    if (!map || !markersLayer) return;
 
-    // Clear previous markers
-    Object.values(markersRef.current).forEach((marker) => marker.remove());
-    markersRef.current = {};
+    // Check if the actual set of zone IDs changed to avoid redundant bounds jumps
+    const currentZoneIds = validZones.map((z) => z.id).sort().join(',');
+    const zonesListChanged = lastZoneIdsRef.current !== currentZoneIds;
 
-    if (validZones.length === 0) return;
+    // Clear previous markers from group
+    markersLayer.clearLayers();
+    markersMapRef.current = {};
+
+    if (validZones.length === 0) {
+      lastZoneIdsRef.current = '';
+      return;
+    }
 
     const latLngs: L.LatLngExpression[] = [];
 
@@ -309,17 +331,18 @@ export const WorkZoneMap: React.FC<WorkZoneMapProps> = ({
       const color = getMarkerColor(zone.status);
       latLngs.push([zone.lat, zone.lng]);
 
-      const icon = createMarkerIcon(zone, isSelected, color);
+      const icon = createMarkerIcon(isSelected, color);
       const marker = L.marker([zone.lat, zone.lng], {
         icon,
         title: `${zone.name} (${zone.code})`,
         zIndexOffset: isSelected ? 1000 : 0,
-      }).addTo(map);
+      });
 
       const popupEl = createPopupElement(zone, color);
       marker.bindPopup(popupEl, {
         maxWidth: 320,
         className: 'infrapulse-map-popup',
+        autoPan: false, // Prevents map bounds jerking when popup opens
       });
 
       marker.on('click', () => {
@@ -328,65 +351,81 @@ export const WorkZoneMap: React.FC<WorkZoneMapProps> = ({
         }
       });
 
-      markersRef.current[zone.id] = marker;
+      marker.addTo(markersLayer);
+      markersMapRef.current[zone.id] = marker;
     });
 
-    // Auto-fit bounds based on available zone coordinates
-    if (latLngs.length > 1) {
-      try {
-        const bounds = L.latLngBounds(latLngs);
-        map.fitBounds(bounds, {
-          padding: [50, 50],
-          maxZoom: 14,
-        });
-      } catch (err) {
-        console.warn('Error auto-fitting map bounds:', err);
+    // Auto-fit bounds ONLY when the set of zones has changed (e.g. search/filter applied)
+    if (zonesListChanged) {
+      lastZoneIdsRef.current = currentZoneIds;
+      if (latLngs.length > 1) {
+        try {
+          const bounds = L.latLngBounds(latLngs);
+          map.fitBounds(bounds, {
+            padding: [48, 48],
+            maxZoom: 14,
+            animate: false, // Instant fit to avoid tile churn
+          });
+        } catch (err) {
+          console.warn('Error auto-fitting map bounds:', err);
+        }
+      } else if (latLngs.length === 1) {
+        map.setView(latLngs[0], 14, { animate: false });
       }
-    } else if (latLngs.length === 1) {
-      map.setView(latLngs[0], 14, { animate: true });
     }
   }, [validZones, onSelectZone]);
 
-  // Handle selectedZoneId change (smooth pan and open popup)
+  // Handle selectedZoneId change (smooth pan and open popup without recreating markers)
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !selectedZoneId) return;
 
-    const marker = markersRef.current[selectedZoneId];
+    const marker = markersMapRef.current[selectedZoneId];
     const selected = validZones.find((z) => z.id === selectedZoneId);
 
-    // Update marker styling for all
+    // Update marker styling (scale & zIndex) for all without re-adding layers
     validZones.forEach((zone) => {
-      const m = markersRef.current[zone.id];
+      const m = markersMapRef.current[zone.id];
       if (m) {
         const isSel = zone.id === selectedZoneId;
         const color = getMarkerColor(zone.status);
-        m.setIcon(createMarkerIcon(zone, isSel, color));
+        m.setIcon(createMarkerIcon(isSel, color));
         m.setZIndexOffset(isSel ? 1000 : 0);
       }
     });
 
     if (marker && selected) {
-      map.setView([selected.lat, selected.lng], Math.max(map.getZoom(), 14), {
-        animate: true,
-      });
+      // Pan smoothly to selected location and open popup
+      map.panTo([selected.lat, selected.lng], { animate: true });
       marker.openPopup();
     }
   }, [selectedZoneId, validZones]);
 
-  // Handle container resizing
+  // Debounced Container Resize Handling
   useEffect(() => {
     const map = mapInstanceRef.current;
-    if (!map || !mapContainerRef.current) return;
+    const container = mapContainerRef.current;
+    if (!map || !container) return;
 
-    const resizeObserver = new ResizeObserver(() => {
-      map.invalidateSize();
+    let resizeTimer: any = null;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.contentRect.width > 0 && entry.contentRect.height > 0) {
+          if (resizeTimer) clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(() => {
+            if (mapInstanceRef.current) {
+              mapInstanceRef.current.invalidateSize({ pan: false, debounceMoveend: true });
+            }
+          }, 120);
+        }
+      }
     });
 
-    resizeObserver.observe(mapContainerRef.current);
+    observer.observe(container);
 
     return () => {
-      resizeObserver.disconnect();
+      if (resizeTimer) clearTimeout(resizeTimer);
+      observer.disconnect();
     };
   }, [height]);
 
@@ -397,8 +436,9 @@ export const WorkZoneMap: React.FC<WorkZoneMapProps> = ({
     if (validZones.length > 1) {
       const latLngs = validZones.map((z) => [z.lat, z.lng] as [number, number]);
       map.fitBounds(L.latLngBounds(latLngs), {
-        padding: [50, 50],
+        padding: [48, 48],
         maxZoom: 14,
+        animate: true,
       });
     } else if (validZones.length === 1) {
       map.setView([validZones[0].lat, validZones[0].lng], 14, { animate: true });
@@ -407,7 +447,7 @@ export const WorkZoneMap: React.FC<WorkZoneMapProps> = ({
 
   return (
     <div className="relative rounded-xl overflow-hidden border border-surface-border bg-slate-100 shadow-card">
-      {/* Map Container */}
+      {/* Map Canvas */}
       <div
         ref={mapContainerRef}
         style={{ height, width: '100%' }}
@@ -415,13 +455,13 @@ export const WorkZoneMap: React.FC<WorkZoneMapProps> = ({
       />
 
       {/* Map Header Controls Overlay */}
-      <div className="absolute top-3 left-14 z-[400] flex items-center gap-2">
+      <div className="absolute top-3 left-14 z-[400] flex items-center gap-2 pointer-events-auto">
         {validZones.length > 0 && (
           <button
             type="button"
             onClick={handleResetView}
             className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/95 hover:bg-white text-slate-700 hover:text-slate-900 text-[11px] font-semibold rounded-lg border border-slate-200 shadow-sm backdrop-blur transition-colors"
-            title="Fit map bounds to all registered work zones"
+            title="Fit map bounds to all currently displayed work zones"
           >
             <Maximize2 className="w-3.5 h-3.5 text-teal-600" />
             <span>Fit All Zones ({validZones.length})</span>
@@ -436,7 +476,7 @@ export const WorkZoneMap: React.FC<WorkZoneMapProps> = ({
             <Layers className="w-3.5 h-3.5 text-teal-600" />
             <span>Spatial Work Zones</span>
           </span>
-          <span className="flex items-center gap-1 text-[10px] text-teal-700 font-mono font-bold bg-teal-50 px-1.5 py-0.2 rounded border border-teal-200">
+          <span className="flex items-center gap-1 text-[10px] text-teal-700 font-mono font-bold bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">
             <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></span>
             OpenStreetMap
           </span>
@@ -462,10 +502,20 @@ export const WorkZoneMap: React.FC<WorkZoneMapProps> = ({
         <div className="absolute inset-0 z-[400] bg-slate-900/10 backdrop-blur-[2px] flex items-center justify-center p-6 pointer-events-none">
           <div className="bg-white/95 border border-slate-200 rounded-xl p-5 shadow-lg max-w-sm text-center pointer-events-auto">
             <MapPin className="w-8 h-8 text-teal-600 mx-auto mb-2" />
-            <h4 className="font-bold text-xs text-slate-800">No Zones With Coordinates Found</h4>
-            <p className="text-[11px] text-slate-500 mt-1">
-              No registered work zones match the current search or status filter. Clear the filter to display zone markers.
+            <h4 className="font-bold text-xs text-slate-800">No Matching Work Zones</h4>
+            <p className="text-[11px] text-slate-500 mt-1 mb-3">
+              No registered work zones match the current search or filter criteria.
             </p>
+            {onResetFilters && (
+              <button
+                type="button"
+                onClick={onResetFilters}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Reset Filters
+              </button>
+            )}
           </div>
         </div>
       )}

@@ -16,12 +16,12 @@ import {
   Cpu,
   Ruler,
   FileCheck2,
-  SlidersHorizontal
+  SlidersHorizontal,
+  FilterX
 } from 'lucide-react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { PageHeader } from '../components/common/PageHeader';
 import { SearchInput } from '../components/common/SearchInput';
-import { FilterBar } from '../components/common/FilterBar';
 import { StatusBadge } from '../components/common/StatusBadge';
 import { Modal } from '../components/common/Modal';
 import { mockEvidenceItems } from '../data/mockEvidence';
@@ -190,26 +190,34 @@ export const EvidencePage: React.FC = () => {
     return matchesSearch && matchesStatus && matchesStage;
   });
 
+  const isFiltered = Boolean(search.trim()) || statusFilter !== 'ALL' || stageFilter !== 'ALL';
+
+  const handleResetFilters = () => {
+    setSearch('');
+    setStatusFilter('ALL');
+    setStageFilter('ALL');
+  };
+
   // Render Geofence Badge helper
   const renderGeofenceBadge = (status?: GeofenceStatus, accuracy?: number) => {
     switch (status) {
       case 'VERIFIED':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
             <CheckCircle2 className="w-3 h-3 text-emerald-600" />
             <span>GPS In-Zone {accuracy ? `(±${accuracy}m)` : ''}</span>
           </span>
         );
       case 'OUT_OF_BOUNDS':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200 shrink-0">
             <XCircle className="w-3 h-3 text-rose-600" />
             <span>Out of Geofence</span>
           </span>
         );
       case 'ACCURACY_TOO_LOW':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">
             <AlertTriangle className="w-3 h-3 text-amber-600" />
             <span>Low Accuracy {accuracy ? `(${accuracy}m)` : ''}</span>
           </span>
@@ -217,7 +225,7 @@ export const EvidencePage: React.FC = () => {
       case 'UNVERIFIED_NO_GPS':
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
             <Compass className="w-3 h-3 text-slate-400" />
             <span>No GPS Geotag</span>
           </span>
@@ -232,13 +240,13 @@ export const EvidencePage: React.FC = () => {
         subtitle="Geotagged civil infrastructure field photography with real-time GPS geofencing, perceptual duplicate detection, and computer vision quality inspection."
         badge={
           <span className="px-2.5 py-1 text-xs font-semibold bg-teal-50 text-teal-700 rounded-full border border-teal-200">
-            {evidenceList.length} Verified Media Files
+            {isFiltered ? `Showing ${filteredEvidence.length} of ${evidenceList.length} Photos` : `${evidenceList.length} Verified Media Files`}
           </span>
         }
         actions={
           <button
             onClick={() => setIsCaptureModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-sm transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-[#10243A] hover:bg-[#1B3550] text-white rounded-lg text-xs font-semibold shadow-sm transition-all"
           >
             <Camera className="w-4 h-4 text-teal-400" />
             <span>Mobile Field Capture</span>
@@ -247,47 +255,67 @@ export const EvidencePage: React.FC = () => {
       />
 
       {/* Vault KPI Summary Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-xl border border-surface-border shadow-card">
-          <span className="text-[11px] font-semibold text-slate-400 block uppercase tracking-wider">Total Records</span>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-xl font-bold text-slate-900">{evidenceList.length}</span>
-            <span className="text-xs text-teal-700 font-semibold bg-teal-50 px-1.5 py-0.5 rounded">High Res</span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white p-4 rounded-xl border border-surface-border shadow-card flex items-start justify-between">
+          <div>
+            <span className="text-[11px] font-bold text-ink-muted uppercase tracking-wider block">Total Media Records</span>
+            <div className="flex items-baseline gap-2 mt-1.5">
+              <span className="text-2xl font-bold text-[#10243A]">{evidenceList.length}</span>
+              <span className="text-[10px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">High Res</span>
+            </div>
+            <span className="text-xs text-ink-secondary mt-1 block truncate">Civil road & duct photography</span>
           </div>
-          <span className="text-[11px] text-slate-500 mt-1 block">Civil road & duct photography</span>
+          <div className="p-2.5 bg-teal-50 rounded-xl text-teal-600 border border-teal-100 shrink-0">
+            <Camera className="w-5 h-5" />
+          </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-surface-border shadow-card">
-          <span className="text-[11px] font-semibold text-slate-400 block uppercase tracking-wider">Geofence Pass Rate</span>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-xl font-bold text-emerald-700">87.5%</span>
-            <span className="text-xs text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded">7 / 8 In-Zone</span>
+        <div className="bg-white p-4 rounded-xl border border-surface-border shadow-card flex items-start justify-between">
+          <div>
+            <span className="text-[11px] font-bold text-ink-muted uppercase tracking-wider block">GPS Geofence Match</span>
+            <div className="flex items-baseline gap-2 mt-1.5">
+              <span className="text-2xl font-bold text-emerald-700">87.5%</span>
+              <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">7 / 8 In-Zone</span>
+            </div>
+            <span className="text-xs text-ink-secondary mt-1 block truncate">WGS 84 GPS coordinate verified</span>
           </div>
-          <span className="text-[11px] text-slate-500 mt-1 block">WGS 84 GPS coordinate verified</span>
+          <div className="p-2.5 bg-emerald-50 rounded-xl text-emerald-600 border border-emerald-100 shrink-0">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-surface-border shadow-card">
-          <span className="text-[11px] font-semibold text-slate-400 block uppercase tracking-wider">Computer Vision</span>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-xl font-bold text-blue-700">100%</span>
-            <span className="text-xs text-blue-700 font-semibold bg-blue-50 px-1.5 py-0.5 rounded">Depth Audited</span>
+        <div className="bg-white p-4 rounded-xl border border-surface-border shadow-card flex items-start justify-between">
+          <div>
+            <span className="text-[11px] font-bold text-ink-muted uppercase tracking-wider block">Computer Vision</span>
+            <div className="flex items-baseline gap-2 mt-1.5">
+              <span className="text-2xl font-bold text-blue-700">100%</span>
+              <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">Depth Audited</span>
+            </div>
+            <span className="text-xs text-ink-secondary mt-1 block truncate">Automated optical depth check</span>
           </div>
-          <span className="text-[11px] text-slate-500 mt-1 block">Automated optical depth verification</span>
+          <div className="p-2.5 bg-blue-50 rounded-xl text-blue-600 border border-blue-100 shrink-0">
+            <Cpu className="w-5 h-5" />
+          </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-surface-border shadow-card">
-          <span className="text-[11px] font-semibold text-slate-400 block uppercase tracking-wider">Integrity & pHash</span>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-xl font-bold text-amber-700">2 Flags</span>
-            <span className="text-xs text-rose-700 font-semibold bg-rose-50 px-1.5 py-0.5 rounded">1 Duplicate</span>
+        <div className="bg-white p-4 rounded-xl border border-surface-border shadow-card flex items-start justify-between">
+          <div>
+            <span className="text-[11px] font-bold text-ink-muted uppercase tracking-wider block">Integrity & pHash Gate</span>
+            <div className="flex items-baseline gap-2 mt-1.5">
+              <span className="text-2xl font-bold text-amber-700">2 Flags</span>
+              <span className="text-[10px] font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">1 Duplicate</span>
+            </div>
+            <span className="text-xs text-ink-secondary mt-1 block truncate">Perceptual hash collision gate</span>
           </div>
-          <span className="text-[11px] text-slate-500 mt-1 block">Perceptual hash collision gate</span>
+          <div className="p-2.5 bg-amber-50 rounded-xl text-amber-600 border border-amber-100 shrink-0">
+            <ShieldAlert className="w-5 h-5" />
+          </div>
         </div>
       </div>
 
       {/* Success Notification */}
       {successToast && (
-        <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-emerald-800 text-sm animate-fade-in">
+        <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-emerald-800 text-sm animate-fade-in shadow-xs">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
             <span>{successToast}</span>
@@ -298,36 +326,100 @@ export const EvidencePage: React.FC = () => {
         </div>
       )}
 
-      {/* Filter and Search */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6">
-        <div className="flex flex-wrap items-center gap-2">
-          <FilterBar
-            options={filterOptions}
-            selected={statusFilter}
-            onSelect={setStatusFilter}
-          />
-          <div className="flex items-center gap-1.5 ml-2">
-            <span className="text-xs font-semibold text-slate-500">Stage:</span>
-            <select
-              value={stageFilter}
-              onChange={(e) => setStageFilter(e.target.value)}
-              className="text-xs bg-white border border-surface-border rounded-lg px-2.5 py-1.5 font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-teal-500"
-            >
-              <option value="ALL">All Stages</option>
-              <option value="BEFORE_WORK">Before Work</option>
-              <option value="WORK_IN_PROGRESS">Work in Progress</option>
-              <option value="COMPLETION">Completion</option>
-              <option value="CORRECTIVE_ACTION">Corrective Action</option>
-            </select>
+      {/* Unified Filter, Stage & Search Control Bar */}
+      <div className="bg-white rounded-xl border border-surface-border p-3.5 shadow-card mb-6">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+          {/* Status Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
+            {filterOptions.map((opt) => {
+              const isSelected = statusFilter === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => setStatusFilter(opt.value)}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap flex items-center gap-1.5 border ${
+                    isSelected
+                      ? 'bg-[#10243A] text-white border-[#10243A] shadow-xs'
+                      : 'bg-white text-ink-secondary border-surface-border hover:bg-slate-50 hover:text-ink-primary'
+                  }`}
+                >
+                  <span>{opt.label}</span>
+                  <span
+                    className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                      isSelected
+                        ? 'bg-teal-500 text-navy-950 font-bold'
+                        : 'bg-slate-100 text-ink-secondary'
+                    }`}
+                  >
+                    {opt.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Right Controls: Stage Select, Search, Reset */}
+          <div className="flex items-center gap-2.5 flex-1 lg:flex-initial justify-end">
+            {/* Stage Dropdown */}
+            <div className="relative shrink-0">
+              <select
+                value={stageFilter}
+                onChange={(e) => setStageFilter(e.target.value)}
+                className="h-9 text-xs bg-white border border-surface-border rounded-lg pl-3 pr-7 font-medium text-ink-primary focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 shadow-xs cursor-pointer"
+              >
+                <option value="ALL">All Stages (8)</option>
+                <option value="BEFORE_WORK">Before Work</option>
+                <option value="WORK_IN_PROGRESS">Work in Progress</option>
+                <option value="COMPLETION">Completion</option>
+                <option value="CORRECTIVE_ACTION">Corrective Action</option>
+              </select>
+            </div>
+
+            {/* Search Input */}
+            <div className="w-full sm:w-72">
+              <SearchInput
+                value={search}
+                onChange={setSearch}
+                placeholder="Search by code, PIN, vendor, zone..."
+                className="w-full"
+              />
+            </div>
+
+            {/* Reset Filters Button */}
+            {isFiltered && (
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="h-9 px-3 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-xs font-semibold shrink-0 transition-colors flex items-center gap-1.5"
+                title="Reset all search & status filters"
+              >
+                <FilterX className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Reset</span>
+              </button>
+            )}
           </div>
         </div>
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder="Search by photo ID, PIN, vendor, work zone..."
-          className="w-full sm:w-80"
-        />
       </div>
+
+      {/* Empty State when filters yield no matches */}
+      {filteredEvidence.length === 0 && (
+        <div className="bg-white rounded-xl border border-surface-border p-12 text-center shadow-card flex flex-col items-center justify-center">
+          <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+            <Camera className="w-6 h-6" />
+          </div>
+          <h4 className="text-base font-bold text-slate-800">No matching photographic evidence</h4>
+          <p className="text-xs text-slate-500 max-w-sm mt-1 mb-4">
+            No media files match your current search criteria or stage filters. Try adjusting your filters or resetting them.
+          </p>
+          <button
+            onClick={handleResetFilters}
+            className="px-4 py-2 bg-[#10243A] text-white rounded-lg text-xs font-semibold hover:bg-[#1B3550] shadow-sm flex items-center gap-1.5"
+          >
+            <FilterX className="w-3.5 h-3.5" />
+            <span>Reset All Filters</span>
+          </button>
+        </div>
+      )}
 
       {/* Evidence Media Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -349,32 +441,42 @@ export const EvidencePage: React.FC = () => {
                 alt={item.evidenceType}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-95 group-hover:opacity-100"
                 onError={(e) => {
-                  // Fallback to high-contrast technical blueprint schematic if image fails to load
                   const target = e.currentTarget;
                   target.onerror = null;
                   target.src = 'https://images.unsplash.com/photo-1581094288338-2314dddb7ece?auto=format&fit=crop&w=800&q=80';
                 }}
               />
 
-              {/* Status and Geofence Tag (Top Left) */}
-              <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
-                <StatusBadge status={item.verificationStatus} size="sm" />
-                {renderGeofenceBadge(item.geofenceStatus, item.gpsAccuracyMeters)}
+              {/* Top Bar: Badges on Left and File Metadata on Right */}
+              <div className="absolute top-2.5 inset-x-2.5 flex items-center justify-between gap-2 pointer-events-none">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <StatusBadge status={item.verificationStatus} size="sm" />
+                  {renderGeofenceBadge(item.geofenceStatus, item.gpsAccuracyMeters)}
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <span className="bg-slate-950/85 backdrop-blur-xs px-2 py-0.5 rounded text-[10px] font-mono text-teal-300 border border-white/10 shadow-xs">
+                    {item.fileSize}
+                  </span>
+                  <span className="bg-slate-950/90 text-[10px] font-bold text-slate-200 px-2 py-0.5 rounded shadow-xs border border-white/10">
+                    {item.evidenceType.replace(/_/g, ' ')}
+                  </span>
+                </div>
               </div>
 
-              {/* File details & Stage (Top Right) */}
-              <div className="absolute top-2.5 right-2.5 flex flex-col items-end gap-1">
-                <span className="bg-slate-900/85 backdrop-blur-xs px-2 py-0.5 rounded text-[10px] font-mono text-teal-400 border border-slate-700">
-                  {item.fileSize}
-                </span>
-                <span className="bg-slate-900/90 text-[10px] font-bold text-slate-200 px-2 py-0.5 rounded shadow">
-                  {item.evidenceType.replace(/_/g, ' ')}
-                </span>
-              </div>
+              {/* Duplicate Suspicion Banner on Card */}
+              {item.duplicateStatus && item.duplicateStatus !== 'UNIQUE' && (
+                <div className="absolute top-11 inset-x-2.5 bg-rose-600/95 backdrop-blur-xs text-white px-2.5 py-1 rounded-md text-[10px] font-semibold flex items-center justify-between shadow-md border border-rose-500">
+                  <span className="flex items-center gap-1.5 truncate">
+                    <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
+                    <span>{item.duplicateStatus === 'DUPLICATE_CONFIRMED' ? 'Confirmed Duplicate' : 'Perceptual Duplicate'}</span>
+                  </span>
+                  <span className="font-mono text-[9px] bg-black/30 px-1.5 py-0.5 rounded shrink-0">pHash 99.8% match</span>
+                </div>
+              )}
 
               {/* Real Engineering Solocator-style HUD Watermark Bar (Bottom) */}
-              <div className="absolute bottom-2 left-2 right-2 bg-slate-950/85 backdrop-blur-xs px-2.5 py-1.5 rounded border border-white/10 text-white flex items-center justify-between text-[10px] font-mono shadow-sm">
-                <span className="flex items-center gap-1.5 text-teal-400 font-semibold truncate">
+              <div className="absolute bottom-2 inset-x-2.5 bg-slate-950/85 backdrop-blur-xs px-2.5 py-1.5 rounded-lg border border-white/10 text-white flex items-center justify-between text-[10px] font-mono shadow-sm">
+                <span className="flex items-center gap-1.5 text-teal-300 font-semibold truncate">
                   <MapPin className="w-3 h-3 shrink-0 text-teal-400" />
                   {item.coordinates.lat !== 0 ? `${item.coordinates.lat.toFixed(4)}° N, ${item.coordinates.lng.toFixed(4)}° E` : 'NO GPS TAG'}
                 </span>
@@ -383,19 +485,8 @@ export const EvidencePage: React.FC = () => {
                 </span>
               </div>
 
-              {/* Duplicate Suspicion Banner on Card */}
-              {item.duplicateStatus && item.duplicateStatus !== 'UNIQUE' && (
-                <div className="absolute top-12 inset-x-0 bg-rose-600/95 text-white px-3 py-1 text-[11px] font-semibold flex items-center justify-between shadow-md">
-                  <span className="flex items-center gap-1">
-                    <ShieldAlert className="w-3.5 h-3.5" />
-                    <span>{item.duplicateStatus === 'DUPLICATE_CONFIRMED' ? 'Confirmed Duplicate' : 'Perceptual Duplicate'}</span>
-                  </span>
-                  <span className="font-mono text-[9px] bg-black/30 px-1.5 py-0.5 rounded">pHash 99.8% match</span>
-                </div>
-              )}
-
               {/* Hover Inspect CTA Overlay */}
-              <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                 <span className="px-3.5 py-2 rounded-lg bg-white/95 text-slate-900 font-bold text-xs flex items-center gap-1.5 shadow-lg">
                   <Eye className="w-4 h-4 text-teal-600" />
                   <span>Inspect Media & AI Audit</span>
@@ -406,41 +497,44 @@ export const EvidencePage: React.FC = () => {
             {/* Content Details */}
             <div className="p-4 flex-1 flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between text-xs mb-1.5">
+                {/* ID & Date Header */}
+                <div className="flex items-center justify-between text-xs mb-2">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-mono font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                    <span className="font-mono font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200 text-xs">
                       {item.id}
                     </span>
-                    <span className="font-mono text-[11px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                    <span className="font-mono text-[11px] text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 font-semibold">
                       {item.assignmentId}
                     </span>
                   </div>
-                  <span className="text-slate-400 text-[11px]">{item.submissionDate}</span>
+                  <span className="text-slate-400 text-[11px] font-medium">{item.submissionDate}</span>
                 </div>
 
-                <h4 className="font-bold text-sm text-slate-900 mt-1">
+                {/* Zone Name - Single Line Clamp for Perfect Grid Alignment */}
+                <h4 className="font-bold text-sm text-[#10243A] line-clamp-1" title={item.workZoneName}>
                   {item.workZoneName}
                 </h4>
                 
-                <div className="text-xs text-slate-600 mt-1.5 flex items-center gap-1">
+                {/* Vendor Row - Single Line Clamp */}
+                <div className="text-xs text-slate-600 mt-1.5 flex items-center gap-1.5 line-clamp-1" title={item.vendorName}>
                   <HardHat className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                   <span className="truncate">Vendor: <strong className="text-slate-800">{item.vendorName}</strong></span>
                 </div>
 
-                {/* Quality & Depth Status Indicator Chip */}
-                <div className="mt-2.5 pt-2 border-t border-slate-100">
+                {/* Quality & Depth Status Indicator Chip (Fixed Height for Alignment) */}
+                <div className="mt-3 pt-2.5 border-t border-slate-100">
                   {item.verificationStatus === 'FLAGGED' ? (
-                    <div className="text-[11px] text-amber-700 bg-amber-50 px-2 py-1 rounded border border-amber-200 flex items-center gap-1 font-medium">
+                    <div className="h-7 px-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-medium flex items-center gap-1.5">
                       <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                      <span className="truncate">{item.duplicateStatus === 'DUPLICATE_CONFIRMED' ? 'Duplicate resubmission detected' : 'Depth variance flagged vs contract specification'}</span>
+                      <span className="truncate">{item.duplicateStatus === 'DUPLICATE_CONFIRMED' ? 'Duplicate resubmission detected' : 'Depth variance flagged vs specification'}</span>
                     </div>
                   ) : item.verificationStatus === 'REJECTED' ? (
-                    <div className="text-[11px] text-rose-700 bg-rose-50 px-2 py-1 rounded border border-rose-200 flex items-center gap-1 font-medium">
+                    <div className="h-7 px-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-[11px] font-medium flex items-center gap-1.5">
                       <XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                      <span className="truncate">Out of geofence bounds / rework required</span>
+                      <span className="truncate">Out of geofence bounds (184m variance)</span>
                     </div>
                   ) : (
-                    <div className="text-[11px] text-teal-700 bg-teal-50 px-2 py-1 rounded border border-teal-200 flex items-center gap-1 font-medium">
+                    <div className="h-7 px-2.5 rounded-lg bg-teal-50 border border-teal-200 text-teal-800 text-[11px] font-medium flex items-center gap-1.5">
                       <CheckCircle2 className="w-3.5 h-3.5 text-teal-600 shrink-0" />
                       <span className="truncate">Calibrated measurement & optical check compliant</span>
                     </div>
@@ -448,8 +542,9 @@ export const EvidencePage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-100 mt-3 flex items-center justify-between text-xs text-slate-500">
-                <span className="flex items-center gap-1 font-medium">
+              {/* Bottom Card Footer */}
+              <div className="pt-3 border-t border-slate-100 mt-3 flex items-center justify-between text-xs">
+                <span className="flex items-center gap-1 font-semibold text-slate-600">
                   <MapPin className="w-3.5 h-3.5 text-teal-600" />
                   <span>PIN {item.pinCode}</span>
                 </span>
@@ -458,7 +553,7 @@ export const EvidencePage: React.FC = () => {
                     setActivePreview(item);
                     setActiveAuditTab('TELEMETRY');
                   }}
-                  className="text-teal-600 font-semibold hover:text-teal-700 flex items-center gap-1"
+                  className="text-teal-600 font-bold hover:text-teal-700 flex items-center gap-1 transition-colors"
                 >
                   <span>Verification Audit</span>
                   <span>→</span>
@@ -485,7 +580,7 @@ export const EvidencePage: React.FC = () => {
               </span>
               <button
                 onClick={() => setActivePreview(null)}
-                className="px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-semibold hover:bg-slate-800"
+                className="px-4 py-2 bg-[#10243A] text-white rounded-lg text-xs font-semibold hover:bg-[#1B3550] transition-colors"
               >
                 Close Audit
               </button>
@@ -493,23 +588,21 @@ export const EvidencePage: React.FC = () => {
           }
         >
           <div className="space-y-4">
-            {/* Top Modal Controls: HUD Watermark Switch & Full Screen Indicator */}
+            {/* Top Modal Controls: HUD Watermark Switch & File Size */}
             <div className="flex items-center justify-between px-1">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowWatermarkHud(!showWatermarkHud)}
-                  className={`px-2.5 py-1 text-[11px] font-semibold rounded-md border transition-all flex items-center gap-1.5 ${
-                    showWatermarkHud
-                      ? 'bg-teal-50 text-teal-700 border-teal-200'
-                      : 'bg-slate-100 text-slate-600 border-slate-200'
-                  }`}
-                >
-                  <SlidersHorizontal className="w-3 h-3" />
-                  <span>Solocator Camera HUD: {showWatermarkHud ? 'ON' : 'OFF'}</span>
-                </button>
-              </div>
+              <button
+                onClick={() => setShowWatermarkHud(!showWatermarkHud)}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all flex items-center gap-1.5 ${
+                  showWatermarkHud
+                    ? 'bg-teal-50 text-teal-700 border-teal-200 shadow-xs'
+                    : 'bg-slate-100 text-slate-600 border-slate-200'
+                }`}
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                <span>Solocator Camera HUD: {showWatermarkHud ? 'ON' : 'OFF'}</span>
+              </button>
 
-              <span className="text-[11px] font-mono text-slate-400">
+              <span className="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded border border-slate-200 font-semibold">
                 {activePreview.fileSize} • JPEG High-Res
               </span>
             </div>
@@ -559,22 +652,22 @@ export const EvidencePage: React.FC = () => {
 
             {/* Duplicate Flag Alert Banner */}
             {activePreview.duplicateStatus && activePreview.duplicateStatus !== 'UNIQUE' && (
-              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 space-y-1">
+              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 space-y-1">
                 <div className="font-bold flex items-center gap-1.5 text-rose-900">
                   <ShieldAlert className="w-4 h-4 text-rose-600" />
                   <span>Perceptual Hash Duplicate Warning (Match Score: 99.8%)</span>
                 </div>
                 <p className="leading-relaxed">
-                  The visual fingerprint of this image matches an existing submission in package <strong>WA-BLR-005 (EVD-9005)</strong> with 99.8% perceptual hash congruence. Automated payment authorization for this package is locked.
+                  The visual fingerprint of this image matches an existing submission in package <strong>WA-BLR-005 (EVD-9005)</strong> with 99.8% perceptual hash congruence. Automated milestone payout authorization for this package is locked.
                 </p>
               </div>
             )}
 
-            {/* Audit Tabs */}
+            {/* Audit Tabs Bar */}
             <div className="flex items-center gap-1 border-b border-slate-200 pt-1">
               <button
                 onClick={() => setActiveAuditTab('TELEMETRY')}
-                className={`px-3 py-1.5 text-xs font-semibold border-b-2 transition-colors flex items-center gap-1.5 ${
+                className={`px-3 py-2 text-xs font-bold border-b-2 transition-colors flex items-center gap-1.5 ${
                   activeAuditTab === 'TELEMETRY'
                     ? 'border-teal-600 text-teal-700'
                     : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -585,7 +678,7 @@ export const EvidencePage: React.FC = () => {
               </button>
               <button
                 onClick={() => setActiveAuditTab('COMPUTER_VISION')}
-                className={`px-3 py-1.5 text-xs font-semibold border-b-2 transition-colors flex items-center gap-1.5 ${
+                className={`px-3 py-2 text-xs font-bold border-b-2 transition-colors flex items-center gap-1.5 ${
                   activeAuditTab === 'COMPUTER_VISION'
                     ? 'border-teal-600 text-teal-700'
                     : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -596,7 +689,7 @@ export const EvidencePage: React.FC = () => {
               </button>
               <button
                 onClick={() => setActiveAuditTab('PHYSICAL_QC')}
-                className={`px-3 py-1.5 text-xs font-semibold border-b-2 transition-colors flex items-center gap-1.5 ${
+                className={`px-3 py-2 text-xs font-bold border-b-2 transition-colors flex items-center gap-1.5 ${
                   activeAuditTab === 'PHYSICAL_QC'
                     ? 'border-teal-600 text-teal-700'
                     : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -609,36 +702,36 @@ export const EvidencePage: React.FC = () => {
 
             {/* Tab 1: Telemetry & Sensors */}
             {activeAuditTab === 'TELEMETRY' && (
-              <div className="grid grid-cols-2 gap-3 p-3.5 bg-slate-50 rounded-xl text-xs border border-slate-200">
+              <div className="grid grid-cols-2 gap-3 p-4 bg-slate-50 rounded-xl text-xs border border-surface-border">
                 <div>
-                  <p className="text-slate-400 font-medium">Work Stage Category</p>
-                  <p className="font-bold text-slate-800 mt-0.5">{activePreview.evidenceType.replace(/_/g, ' ')}</p>
+                  <p className="text-slate-400 font-semibold text-[11px]">Work Stage Category</p>
+                  <p className="font-bold text-slate-900 mt-0.5">{activePreview.evidenceType.replace(/_/g, ' ')}</p>
                 </div>
                 <div>
-                  <p className="text-slate-400 font-medium">GPS Geofence Status</p>
+                  <p className="text-slate-400 font-semibold text-[11px]">GPS Geofence Status</p>
                   <div className="mt-0.5">{renderGeofenceBadge(activePreview.geofenceStatus, activePreview.gpsAccuracyMeters)}</div>
                 </div>
                 <div>
-                  <p className="text-slate-400 font-medium">Verified GPS Coordinates</p>
-                  <p className="font-mono text-slate-800 mt-0.5">
+                  <p className="text-slate-400 font-semibold text-[11px]">Verified GPS Coordinates</p>
+                  <p className="font-mono font-bold text-slate-900 mt-0.5">
                     {activePreview.coordinates.lat}° N, {activePreview.coordinates.lng}° E
                   </p>
                 </div>
                 <div>
-                  <p className="text-slate-400 font-medium">Duplicate Status & pHash</p>
+                  <p className="text-slate-400 font-semibold text-[11px]">Duplicate Status & pHash</p>
                   <p className="font-mono text-slate-800 mt-0.5 flex items-center gap-1">
                     <Fingerprint className="w-3.5 h-3.5 text-slate-500" />
                     <span>{activePreview.duplicateStatus || 'UNIQUE'} ({activePreview.perceptualHash || 'Verified'})</span>
                   </p>
                 </div>
                 <div>
-                  <p className="text-slate-400 font-medium">Device Sensor Integrity</p>
-                  <p className="font-mono text-slate-800 mt-0.5">
+                  <p className="text-slate-400 font-semibold text-[11px]">Device Sensor Integrity</p>
+                  <p className="font-mono font-medium text-slate-800 mt-0.5">
                     {activePreview.deviceIntegrityStatus || 'HARDWARE_ATTESTED'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-slate-400 font-medium">Geofence Proximity</p>
+                  <p className="text-slate-400 font-semibold text-[11px]">Geofence Proximity</p>
                   <p className="font-semibold text-teal-700 mt-0.5">
                     {activePreview.geofenceStatus === 'OUT_OF_BOUNDS' ? '184m outside authorized perimeter' : 'Within authorized project boundary corridor'}
                   </p>
@@ -648,9 +741,9 @@ export const EvidencePage: React.FC = () => {
 
             {/* Tab 2: Computer Vision */}
             {activeAuditTab === 'COMPUTER_VISION' && (
-              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-2.5">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-200">
-                  <span className="font-bold text-slate-800 flex items-center gap-1.5">
+              <div className="p-4 bg-slate-50 rounded-xl border border-surface-border text-xs space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-surface-border">
+                  <span className="font-bold text-slate-900 flex items-center gap-1.5">
                     <Layers className="w-4 h-4 text-teal-600" />
                     Monocular Depth & Disparity Analysis
                   </span>
@@ -661,8 +754,8 @@ export const EvidencePage: React.FC = () => {
                 <p className="text-slate-700 font-medium leading-relaxed">
                   {activePreview.monocularDepthEstimate}
                 </p>
-                <div className="p-2.5 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
-                  <span className="text-slate-500">Photometric Edge Uniformity:</span>
+                <div className="p-3 bg-white rounded-lg border border-surface-border flex items-center justify-between">
+                  <span className="text-slate-500 font-medium">Photometric Edge Uniformity:</span>
                   <strong className="text-slate-900 font-mono">98.2% Compliant</strong>
                 </div>
                 <p className="text-[10px] text-slate-400 italic">
@@ -673,9 +766,9 @@ export const EvidencePage: React.FC = () => {
 
             {/* Tab 3: Physical QC & Calibrated Measurements */}
             {activeAuditTab === 'PHYSICAL_QC' && (
-              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-2.5">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-200">
-                  <span className="font-bold text-slate-800 flex items-center gap-1.5">
+              <div className="p-4 bg-slate-50 rounded-xl border border-surface-border text-xs space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-surface-border">
+                  <span className="font-bold text-slate-900 flex items-center gap-1.5">
                     <FileCheck2 className="w-4 h-4 text-teal-600" />
                     Physical Calibration & Lab Core Test Audit
                   </span>
@@ -683,20 +776,20 @@ export const EvidencePage: React.FC = () => {
                     IRC:SP:84 Certified
                   </span>
                 </div>
-                <div className="p-2.5 bg-white rounded-lg border border-slate-200 space-y-1">
-                  <span className="text-slate-400 text-[10px] block uppercase font-semibold">Test Assessment</span>
-                  <p className="font-semibold text-slate-900">
+                <div className="p-3 bg-white rounded-lg border border-surface-border space-y-1">
+                  <span className="text-slate-400 text-[10px] block uppercase font-bold tracking-wider">Test Assessment</span>
+                  <p className="font-semibold text-slate-900 leading-relaxed">
                     {activePreview.physicalMeasurementStatus}
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
-                  <div className="p-2 bg-white rounded border border-slate-200">
-                    <span className="text-slate-400 block text-[10px]">Testing Tool Serial</span>
-                    <strong className="text-slate-800 font-mono">Mitutoyo 500-196-30 (Calibrated)</strong>
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div className="p-2.5 bg-white rounded-lg border border-surface-border">
+                    <span className="text-slate-400 block text-[10px] font-semibold uppercase">Testing Device Serial</span>
+                    <strong className="text-slate-800 font-mono text-xs">Mitutoyo 500-196-30 (Calibrated)</strong>
                   </div>
-                  <div className="p-2 bg-white rounded border border-slate-200">
-                    <span className="text-slate-400 block text-[10px]">Quality Inspector</span>
-                    <strong className="text-slate-800">EE Suresh Kumar (AE-BBMP)</strong>
+                  <div className="p-2.5 bg-white rounded-lg border border-surface-border">
+                    <span className="text-slate-400 block text-[10px] font-semibold uppercase">Authorizing Engineer</span>
+                    <strong className="text-slate-800 text-xs">EE Suresh Kumar (AE-BBMP)</strong>
                   </div>
                 </div>
               </div>
@@ -718,7 +811,7 @@ export const EvidencePage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsCaptureModalOpen(false)}
-                className="px-4 py-2 border border-slate-300 text-slate-600 rounded-lg text-xs font-semibold hover:bg-slate-50"
+                className="px-4 py-2 border border-slate-300 text-slate-600 rounded-lg text-xs font-semibold hover:bg-slate-50 transition-colors"
               >
                 Cancel
               </button>
@@ -726,13 +819,13 @@ export const EvidencePage: React.FC = () => {
                 type="button"
                 onClick={handleSubmitEvidence}
                 disabled={isSubmitting || !capturedImage}
-                className="px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-semibold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 shadow"
+                className="px-4 py-2 bg-[#10243A] text-white rounded-lg text-xs font-semibold hover:bg-[#1B3550] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-xs transition-colors"
               >
                 {isSubmitting ? (
                   <span>Uploading & Verifying...</span>
                 ) : (
                   <>
-                    <UploadCloud className="w-4 h-4" />
+                    <UploadCloud className="w-4 h-4 text-teal-400" />
                     <span>Upload & Verify Evidence</span>
                   </>
                 )}
@@ -808,7 +901,7 @@ export const EvidencePage: React.FC = () => {
             )}
 
             {/* Geolocation Section */}
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <MapPin className="w-4 h-4 text-teal-600" />
@@ -846,7 +939,7 @@ export const EvidencePage: React.FC = () => {
             </div>
 
             {/* Sensor & Orientation Status */}
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
+            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
                 <Compass className="w-4 h-4 text-slate-500" />
                 <div>

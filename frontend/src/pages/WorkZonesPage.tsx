@@ -32,12 +32,15 @@ export const WorkZonesPage: React.FC = () => {
   const { user, hasPermission } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialProjectId = searchParams.get('projectId') || searchParams.get('project') || 'ALL';
-
-  const [zones, setZones] = useState<WorkZoneItem[]>([]);
+  
+  // Master Data State
+  const [allZones, setAllZones] = useState<WorkZoneItem[]>(FALLBACK_WORK_ZONES);
+  const [allAssignments, setAllAssignments] = useState<WorkAssignmentItem[]>([]);
+  const [allProjects, setAllProjects] = useState<ProjectResponse[]>(FALLBACK_PROJECTS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filters
+  // Search & Filter State
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [pinFilter, setPinFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<ZoneStatus | 'ALL'>('ALL');
@@ -46,8 +49,6 @@ export const WorkZonesPage: React.FC = () => {
 
   // Creation modal state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [projects, setProjects] = useState<ProjectResponse[]>(FALLBACK_PROJECTS);
-  const [loadingProjects, setLoadingProjects] = useState(false);
   const [createForm, setCreateForm] = useState<CreateWorkZonePayload>({
     projectId: '',
     zoneName: '',
@@ -67,72 +68,52 @@ export const WorkZonesPage: React.FC = () => {
     user?.role === 'PLATFORM_ADMIN' ||
     user?.role === 'PROJECT_MANAGER';
 
-  const applyFallbackFilter = useCallback((allList: WorkZoneItem[]) => {
-    let filtered = [...allList];
-    if (projectFilter !== 'ALL') {
-      filtered = filtered.filter(
-        (z) =>
-          z.projectId === projectFilter ||
-          z.projectName.toLowerCase().includes(projectFilter.toLowerCase())
-      );
-    }
-    if (statusFilter !== 'ALL') {
-      filtered = filtered.filter((z) => z.status === statusFilter);
-    }
-    if (pinFilter.trim()) {
-      filtered = filtered.filter((z) => z.pincode.startsWith(pinFilter.trim()));
-    }
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      filtered = filtered.filter(
-        (z) =>
-          z.zoneCode.toLowerCase().includes(q) ||
-          z.zoneName.toLowerCase().includes(q) ||
-          z.pincode.includes(q) ||
-          z.locality.toLowerCase().includes(q) ||
-          z.district.toLowerCase().includes(q) ||
-          z.projectName.toLowerCase().includes(q) ||
-          z.projectId.toLowerCase().includes(q)
-      );
-    }
-    setZones(filtered);
-    if (filtered.length > 0) {
-      setSelectedZone((prev) => (prev ? filtered.find((f) => f.id === prev.id) || filtered[0] : filtered[0]));
-    } else {
-      setSelectedZone(null);
-    }
-  }, [search, pinFilter, statusFilter, projectFilter]);
-
-  const fetchZones = useCallback(async () => {
+  // Load master dataset from backend (Decoupled from search/selection to prevent tile unmounts)
+  const fetchMasterData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await workZoneService.getWorkZones({
-        projectId: projectFilter !== 'ALL' ? projectFilter : undefined,
-        search: search.trim() || undefined,
-        pincode: pinFilter.trim() || undefined,
-        status: statusFilter !== 'ALL' ? statusFilter : undefined,
-        size: 100,
-      });
-      if (data && data.content && data.content.length > 0) {
-        setZones(data.content);
-        if (!selectedZone) {
-          setSelectedZone(data.content[0]);
-        } else {
-          const updated = data.content.find((z) => z.id === selectedZone.id);
-          if (updated) setSelectedZone(updated);
-          else setSelectedZone(data.content[0]);
-        }
+
+      const [zonesRes, assignmentsRes, projectsRes] = await Promise.all([
+        workZoneService.getWorkZones({ size: 100 }).catch(() => ({ content: [] })),
+        workAssignmentService.getAssignments({ size: 100 }).catch(() => ({ content: [] })),
+        projectService.getProjects({ size: 100 }).catch(() => ({ content: [] })),
+      ]);
+
+      const loadedZones =
+        zonesRes && zonesRes.content && zonesRes.content.length > 0
+          ? zonesRes.content
+          : FALLBACK_WORK_ZONES;
+      const loadedProjects =
+        projectsRes && projectsRes.content && projectsRes.content.length > 0
+          ? projectsRes.content
+          : FALLBACK_PROJECTS;
+
+      setAllZones(loadedZones);
+      setAllAssignments(assignmentsRes.content || []);
+      setAllProjects(loadedProjects);
+
+      // Retain or initialize selected zone
+      if (loadedZones.length > 0) {
+        setSelectedZone((prev) => {
+          if (!prev) return loadedZones[0];
+          const match = loadedZones.find((z) => z.id === prev.id);
+          return match || loadedZones[0];
+        });
       } else {
-        applyFallbackFilter(FALLBACK_WORK_ZONES);
+        setSelectedZone(null);
       }
     } catch (err: any) {
-      console.warn('Backend work zones endpoint unreachable or returned error, using fallback demonstration work zones:', err);
-      applyFallbackFilter(FALLBACK_WORK_ZONES);
+      console.warn('Backend unavailable, using fallback work zones and projects:', err);
+      setAllZones(FALLBACK_WORK_ZONES);
+      setAllProjects(FALLBACK_PROJECTS);
+      if (FALLBACK_WORK_ZONES.length > 0) {
+        setSelectedZone(FALLBACK_WORK_ZONES[0]);
+      }
     } finally {
       setLoading(false);
     }
-  }, [search, pinFilter, statusFilter, projectFilter, selectedZone, applyFallbackFilter]);
+  }, []);
 
   useEffect(() => {
     fetchMasterData();
@@ -149,26 +130,141 @@ export const WorkZonesPage: React.FC = () => {
         }
       }
 
-  const loadProjectsForModal = async () => {
-    try {
-      setLoadingProjects(true);
-      const res = await projectService.getProjects({ size: 100 });
-      const activeProjects = (res && res.content && res.content.length > 0 ? res.content : FALLBACK_PROJECTS).filter(
-        (p) => p.status === 'ACTIVE' || p.status === 'PLANNED'
-      );
-      setProjects(activeProjects);
-      if (activeProjects.length > 0 && !createForm.projectId) {
-        setCreateForm((prev) => ({ ...prev, projectId: activeProjects[0].id }));
+      // 2. Status filter
+      if (statusFilter !== 'ALL') {
+        if (zone.status !== statusFilter) {
+          return false;
+        }
       }
-    } catch (err) {
-      console.error('Error fetching projects', err);
-      const activeProjects = FALLBACK_PROJECTS.filter((p) => p.status === 'ACTIVE' || p.status === 'PLANNED');
-      setProjects(activeProjects);
-      if (activeProjects.length > 0 && !createForm.projectId) {
-        setCreateForm((prev) => ({ ...prev, projectId: activeProjects[0].id }));
+
+      // 3. Project filter
+      if (projectFilter !== 'ALL') {
+        if (
+          zone.projectId !== projectFilter &&
+          !zone.projectName.toLowerCase().includes(projectFilter.toLowerCase())
+        ) {
+          return false;
+        }
       }
-    } finally {
-      setLoadingProjects(false);
+
+      // 4. Multi-field search query
+      if (search.trim()) {
+        const query = search.trim().toLowerCase();
+
+        // Retrieve vendor names associated with this zone
+        const zoneAsns = allAssignments.filter((a) => a.workZoneId === zone.id);
+        const vendorNames = zoneAsns
+          .map((a) => (a as any).vendorCompanyName || (a as any).vendorName || '')
+          .join(' ')
+          .toLowerCase();
+
+        const matchName = zone.zoneName.toLowerCase().includes(query);
+        const matchCode = zone.zoneCode.toLowerCase().includes(query);
+        const matchPin = zone.pincode.includes(query);
+        const matchLocality = (zone.locality || '').toLowerCase().includes(query);
+        const matchDistrict = (zone.district || '').toLowerCase().includes(query);
+        const matchProject = (zone.projectName || '').toLowerCase().includes(query);
+        const matchVendor = vendorNames.includes(query);
+
+        if (
+          !matchName &&
+          !matchCode &&
+          !matchPin &&
+          !matchLocality &&
+          !matchDistrict &&
+          !matchProject &&
+          !matchVendor
+        ) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [allZones, allAssignments, search, pinFilter, statusFilter, projectFilter]);
+
+  // Sync selected zone with filtered results
+  useEffect(() => {
+    if (filteredZones.length === 0) {
+      // If all filtered out, do not forcefully clear selectedZone so user can still see details or reset
+    } else if (selectedZone && !filteredZones.some((z) => z.id === selectedZone.id)) {
+      setSelectedZone(filteredZones[0]);
+    } else if (!selectedZone && filteredZones.length > 0) {
+      setSelectedZone(filteredZones[0]);
+    }
+  }, [filteredZones, selectedZone]);
+
+  // Convert filtered real work zones with coordinates to MapZoneData format
+  const mapZones = useMemo<MapZoneData[]>(() => {
+    return filteredZones
+      .filter((z) => {
+        const lat = Number(z.centerLatitude);
+        const lng = Number(z.centerLongitude);
+        return !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+      })
+      .map((z) => {
+        const lat = Number(z.centerLatitude);
+        const lng = Number(z.centerLongitude);
+
+        // Find assigned vendors from real assignments in this zone
+        const zoneAssignments = allAssignments.filter((a) => a.workZoneId === z.id);
+        const vendors = Array.from(
+          new Set(
+            zoneAssignments
+              .map((a) => (a as any).vendorCompanyName || (a as any).vendorName)
+              .filter(Boolean)
+          )
+        );
+        const assignedVendorName =
+          vendors.length > 0 ? vendors.join(', ') : 'Pending Contractor Allocation';
+
+        const workTypes = Array.from(
+          new Set(
+            zoneAssignments
+              .map((a) => a.workTypeDisplayName || a.workType)
+              .filter(Boolean)
+          )
+        );
+        const currentWorkType =
+          workTypes.length > 0 ? workTypes.join(', ') : 'Infrastructure Ducting';
+
+        return {
+          id: z.id,
+          code: z.zoneCode,
+          name: z.zoneName,
+          pinCode: z.pincode,
+          locality: z.locality,
+          district: z.district,
+          state: z.state,
+          region: z.district || 'Urban Sector',
+          projectId: z.projectId,
+          projectName: z.projectName,
+          status: z.status,
+          currentWorkType,
+          assignedVendorName,
+          activeWork:
+            z.activeAssignmentsCount ||
+            zoneAssignments.filter(
+              (a) => a.status === 'IN_PROGRESS' || a.status === 'ACCEPTED'
+            ).length,
+          totalAssignments: zoneAssignments.length,
+          completedWork: zoneAssignments.filter((a) => a.status === 'COMPLETED').length,
+          lat,
+          lng,
+          isApproximate: false,
+        };
+      });
+  }, [filteredZones, allAssignments]);
+
+  // Handle marker selection with inventory card scroll-into-view
+  const handleSelectZoneFromMap = (mZone: MapZoneData) => {
+    const match = allZones.find((z) => z.id === mZone.id);
+    if (match) {
+      setSelectedZone(match);
+      const cardEl = document.getElementById(`zone-card-${match.id}`);
+      if (cardEl) {
+        cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
     }
   };
 
@@ -206,6 +302,10 @@ export const WorkZonesPage: React.FC = () => {
     setPinFilter('');
     setStatusFilter('ALL');
     setProjectFilter('ALL');
+    searchParams.delete('projectId');
+    searchParams.delete('project');
+    searchParams.delete('search');
+    setSearchParams(searchParams);
     if (allZones.length > 0) {
       setSelectedZone(allZones[0]);
     }
@@ -302,19 +402,34 @@ export const WorkZonesPage: React.FC = () => {
 
       {/* Filter and PIN Search Bar */}
       <div className="bg-white rounded-xl border border-surface-border p-4 shadow-card mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
-          <div className="relative sm:col-span-2">
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+          {/* Universal Search Input */}
+          <div className="relative sm:col-span-4">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search zone, PIN, locality, project..."
+              placeholder="Search by zone, locality, district, project, or vendor..."
               className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
           </div>
 
-          <div>
+          {/* 6-Digit PIN Code Filter */}
+          <div className="relative sm:col-span-2">
+            <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              maxLength={6}
+              value={pinFilter}
+              onChange={(e) => setPinFilter(e.target.value.replace(/\D/g, ''))}
+              placeholder="PIN (e.g. 560001)"
+              className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono"
+            />
+          </div>
+
+          {/* Project Filter */}
+          <div className="sm:col-span-3">
             <select
               value={projectFilter}
               onChange={(e) => {
@@ -328,38 +443,10 @@ export const WorkZonesPage: React.FC = () => {
               }}
               className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
             >
-              <option value="ALL">All Projects ({FALLBACK_PROJECTS.length})</option>
-              {FALLBACK_PROJECTS.map((p) => (
-                <option key={p.id} value={p.projectCode}>
-                  {p.projectCode} • {p.projectName}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="relative">
-            <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              maxLength={6}
-              value={pinFilter}
-              onChange={(e) => setPinFilter(e.target.value.replace(/\D/g, ''))}
-              placeholder="PIN Code (6 digits)"
-              className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono"
-            />
-          </div>
-
-          {/* Project Filter */}
-          <div className="sm:col-span-3">
-            <select
-              value={projectFilter}
-              onChange={(e) => setProjectFilter(e.target.value)}
-              className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
-            >
-              <option value="ALL">All Projects</option>
+              <option value="ALL">All Projects ({allProjects.length})</option>
               {allProjects.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.projectName}
+                  {p.projectCode ? `${p.projectCode} • ` : ''}{p.projectName}
                 </option>
               ))}
             </select>
@@ -413,7 +500,7 @@ export const WorkZonesPage: React.FC = () => {
         </div>
       )}
 
-      {error && zones.length === 0 && (
+      {error && allZones.length === 0 && (
         <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs mb-6 flex items-start gap-3">
           <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
           <div>
@@ -448,13 +535,20 @@ export const WorkZonesPage: React.FC = () => {
             </div>
 
             {/* Dedicated Compact Legend Row Outside the Map Canvas */}
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-3 px-3 py-2 bg-slate-50/90 rounded-lg border border-slate-200 text-xs">
-              <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-600">
-                <span className="font-semibold text-slate-700">Status Legend:</span>
-                <span className="flex items-center gap-1.5 font-medium"><span className="w-2.5 h-2.5 rounded-full bg-teal-600"></span> Active</span>
-                <span className="flex items-center gap-1.5 font-medium"><span className="w-2.5 h-2.5 rounded-full bg-sky-600"></span> Available</span>
-                <span className="flex items-center gap-1.5 font-medium"><span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span> Completed</span>
-                <span className="flex items-center gap-1.5 font-medium"><span className="w-2.5 h-2.5 rounded-full bg-rose-600"></span> Blocked</span>
+            <div className="mb-3 px-3 py-2 bg-slate-50 rounded-lg border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-3 text-[11px] text-slate-600 font-medium">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#0D9488]"></span> Active
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#0284C7]"></span> Available
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]"></span> Completed
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#EF4444]"></span> Blocked
+                </span>
               </div>
               <div className="flex items-center gap-1 text-[10px] text-teal-700 font-mono font-bold bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
                 <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></span>
@@ -520,15 +614,26 @@ export const WorkZonesPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pt-3 text-xs text-slate-600 flex flex-wrap items-center justify-between gap-2">
-                <span>
-                  Linked Project:{' '}
-                  <strong className="text-slate-900">{selectedZone.projectName}</strong>{' '}
-                  <span className="font-mono text-teal-700 font-bold bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200 text-[10px]">
-                    {selectedZone.projectId}
+              <div className="pt-3 text-xs text-slate-600 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-start gap-2 min-w-0">
+                  <Building2 className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                  <span className="break-words">
+                    Associated Project:{' '}
+                    <strong className="text-slate-900">{selectedZone.projectName}</strong>
                   </span>
-                </span>
-                <span className="text-[11px] text-slate-400">Created {new Date(selectedZone.createdAt).toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center gap-1.5 font-mono text-[11px] text-slate-600 bg-slate-50 px-2.5 py-1 rounded border border-slate-200 shrink-0">
+                  <MapPin className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                  {selectedZone.centerLatitude && selectedZone.centerLongitude ? (
+                    <span>
+                      {Number(selectedZone.centerLatitude).toFixed(4)}° N,{' '}
+                      {Number(selectedZone.centerLongitude).toFixed(4)}° E{' '}
+                      <span className="text-teal-700 font-semibold">(Verified WGS 84)</span>
+                    </span>
+                  ) : (
+                    <span className="text-amber-600">Pending GPS coordinates</span>
+                  )}
+                </div>
               </div>
 
               {selectedZone.description && (
@@ -593,6 +698,7 @@ export const WorkZonesPage: React.FC = () => {
                 return (
                   <div
                     key={zone.id}
+                    id={`zone-card-${zone.id}`}
                     data-zone-item={zone.zoneCode}
                     onClick={() => setSelectedZone(zone)}
                     className={`p-3.5 rounded-lg border transition-all cursor-pointer ${
@@ -638,12 +744,11 @@ export const WorkZonesPage: React.FC = () => {
                           <span className="text-[10px] text-slate-400 shrink-0">No GPS</span>
                         )}
                       </div>
-                      <div className="text-[11px] text-slate-500 pt-1 border-t border-slate-100 flex items-center justify-between">
-                        <span className="truncate">
-                          Project: <strong className="text-slate-800">{zone.projectName}</strong>
-                        </span>
-                        <span className="font-mono text-[9px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200 shrink-0 ml-1">
-                          {zone.projectId}
+
+                      <div className="text-[11px] text-slate-600 flex items-start gap-1.5">
+                        <HardHat className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                        <span className="break-words">
+                          Contractor: <strong className="text-slate-800">{vendorLabel}</strong>
                         </span>
                       </div>
                     </div>

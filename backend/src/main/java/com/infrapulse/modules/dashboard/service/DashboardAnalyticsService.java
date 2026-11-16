@@ -98,7 +98,10 @@ public class DashboardAnalyticsService {
 
             // 2. Query Filters
             if (projectId != null && !projectId.isBlank() && !"ALL".equalsIgnoreCase(projectId)) {
-                predicates.add(cb.equal(root.get("project").get("id"), projectId.trim()));
+                predicates.add(cb.or(
+                    cb.equal(root.get("project").get("id"), projectId.trim()),
+                    cb.equal(root.get("project").get("projectCode"), projectId.trim())
+                ));
             }
 
             if (pincode != null && !pincode.isBlank()) {
@@ -161,7 +164,7 @@ public class DashboardAnalyticsService {
 
         if (filterProjectId != null && !filterProjectId.isBlank() && !"ALL".equalsIgnoreCase(filterProjectId)) {
             return allProjects.stream()
-                .filter(p -> p.getId().equals(filterProjectId.trim()))
+                .filter(p -> p.getId().equalsIgnoreCase(filterProjectId.trim()) || p.getProjectCode().equalsIgnoreCase(filterProjectId.trim()))
                 .toList();
         }
         return allProjects;

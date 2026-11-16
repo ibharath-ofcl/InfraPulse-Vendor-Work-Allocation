@@ -388,6 +388,8 @@ public class ProjectVendorDemoSeedRunner implements ApplicationRunner {
         Optional<Project> blrProjectOpt = projectRepository.findByProjectCode("PRJ-BLR-202");
         Optional<User> adminOpt = userRepository.findByEmail("admin@infrapulse.gov.in");
         Optional<Vendor> v1Opt = vendorRepository.findByVendorCode("VND-1001");
+        Optional<Vendor> v2Opt = vendorRepository.findByVendorCode("VND-1002");
+        Optional<Vendor> v3Opt = vendorRepository.findByVendorCode("VND-1003");
 
         if (cheProjectOpt.isEmpty() || adminOpt.isEmpty()) {
             log.warn("Required projects or admin user missing. Skipping work zone and assignment seed.");
@@ -693,45 +695,303 @@ public class ProjectVendorDemoSeedRunner implements ApplicationRunner {
 
         log.info("Provisioned geographical work zones linked to all 8 municipal projects.");
 
-        // 3. Initial Work Assignments
-        if (v1Opt.isPresent() && workAssignmentRepository.count() == 0) {
-            Vendor v1 = v1Opt.get();
+        // 3. Initial Work Assignments across multiple projects and vendors
+        if (workAssignmentRepository.count() == 0) {
+            Vendor v1 = v1Opt.orElse(null);
+            Vendor v2 = v2Opt.orElse(null);
+            Vendor v3 = v3Opt.orElse(null);
 
-            com.infrapulse.modules.workassignment.entity.WorkAssignment asn1 = new com.infrapulse.modules.workassignment.entity.WorkAssignment(
-                UUID.randomUUID().toString(),
-                "INF-WA-2026-001001",
-                cheProject,
-                wz1,
-                v1,
-                com.infrapulse.modules.workassignment.enums.WorkType.TRENCHING,
-                "Trenching - Anna Nagar Sector A",
-                "Mechanical excavation and trench preparation for optical fiber duct installation.",
-                LocalDate.of(2026, 11, 10),
-                LocalDate.of(2026, 11, 20),
-                com.infrapulse.modules.workassignment.enums.AssignmentPriority.HIGH,
-                com.infrapulse.modules.workassignment.enums.AssignmentStatus.ACCEPTED,
-                "Follow approved infrastructure safety procedures and prepare trench for conduit laying.",
-                admin
-            );
-            workAssignmentRepository.save(asn1);
+            // PRJ-CHE-101 assignments (Vendor 1)
+            if (v1 != null) {
+                workAssignmentRepository.save(new com.infrapulse.modules.workassignment.entity.WorkAssignment(
+                    UUID.randomUUID().toString(),
+                    "INF-WA-2026-001001",
+                    cheProject,
+                    wz1,
+                    v1,
+                    com.infrapulse.modules.workassignment.enums.WorkType.TRENCHING,
+                    "Trenching - Anna Nagar Sector A",
+                    "Mechanical excavation and trench preparation for optical fiber duct installation.",
+                    LocalDate.of(2026, 11, 10),
+                    LocalDate.of(2026, 11, 20),
+                    com.infrapulse.modules.workassignment.enums.AssignmentPriority.HIGH,
+                    com.infrapulse.modules.workassignment.enums.AssignmentStatus.ACCEPTED,
+                    "Follow approved infrastructure safety procedures and prepare trench for conduit laying.",
+                    admin
+                ));
 
-            com.infrapulse.modules.workassignment.entity.WorkAssignment asn2 = new com.infrapulse.modules.workassignment.entity.WorkAssignment(
-                UUID.randomUUID().toString(),
-                "INF-WA-2026-001002",
-                cheProject,
-                wz3,
-                v1,
-                com.infrapulse.modules.workassignment.enums.WorkType.ROAD_RESURFACING,
-                "Surface Restoration - George Town Heritage Corridor",
-                "High-grade asphalt mastic resurfacing and compaction over backfilled trench line.",
-                LocalDate.of(2026, 11, 15),
-                LocalDate.of(2026, 11, 28),
-                com.infrapulse.modules.workassignment.enums.AssignmentPriority.MEDIUM,
-                com.infrapulse.modules.workassignment.enums.AssignmentStatus.ASSIGNED,
-                "Ensure smooth transitions with existing pavement levels and clean curb edges.",
-                admin
-            );
-            workAssignmentRepository.save(asn2);
+                workAssignmentRepository.save(new com.infrapulse.modules.workassignment.entity.WorkAssignment(
+                    UUID.randomUUID().toString(),
+                    "INF-WA-2026-001002",
+                    cheProject,
+                    wz3,
+                    v1,
+                    com.infrapulse.modules.workassignment.enums.WorkType.ROAD_RESURFACING,
+                    "Surface Restoration - George Town Heritage Corridor",
+                    "High-grade asphalt mastic resurfacing and compaction over backfilled trench line.",
+                    LocalDate.of(2026, 11, 15),
+                    LocalDate.of(2026, 11, 28),
+                    com.infrapulse.modules.workassignment.enums.AssignmentPriority.MEDIUM,
+                    com.infrapulse.modules.workassignment.enums.AssignmentStatus.ASSIGNED,
+                    "Ensure smooth transitions with existing pavement levels and clean curb edges.",
+                    admin
+                ));
+
+                workAssignmentRepository.save(new com.infrapulse.modules.workassignment.entity.WorkAssignment(
+                    UUID.randomUUID().toString(),
+                    "INF-WA-2026-001003",
+                    cheProject,
+                    wz2,
+                    v1,
+                    com.infrapulse.modules.workassignment.enums.WorkType.BACKFILLING,
+                    "Trench Backfilling & Compaction - Anna Nagar East",
+                    "Graded granular backfill with pneumatic layer compaction and safety tape embedment.",
+                    LocalDate.of(2026, 11, 5),
+                    LocalDate.of(2026, 11, 14),
+                    com.infrapulse.modules.workassignment.enums.AssignmentPriority.HIGH,
+                    com.infrapulse.modules.workassignment.enums.AssignmentStatus.COMPLETED,
+                    "Achieve 95% standard proctor compaction density prior to asphalt resurfacing handover.",
+                    admin
+                ));
+            }
+
+            // PRJ-BLR-202 assignments (Vendor 2)
+            if (blrProjectOpt.isPresent() && v2 != null) {
+                Project blrProj = blrProjectOpt.get();
+                workZoneRepository.findByZoneCode("WZ-560001-001").ifPresent(z -> {
+                    workAssignmentRepository.save(new com.infrapulse.modules.workassignment.entity.WorkAssignment(
+                        UUID.randomUUID().toString(),
+                        "INF-WA-2026-002001",
+                        blrProj,
+                        z,
+                        v2,
+                        com.infrapulse.modules.workassignment.enums.WorkType.UNDERGROUND_CABLE_INSTALLATION,
+                        "Underground Cable Ducting - MG Road Metro Corridor",
+                        "High-density HDPE conduit stringing and optical fiber splicing along central metro corridor.",
+                        LocalDate.of(2026, 12, 1),
+                        LocalDate.of(2026, 12, 20),
+                        com.infrapulse.modules.workassignment.enums.AssignmentPriority.HIGH,
+                        com.infrapulse.modules.workassignment.enums.AssignmentStatus.IN_PROGRESS,
+                        "Coordinate with metro rail authority for overnight execution window (01:00 to 04:30).",
+                        admin
+                    ));
+                });
+
+                workZoneRepository.findByZoneCode("WZ-560001-002").ifPresent(z -> {
+                    workAssignmentRepository.save(new com.infrapulse.modules.workassignment.entity.WorkAssignment(
+                        UUID.randomUUID().toString(),
+                        "INF-WA-2026-002002",
+                        blrProj,
+                        z,
+                        v2,
+                        com.infrapulse.modules.workassignment.enums.WorkType.BACKFILLING,
+                        "Sub-surface Encasement - Brigade Junction",
+                        "Controlled low-strength material backfill around multi-service utility conduits.",
+                        LocalDate.of(2026, 12, 15),
+                        LocalDate.of(2026, 12, 30),
+                        com.infrapulse.modules.workassignment.enums.AssignmentPriority.MEDIUM,
+                        com.infrapulse.modules.workassignment.enums.AssignmentStatus.ASSIGNED,
+                        "Verify warning ribbon placement 300mm above top pipe crown.",
+                        admin
+                    ));
+                });
+            }
+
+            // PRJ-BLR-101 assignments (Vendor 1)
+            projectRepository.findByProjectCode("PRJ-BLR-101").ifPresent(p -> {
+                if (v1 != null) {
+                    workZoneRepository.findByZoneCode("WZ-560038-001").ifPresent(z -> {
+                        workAssignmentRepository.save(new com.infrapulse.modules.workassignment.entity.WorkAssignment(
+                            UUID.randomUUID().toString(),
+                            "INF-WA-2026-003001",
+                            p,
+                            z,
+                            v1,
+                            com.infrapulse.modules.workassignment.enums.WorkType.TRENCHING,
+                            "Micro-Trenching - Indiranagar 100ft Road",
+                            "Precision pavement micro-trenching for urban optical fiber spine.",
+                            LocalDate.of(2026, 10, 5),
+                            LocalDate.of(2026, 10, 25),
+                            com.infrapulse.modules.workassignment.enums.AssignmentPriority.HIGH,
+                            com.infrapulse.modules.workassignment.enums.AssignmentStatus.COMPLETED,
+                            "Clean vacuum slurry extraction required during trench cut.",
+                            admin
+                        ));
+                    });
+
+                    workZoneRepository.findByZoneCode("WZ-560038-002").ifPresent(z -> {
+                        workAssignmentRepository.save(new com.infrapulse.modules.workassignment.entity.WorkAssignment(
+                            UUID.randomUUID().toString(),
+                            "INF-WA-2026-003002",
+                            p,
+                            z,
+                            v1,
+                            com.infrapulse.modules.workassignment.enums.WorkType.UNDERGROUND_CABLE_INSTALLATION,
+                            "Fiber Blowing & Pulling - CMH Road Sub-Surface Vault",
+                            "Compressed air fiber blowing through 4-way sub-ducts into distribution vault.",
+                            LocalDate.of(2026, 11, 1),
+                            LocalDate.of(2026, 11, 25),
+                            com.infrapulse.modules.workassignment.enums.AssignmentPriority.HIGH,
+                            com.infrapulse.modules.workassignment.enums.AssignmentStatus.IN_PROGRESS,
+                            "Document OTDR bi-directional attenuation test results per fiber strand.",
+                            admin
+                        ));
+                    });
+                }
+            });
+
+            // PRJ-HYD-404 assignments (Vendor 2)
+            projectRepository.findByProjectCode("PRJ-HYD-404").ifPresent(p -> {
+                if (v2 != null) {
+                    workZoneRepository.findByZoneCode("WZ-500081-001").ifPresent(z -> {
+                        workAssignmentRepository.save(new com.infrapulse.modules.workassignment.entity.WorkAssignment(
+                            UUID.randomUUID().toString(),
+                            "INF-WA-2026-004001",
+                            p,
+                            z,
+                            v2,
+                            com.infrapulse.modules.workassignment.enums.WorkType.TRENCHING,
+                            "Telecom Trenching - HITEC City Cyber Towers Ring",
+                            "Sidewalk micro-trenching along Cyber Towers peripheral road.",
+                            LocalDate.of(2026, 11, 2),
+                            LocalDate.of(2026, 11, 18),
+                            com.infrapulse.modules.workassignment.enums.AssignmentPriority.HIGH,
+                            com.infrapulse.modules.workassignment.enums.AssignmentStatus.IN_PROGRESS,
+                            "Maintain continuous pedestrian safety barricades and illuminated signage.",
+                            admin
+                        ));
+                    });
+
+                    workZoneRepository.findByZoneCode("WZ-500081-002").ifPresent(z -> {
+                        workAssignmentRepository.save(new com.infrapulse.modules.workassignment.entity.WorkAssignment(
+                            UUID.randomUUID().toString(),
+                            "INF-WA-2026-004002",
+                            p,
+                            z,
+                            v2,
+                            com.infrapulse.modules.workassignment.enums.WorkType.UNDERGROUND_CABLE_INSTALLATION,
+                            "Conduit Routing - Madhapur Metro Station Flank",
+                            "Subterranean conduit installation and feeder junction link to metro station concourse.",
+                            LocalDate.of(2026, 11, 12),
+                            LocalDate.of(2026, 11, 30),
+                            com.infrapulse.modules.workassignment.enums.AssignmentPriority.MEDIUM,
+                            com.infrapulse.modules.workassignment.enums.AssignmentStatus.ACCEPTED,
+                            "Strict adherence to municipal underground utility depth guidelines (min 1.2m depth).",
+                            admin
+                        ));
+                    });
+                }
+            });
+
+            // PRJ-PUN-505 assignments (Vendor 3)
+            projectRepository.findByProjectCode("PRJ-PUN-505").ifPresent(p -> {
+                if (v3 != null) {
+                    workZoneRepository.findByZoneCode("WZ-411014-001").ifPresent(z -> {
+                        workAssignmentRepository.save(new com.infrapulse.modules.workassignment.entity.WorkAssignment(
+                            UUID.randomUUID().toString(),
+                            "INF-WA-2026-005001",
+                            p,
+                            z,
+                            v3,
+                            com.infrapulse.modules.workassignment.enums.WorkType.ROAD_RESURFACING,
+                            "Asphalt Patch Resurfacing - Viman Nagar Substation Corridor",
+                            "Trench backfill bituminous macadam resurfacing and hot mix asphalt rolling.",
+                            LocalDate.of(2026, 10, 15),
+                            LocalDate.of(2026, 11, 10),
+                            com.infrapulse.modules.workassignment.enums.AssignmentPriority.HIGH,
+                            com.infrapulse.modules.workassignment.enums.AssignmentStatus.IN_PROGRESS,
+                            "Ensure seamless joint welding with adjacent asphalt wear course.",
+                            admin
+                        ));
+                    });
+
+                    workZoneRepository.findByZoneCode("WZ-411014-002").ifPresent(z -> {
+                        workAssignmentRepository.save(new com.infrapulse.modules.workassignment.entity.WorkAssignment(
+                            UUID.randomUUID().toString(),
+                            "INF-WA-2026-005002",
+                            p,
+                            z,
+                            v3,
+                            com.infrapulse.modules.workassignment.enums.WorkType.FINAL_INSPECTION,
+                            "Substation Trench Final Quality Inspection - Kharadi IT Park",
+                            "Comprehensive engineering audit of civil reinstatement and conduit isolation.",
+                            LocalDate.of(2026, 11, 8),
+                            LocalDate.of(2026, 11, 20),
+                            com.infrapulse.modules.workassignment.enums.AssignmentPriority.MEDIUM,
+                            com.infrapulse.modules.workassignment.enums.AssignmentStatus.SUBMITTED_FOR_REVIEW,
+                            "Submit photographic evidence and compaction test certificates for PM review.",
+                            admin
+                        ));
+                    });
+                }
+            });
+
+            // PRJ-DEL-606 assignments (Vendor 1)
+            projectRepository.findByProjectCode("PRJ-DEL-606").ifPresent(p -> {
+                if (v1 != null) {
+                    workZoneRepository.findByZoneCode("WZ-110001-001").ifPresent(z -> {
+                        workAssignmentRepository.save(new com.infrapulse.modules.workassignment.entity.WorkAssignment(
+                            UUID.randomUUID().toString(),
+                            "INF-WA-2026-006001",
+                            p,
+                            z,
+                            v1,
+                            com.infrapulse.modules.workassignment.enums.WorkType.TRENCHING,
+                            "Pre-cast Vault Excavation - Connaught Place Radial 1",
+                            "Deep shored excavation for pre-cast modular utility chamber installation.",
+                            LocalDate.of(2026, 8, 1),
+                            LocalDate.of(2026, 9, 15),
+                            com.infrapulse.modules.workassignment.enums.AssignmentPriority.HIGH,
+                            com.infrapulse.modules.workassignment.enums.AssignmentStatus.COMPLETED,
+                            "Install heavy-duty trench safety shoring boxes to prevent wall collapse.",
+                            admin
+                        ));
+                    });
+                }
+            });
+
+            // PRJ-KOL-808 assignments (Vendor 3)
+            projectRepository.findByProjectCode("PRJ-KOL-808").ifPresent(p -> {
+                if (v3 != null) {
+                    workZoneRepository.findByZoneCode("WZ-700043-001").ifPresent(z -> {
+                        workAssignmentRepository.save(new com.infrapulse.modules.workassignment.entity.WorkAssignment(
+                            UUID.randomUUID().toString(),
+                            "INF-WA-2026-008001",
+                            p,
+                            z,
+                            v3,
+                            com.infrapulse.modules.workassignment.enums.WorkType.ROAD_RESURFACING,
+                            "Heavy-Duty Road Base & Asphalt Paving - Garden Reach Port Link",
+                            "Sub-grade soil stabilization, wet-mix macadam base, and dense bituminous asphalt wear course.",
+                            LocalDate.of(2026, 3, 1),
+                            LocalDate.of(2026, 7, 31),
+                            com.infrapulse.modules.workassignment.enums.AssignmentPriority.HIGH,
+                            com.infrapulse.modules.workassignment.enums.AssignmentStatus.COMPLETED,
+                            "Passed 100% core sample density and surface smoothness specifications.",
+                            admin
+                        ));
+                    });
+
+                    workZoneRepository.findByZoneCode("WZ-700043-002").ifPresent(z -> {
+                        workAssignmentRepository.save(new com.infrapulse.modules.workassignment.entity.WorkAssignment(
+                            UUID.randomUUID().toString(),
+                            "INF-WA-2026-008002",
+                            p,
+                            z,
+                            v3,
+                            com.infrapulse.modules.workassignment.enums.WorkType.FINAL_INSPECTION,
+                            "Port Feeder Final Infrastructure Engineering Handover - Kidderpore",
+                            "Final municipal handover inspection and storm runoff cross-drain clearance.",
+                            LocalDate.of(2026, 8, 1),
+                            LocalDate.of(2026, 9, 30),
+                            com.infrapulse.modules.workassignment.enums.AssignmentPriority.MEDIUM,
+                            com.infrapulse.modules.workassignment.enums.AssignmentStatus.COMPLETED,
+                            "Formal municipal acceptance certificate issued with zero defect liability notices.",
+                            admin
+                        ));
+                    });
+                }
+            });
         }
 
         log.info("Provisioned initial demonstration spatial work zones and assignments.");

@@ -57,21 +57,21 @@ export const RecordMeasurementModal: React.FC<RecordMeasurementModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-        <div className="flex items-center justify-between p-5 border-b border-slate-800">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-amber-500/10 rounded-lg text-amber-400">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-950/60 backdrop-blur-xs p-4">
+      <div className="bg-white border border-surface-border rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-modal">
+        <div className="flex items-center justify-between p-5 border-b border-surface-border bg-white">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-amber-50 rounded-lg text-amber-600 border border-amber-100">
               <Ruler className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">Record Calibrated Physical Measurement</h3>
-              <p className="text-xs text-slate-400 mt-0.5">{evidenceLink.requirementCode}: {evidenceLink.requirementTitle}</p>
+              <h3 className="text-lg font-bold text-[#10243A]">Record Calibrated Physical Measurement</h3>
+              <p className="text-xs text-ink-secondary mt-0.5">{evidenceLink.requirementCode}: {evidenceLink.requirementTitle}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            className="p-1.5 rounded-lg text-ink-muted hover:text-ink-primary hover:bg-slate-100 transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -79,30 +79,30 @@ export const RecordMeasurementModal: React.FC<RecordMeasurementModalProps> = ({
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {error && (
-            <div className="p-3 bg-red-950/50 border border-red-800/80 rounded-lg flex items-center gap-2 text-xs text-red-200">
-              <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-xs text-red-700">
+              <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
-          <div className="p-3.5 bg-slate-950/70 border border-slate-800/80 rounded-xl space-y-2 text-xs">
-            <div className="flex justify-between text-slate-400">
-              <span>Attached Evidence:</span>
-              <span className="font-mono text-cyan-400 font-semibold">{evidenceLink.evidenceCode || 'N/A'}</span>
+          <div className="p-3.5 bg-slate-50 border border-surface-border rounded-xl space-y-2 text-xs">
+            <div className="flex justify-between text-ink-secondary">
+              <span className="font-medium">Attached Evidence:</span>
+              <span className="font-mono text-teal-700 font-bold">{evidenceLink.evidenceCode || 'N/A'}</span>
             </div>
-            <div className="flex justify-between text-slate-400">
-              <span>Work Assignment:</span>
-              <span className="font-mono text-slate-200">{evidenceLink.assignmentCode || 'General Project Scope'}</span>
+            <div className="flex justify-between text-ink-secondary">
+              <span className="font-medium">Work Assignment:</span>
+              <span className="font-mono text-[#10243A] font-semibold">{evidenceLink.assignmentCode || 'General Project Scope'}</span>
             </div>
-            <div className="flex justify-between text-slate-400">
-              <span>Current Status:</span>
-              <span className="text-amber-400 font-medium">{evidenceLink.status}</span>
+            <div className="flex justify-between text-ink-secondary">
+              <span className="font-medium">Current Status:</span>
+              <span className="text-amber-700 font-bold">{evidenceLink.status}</span>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-ink-primary mb-1">
                 Measured Value *
               </label>
               <input
@@ -111,12 +111,12 @@ export const RecordMeasurementModal: React.FC<RecordMeasurementModalProps> = ({
                 value={measuredValue}
                 onChange={(e) => setMeasuredValue(e.target.value)}
                 placeholder="e.g. 41.5"
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white focus:outline-hidden focus:border-cyan-500"
+                className="w-full px-3 py-2 bg-white border border-surface-border rounded-lg text-sm text-ink-primary focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-ink-primary mb-1">
                 Measurement Unit *
               </label>
               <input
@@ -125,13 +125,13 @@ export const RecordMeasurementModal: React.FC<RecordMeasurementModalProps> = ({
                 value={measurementUnit}
                 onChange={(e) => setMeasurementUnit(e.target.value)}
                 placeholder="e.g. mm, %, cm, MPa"
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white focus:outline-hidden focus:border-cyan-500"
+                className="w-full px-3 py-2 bg-white border border-surface-border rounded-lg text-sm text-ink-primary focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">
+            <label className="block text-xs font-semibold text-ink-primary mb-1">
               Calibrated Measurement Tool / Serial Number *
             </label>
             <input
@@ -140,12 +140,12 @@ export const RecordMeasurementModal: React.FC<RecordMeasurementModalProps> = ({
               value={physicalMeasurementTool}
               onChange={(e) => setPhysicalMeasurementTool(e.target.value)}
               placeholder="e.g. Mitutoyo Vernier Caliper S/N 8934, Nuclear Gauge Troxler 3440"
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white focus:outline-hidden focus:border-cyan-500"
+              className="w-full px-3 py-2 bg-white border border-surface-border rounded-lg text-sm text-ink-primary focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">
+            <label className="block text-xs font-semibold text-ink-primary mb-1">
               Verification & Field Sampling Notes
             </label>
             <textarea
@@ -153,23 +153,23 @@ export const RecordMeasurementModal: React.FC<RecordMeasurementModalProps> = ({
               value={measurementNotes}
               onChange={(e) => setMeasurementNotes(e.target.value)}
               placeholder="Record sample extraction station (e.g. Ch 1+240 LHS), ambient temperature, compaction pass count, and test certificate reference..."
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white focus:outline-hidden focus:border-cyan-500"
+              className="w-full px-3 py-2 bg-white border border-surface-border rounded-lg text-sm text-ink-primary placeholder-ink-muted focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
             />
           </div>
 
-          <div className="pt-2 flex justify-end gap-2 border-t border-slate-800">
+          <div className="pt-3 flex justify-end gap-2 border-t border-surface-border">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-slate-800/60 hover:bg-slate-800 transition"
+              className="px-4 py-2 rounded-lg text-xs font-medium text-ink-secondary hover:text-ink-primary bg-white border border-surface-border hover:bg-slate-50 transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 rounded-lg text-xs font-medium text-white bg-cyan-600 hover:bg-cyan-500 transition flex items-center gap-1.5 shadow-md shadow-cyan-950"
+              className="px-4 py-2 rounded-lg text-xs font-medium text-white bg-teal-600 hover:bg-teal-700 transition flex items-center gap-1.5 shadow-xs"
             >
               {isSubmitting ? (
                 <>
@@ -189,4 +189,3 @@ export const RecordMeasurementModal: React.FC<RecordMeasurementModalProps> = ({
     </div>
   );
 };
-

@@ -5,22 +5,29 @@ import {
   Search, 
   RotateCw, 
   AlertCircle, 
-  Compass
+  Compass,
+  Layers,
+  Building2,
+  HardHat,
+  Info
 } from 'lucide-react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { PageHeader } from '../components/common/PageHeader';
 import { StatusBadge } from '../components/common/StatusBadge';
 import { Modal } from '../components/common/Modal';
-import { WorkZoneMap } from '../components/maps/WorkZoneMap';
+import { WorkZoneMap, MapZoneData } from '../components/maps/WorkZoneMap';
 import { workZoneService } from '../services/workZoneService';
 import { projectService } from '../services/projectService';
+import { workAssignmentService } from '../services/workAssignmentService';
 import { WorkZoneItem, ZoneStatus, CreateWorkZonePayload } from '../types/workZone';
 import { ProjectResponse } from '../types/project';
+import { WorkAssignmentItem } from '../types/workAssignment';
 import { useAuth } from '../auth/useAuth';
 
 export const WorkZonesPage: React.FC = () => {
   const { user, hasPermission } = useAuth();
   const [zones, setZones] = useState<WorkZoneItem[]>([]);
+  const [assignments, setAssignments] = useState<WorkAssignmentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,18 +64,30 @@ export const WorkZonesPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await workZoneService.getWorkZones({
-        search: search.trim() || undefined,
-        pincode: pinFilter.trim() || undefined,
-        status: statusFilter !== 'ALL' ? statusFilter : undefined,
-        size: 100,
-      });
-      setZones(data.content);
-      if (data.content.length > 0 && !selectedZone) {
-        setSelectedZone(data.content[0]);
-      } else if (selectedZone) {
-        const updated = data.content.find((z) => z.id === selectedZone.id);
-        if (updated) setSelectedZone(updated);
+
+      // Fetch work zones and work assignments in parallel to get actual vendor allocations
+      const [zonesData, assignmentsData] = await Promise.all([
+        workZoneService.getWorkZones({
+          search: search.trim() || undefined,
+          pincode: pinFilter.trim() || undefined,
+          status: statusFilter !== 'ALL' ? statusFilter : undefined,
+          size: 100,
+        }),
+        workAssignmentService.getAssignments({ size: 100 }).catch(() => ({ content: [] })),
+      ]);
+
+      setZones(zonesData.content);
+      setAssignments(assignmentsData.content || []);
+
+      if (zonesData.content.length > 0) {
+        if (!selectedZone) {
+          setSelectedZone(zonesData.content[0]);
+        } else {
+          const updated = zonesData.content.find((z) => z.id === selectedZone.id);
+          if (updated) setSelectedZone(updated);
+        }
+      } else {
+        setSelectedZone(null);
       }
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to load geographical work zones.');
@@ -143,32 +162,95 @@ export const WorkZonesPage: React.FC = () => {
     }
   };
 
-  // Convert zones with coordinates to WorkZoneMap format
-  const mapZones = useMemo(() => {
+  // Convert real work zones with coordinates to MapZoneData format
+  const mapZones = useMemo<MapZoneData[]>(() => {
     return zones
-      .filter((z) => z.centerLatitude && z.centerLongitude)
-      .map((z) => ({
-        id: z.id,
-        code: z.zoneCode,
-        name: z.zoneName,
-        pinCode: z.pincode,
-        region: z.district || 'Urban Sector',
-        projectId: z.projectId,
-        projectName: z.projectName,
-        status: (z.status === 'ACTIVE' ? 'ACTIVE' : z.status === 'COMPLETED' ? 'COMPLETED' : 'AVAILABLE') as any,
-        currentWorkType: 'TRENCHING' as any,
-        dependencyStatus: 'CLEARED' as any,
-        lat: z.centerLatitude!,
-        lng: z.centerLongitude!,
-        assignedVendorName: z.projectName,
-      }));
-  }, [zones]);
+      .filter((z) => {
+        const lat = typeof z.centerLatitude === 'number' ? z.centerLatitude : parseFloat(String(z.centerLatitude));
+        const lng = typeof z.centerLongitude === 'number' ? z.centerLongitude : parseFloat(String(z.centerLongitude));
+        return !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+      })
+      .map((z) => {
+        const lat = typeof z.centerLatitude === 'number' ? z.centerLatitude : parseFloat(String(z.centerLatitude));
+        const lng = typeof z.centerLongitude === 'number' ? z.centerLongitude : parseFloat(String(z.centerLongitude));
+
+        // Find assigned vendors from real assignments in this zone
+        const zoneAssignments = assignments.filter((a) => a.workZoneId === z.id);
+        const vendors = Array.from(
+          new Set(
+            zoneAssignments
+              .map((a) => (a as any).vendorCompanyName || (a as any).vendorName)
+              .filter(Boolean)
+          )
+        );
+        const assignedVendorName = vendors.length > 0 
+          ? vendors.join(', ') 
+          : 'Pending Contractor Allocation';
+
+        const workTypes = Array.from(
+          new Set(
+            zoneAssignments
+              .map((a) => a.workTypeDisplayName || a.workType)
+              .filter(Boolean)
+          )
+        );
+        const currentWorkType = workTypes.length > 0 ? workTypes.join(', ') : 'Infrastructure Ducting';
+
+        return {
+          id: z.id,
+          code: z.zoneCode,
+          name: z.zoneName,
+          pinCode: z.pincode,
+          locality: z.locality,
+          district: z.district,
+          state: z.state,
+          region: z.district || 'Urban Sector',
+          projectId: z.projectId,
+          projectName: z.projectName,
+          status: z.status,
+          currentWorkType,
+          assignedVendorName,
+          activeWork: z.activeAssignmentsCount || zoneAssignments.filter((a) => a.status === 'IN_PROGRESS' || a.status === 'ACCEPTED').length,
+          totalAssignments: zoneAssignments.length,
+          completedWork: zoneAssignments.filter((a) => a.status === 'COMPLETED').length,
+          lat,
+          lng,
+          isApproximate: false,
+        };
+      });
+  }, [zones, assignments]);
+
+  // Handle marker selection with inventory card scroll-into-view
+  const handleSelectZoneFromMap = (mZone: MapZoneData) => {
+    const match = zones.find((z) => z.id === mZone.id);
+    if (match) {
+      setSelectedZone(match);
+      const cardEl = document.getElementById(`zone-card-${match.id}`);
+      if (cardEl) {
+        cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  };
+
+  // Find assigned vendors for the selected zone
+  const selectedZoneVendors = useMemo(() => {
+    if (!selectedZone) return 'Pending Allocation';
+    const zoneAsns = assignments.filter((a) => a.workZoneId === selectedZone.id);
+    const names = Array.from(
+      new Set(
+        zoneAsns
+          .map((a) => (a as any).vendorCompanyName || (a as any).vendorName)
+          .filter(Boolean)
+      )
+    );
+    return names.length > 0 ? names.join(', ') : 'Pending Contractor Allocation';
+  }, [selectedZone, assignments]);
 
   return (
     <PageContainer>
       <PageHeader
         title="Geographical Work Zones"
-        subtitle="PIN-code mapped spatial sectors coordinating infrastructure work packages and boundaries."
+        subtitle="PIN-code mapped spatial sectors coordinating infrastructure work packages, real GIS boundaries, and contractor allocation."
         badge={
           <span className="px-2.5 py-1 text-xs font-semibold bg-teal-50 text-teal-700 rounded-full border border-teal-200">
             {zones.length} Registered Zones
@@ -228,7 +310,7 @@ export const WorkZonesPage: React.FC = () => {
             <button
               onClick={fetchZones}
               disabled={loading}
-              className="p-2 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-lg shrink-0"
+              className="p-2 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-lg shrink-0 transition-colors"
               title="Refresh zones"
             >
               <RotateCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -241,7 +323,7 @@ export const WorkZonesPage: React.FC = () => {
       {loading && zones.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-slate-500">
           <div className="w-8 h-8 border-3 border-teal-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-          <p className="text-xs font-medium">Loading geographical work zones...</p>
+          <p className="text-xs font-medium">Loading geographical work zones and map tiles...</p>
         </div>
       )}
 
@@ -255,92 +337,101 @@ export const WorkZonesPage: React.FC = () => {
         </div>
       )}
 
-      {/* Two Column Grid: GIS Map / Coordinates List & Zone Inventory */}
+      {/* Two Column Grid: Interactive Real Leaflet Map & Zone Inventory */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Interactive Map or Coordinate Registry */}
+        {/* Left Column: Interactive OpenStreetMap & Selected Zone Details */}
         <div className="lg:col-span-7 space-y-4">
           <div className="bg-white rounded-xl p-5 border border-surface-border shadow-card">
             <div className="flex items-center justify-between mb-3 pb-2 border-b border-surface-border">
               <div>
                 <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
                   <Compass className="w-4 h-4 text-teal-600" />
-                  GIS Work Zone Coordinates
+                  Interactive GIS Work Zones Map
                 </h3>
                 <p className="text-xs text-slate-500">
                   {mapZones.length > 0
-                    ? `Displaying ${mapZones.length} geocoded parcels on interactive map`
-                    : 'Coordinates list display (no geocoded coordinates supplied for current zones)'}
+                    ? `Displaying ${mapZones.length} registered work zones on live OpenStreetMap tiles`
+                    : 'Showing live geographical map'}
                 </p>
               </div>
-              {mapZones.length > 0 && (
-                <span className="text-xs font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
-                  Click marker to inspect
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                  {mapZones.length} Markers Placed
                 </span>
-              )}
+              </div>
             </div>
 
-            {mapZones.length > 0 ? (
-              <WorkZoneMap
-                zones={mapZones}
-                selectedZoneId={selectedZone?.id}
-                onSelectZone={(mZone) => {
-                  const match = zones.find((z) => z.id === mZone.id);
-                  if (match) setSelectedZone(match);
-                }}
-                height="420px"
-              />
-            ) : (
-              <div className="p-8 rounded-lg bg-slate-50 border border-slate-200 text-center">
-                <MapPin className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                <h4 className="text-xs font-bold text-slate-700 mb-1">Location Registry Mode</h4>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto mb-3">
-                  Map markers are rendered exclusively when exact GPS coordinates are configured.
-                </p>
-                <div className="text-[11px] font-mono text-slate-400">
-                  SRID: EPSG:4326 (WGS 84)
-                </div>
-              </div>
-            )}
+            {/* Fully Functional Leaflet + OpenStreetMap Map Component */}
+            <WorkZoneMap
+              zones={mapZones}
+              selectedZoneId={selectedZone?.id}
+              onSelectZone={handleSelectZoneFromMap}
+              height="440px"
+            />
           </div>
 
           {/* Selected Zone Detail Card */}
           {selectedZone && (
             <div className="bg-white rounded-xl p-5 border border-surface-border shadow-card">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <div>
-                  <span className="font-mono text-xs font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-xs font-bold text-teal-700 bg-teal-50 px-2.5 py-1 rounded border border-teal-200">
                     {selectedZone.zoneCode}
                   </span>
-                  <h3 className="text-sm font-bold text-slate-900 mt-1">{selectedZone.zoneName}</h3>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">{selectedZone.zoneName}</h3>
+                    <p className="text-[11px] text-slate-500">{selectedZone.locality}, {selectedZone.district}</p>
+                  </div>
                 </div>
                 <StatusBadge status={selectedZone.status} />
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-3 text-xs border-b border-slate-100">
                 <div>
-                  <span className="text-slate-400 text-[11px] block">PIN Code</span>
+                  <span className="text-slate-400 text-[11px] block">Postal PIN</span>
                   <span className="font-mono font-bold text-slate-800 text-sm">{selectedZone.pincode}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 text-[11px] block">Locality</span>
-                  <span className="font-medium text-slate-800 truncate block">{selectedZone.locality}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 text-[11px] block">District / State</span>
+                  <span className="text-slate-400 text-[11px] block">Jurisdiction</span>
                   <span className="font-medium text-slate-800 truncate block">
                     {selectedZone.district}, {selectedZone.state}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-400 text-[11px] block">Active Assignments</span>
-                  <span className="font-bold text-teal-700">{selectedZone.activeAssignmentsCount}</span>
+                  <span className="text-slate-400 text-[11px] block">Assigned Contractor</span>
+                  <span className="font-semibold text-slate-800 truncate block text-teal-700">
+                    {selectedZoneVendors}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 text-[11px] block">Active Work Tasks</span>
+                  <span className="font-bold text-teal-700 text-sm">{selectedZone.activeAssignmentsCount}</span>
                 </div>
               </div>
 
-              <div className="pt-3 text-xs text-slate-600 flex items-center justify-between">
-                <span>Associated Project: <strong className="text-slate-900">{selectedZone.projectName}</strong></span>
-                <span className="text-[11px] text-slate-400">Created {selectedZone.createdAt}</span>
+              <div className="pt-3 text-xs text-slate-600 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Associated Project: <strong className="text-slate-900">{selectedZone.projectName}</strong></span>
+                </div>
+                <div className="flex items-center gap-1.5 font-mono text-[11px] text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
+                  <MapPin className="w-3 h-3 text-teal-600" />
+                  {selectedZone.centerLatitude && selectedZone.centerLongitude ? (
+                    <span>
+                      {Number(selectedZone.centerLatitude).toFixed(4)}° N, {Number(selectedZone.centerLongitude).toFixed(4)}° E (WGS 84)
+                    </span>
+                  ) : (
+                    <span className="text-amber-600">No coordinates configured</span>
+                  )}
+                </div>
               </div>
+
+              {selectedZone.description && (
+                <div className="mt-3 pt-2 text-[11px] text-slate-500 border-t border-slate-100 flex items-start gap-1.5">
+                  <Info className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                  <span>{selectedZone.description}</span>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -349,10 +440,11 @@ export const WorkZonesPage: React.FC = () => {
         <div className="lg:col-span-5 space-y-3">
           <div className="bg-white rounded-xl p-4 border border-surface-border shadow-card">
             <div className="flex items-center justify-between pb-3 border-b border-surface-border">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-teal-600" />
                 Zone Inventory ({zones.length})
               </span>
-              <span className="text-xs text-slate-400">Select to inspect</span>
+              <span className="text-[11px] text-slate-400">Click to locate on map</span>
             </div>
 
             {zones.length === 0 && !loading && (
@@ -361,22 +453,36 @@ export const WorkZonesPage: React.FC = () => {
               </div>
             )}
 
-            <div className="space-y-2 mt-3 max-h-[560px] overflow-y-auto pr-1">
+            <div className="space-y-2.5 mt-3 max-h-[580px] overflow-y-auto pr-1 custom-scrollbar">
               {zones.map((zone) => {
                 const isSelected = selectedZone?.id === zone.id;
+                const hasGps = Boolean(zone.centerLatitude && zone.centerLongitude);
+
+                // Find vendor for this card
+                const zoneAsns = assignments.filter((a) => a.workZoneId === zone.id);
+                const vendorNames = Array.from(
+                  new Set(
+                    zoneAsns
+                      .map((a) => (a as any).vendorCompanyName || (a as any).vendorName)
+                      .filter(Boolean)
+                  )
+                );
+                const vendorLabel = vendorNames.length > 0 ? vendorNames.join(', ') : 'Pending Contractor';
+
                 return (
                   <div
                     key={zone.id}
+                    id={`zone-card-${zone.id}`}
                     onClick={() => setSelectedZone(zone)}
                     className={`p-3.5 rounded-lg border transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-slate-50 border-teal-500 shadow-sm'
-                        : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
+                        ? 'bg-teal-50/50 border-teal-500 shadow-sm ring-1 ring-teal-500/30'
+                        : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/60'
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-2 mb-1">
+                    <div className="flex items-start justify-between gap-2 mb-1.5">
                       <div>
-                        <span className="text-[10px] font-mono font-bold text-teal-700 bg-teal-50 px-1.5 py-0.2 rounded border border-teal-200">
+                        <span className="text-[10px] font-mono font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">
                           {zone.zoneCode}
                         </span>
                         <h4 className="text-xs font-bold text-slate-900 mt-1">{zone.zoneName}</h4>
@@ -384,15 +490,31 @@ export const WorkZonesPage: React.FC = () => {
                       <StatusBadge status={zone.status} size="sm" />
                     </div>
 
-                    <div className="text-[11px] text-slate-500 space-y-1 mt-2">
+                    <div className="text-[11px] text-slate-500 space-y-1.5 mt-2">
                       <div className="flex items-center justify-between">
                         <span>
                           PIN: <strong className="text-slate-800 font-mono">{zone.pincode}</strong> • {zone.locality}
                         </span>
-                        <span className="text-teal-700 font-semibold">{zone.activeAssignmentsCount} tasks</span>
+                        <span className="text-teal-700 font-semibold bg-teal-50/80 px-2 py-0.5 rounded text-[10px] border border-teal-100">
+                          {zone.activeAssignmentsCount} tasks
+                        </span>
                       </div>
-                      <div className="text-[11px] text-slate-400 truncate pt-1 border-t border-slate-100">
-                        Project: {zone.projectName}
+                      <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1.5 border-t border-slate-100">
+                        <span className="truncate max-w-[200px]" title={zone.projectName}>
+                          Project: {zone.projectName}
+                        </span>
+                        {hasGps ? (
+                          <span className="text-[10px] text-teal-600 font-medium flex items-center gap-0.5 shrink-0">
+                            <MapPin className="w-2.5 h-2.5" />
+                            GPS Ready
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-slate-400">No GPS</span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-slate-600 flex items-center gap-1">
+                        <HardHat className="w-2.5 h-2.5 text-slate-400" />
+                        <span className="truncate">Vendor: <strong>{vendorLabel}</strong></span>
                       </div>
                     </div>
                   </div>
@@ -504,7 +626,7 @@ export const WorkZonesPage: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Latitude (Optional)</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Latitude (GPS Coordinates)</label>
               <input
                 type="number"
                 step="any"
@@ -521,7 +643,7 @@ export const WorkZonesPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Longitude (Optional)</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Longitude (GPS Coordinates)</label>
               <input
                 type="number"
                 step="any"

@@ -89,3 +89,25 @@
   }
 }
 
+/* Leaflet Map Customizations */
+.infrapulse-map-popup .leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(16, 36, 58, 0.18), 0 8px 10px -6px rgba(16, 36, 58, 0.1);
+  border: 1px solid #E2E8F0;
+  padding: 2px;
+}
+
+.infrapulse-map-popup .leaflet-popup-content {
+  margin: 8px 12px;
+  line-height: 1.4;
+}
+
+.infrapulse-map-popup .leaflet-popup-tip {
+  background: #FFFFFF;
+}
+
+.infrapulse-zone-marker {
+  background: transparent !important;
+  border: none !important;
+}
+

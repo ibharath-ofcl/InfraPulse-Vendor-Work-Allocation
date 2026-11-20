@@ -259,8 +259,88 @@ export const FALLBACK_PROJECTS: ProjectResponse[] = [
   },
 ];
 
+export const FALLBACK_PMS = [
+  {
+    id: 'pm-001',
+    fullName: 'Priya Sharma (PM)',
+    email: 'pm@infrapulse.gov.in',
+    role: 'PROJECT_MANAGER',
+    status: 'ACTIVE',
+  },
+  {
+    id: 'pm-002',
+    fullName: 'Arun Varma (PM)',
+    email: 'arun.pm@infrapulse.gov.in',
+    role: 'PROJECT_MANAGER',
+    status: 'ACTIVE',
+  },
+  {
+    id: 'pm-003',
+    fullName: 'Siddharth Roy (PM)',
+    email: 'siddharth@infrapulse.gov.in',
+    role: 'PROJECT_MANAGER',
+    status: 'ACTIVE',
+  },
+  {
+    id: 'pm-004',
+    fullName: 'Ananya Sen (PM)',
+    email: 'ananya.pm@infrapulse.gov.in',
+    role: 'PROJECT_MANAGER',
+    status: 'ACTIVE',
+  },
+];
+
+const LOCAL_STORAGE_PROJECTS_KEY = 'infrapulse_stored_projects';
+
+/**
+ * Retrieve user-created projects stored in localStorage.
+ */
+export function getStoredProjects(): ProjectResponse[] {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return [];
+  }
+  try {
+    const raw = window.localStorage.getItem(LOCAL_STORAGE_PROJECTS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    console.error('Failed to read stored projects from localStorage', err);
+    return [];
+  }
+}
+
+/**
+ * Save a newly created project to localStorage and dispatch event.
+ */
+export function saveStoredProject(project: ProjectResponse): void {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return;
+  }
+  try {
+    const current = getStoredProjects();
+    const updated = [project, ...current.filter(p => p.id !== project.id && p.projectCode !== project.projectCode)];
+    window.localStorage.setItem(LOCAL_STORAGE_PROJECTS_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('infrapulse_projects_updated', { detail: project }));
+  } catch (err) {
+    console.error('Failed to save project to localStorage', err);
+  }
+}
+
+/**
+ * Get all available projects merging locally stored user projects with fallback dataset.
+ */
+export function getAllMergedProjects(): ProjectResponse[] {
+  const stored = getStoredProjects();
+  const storedIds = new Set(stored.map(s => s.id));
+  const storedCodes = new Set(stored.map(s => s.projectCode));
+  const fallbackFiltered = FALLBACK_PROJECTS.filter(f => !storedIds.has(f.id) && !storedCodes.has(f.projectCode));
+  return [...stored, ...fallbackFiltered];
+}
+
 export function getFallbackProjectDetail(identifier: string): ProjectDetailResponse | null {
-  const base = FALLBACK_PROJECTS.find(
+  const allProjects = getAllMergedProjects();
+  const base = allProjects.find(
     p => p.id === identifier || p.projectCode === identifier
   );
   if (!base) return null;

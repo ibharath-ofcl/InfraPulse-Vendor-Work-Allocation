@@ -17,6 +17,11 @@ import {
 import { intelligenceService } from '../../services/intelligenceService';
 import { projectService } from '../../services/projectService';
 import { mockProjects } from '../../data/mockProjects';
+import { 
+  getAllMergedContracts, 
+  getAllMergedRequirements, 
+  updateRequirementApprovalStatus 
+} from '../../data/mockIntelligence';
 import { PageContainer } from '../../components/layout/PageContainer';
 import {
   ProjectContract,
@@ -78,6 +83,18 @@ export const IntelligenceSuitePage: React.FC = () => {
     if (selectedProjectId) {
       loadProjectIntelligence(selectedProjectId);
     }
+
+    const handleSync = () => {
+      if (selectedProjectId) {
+        loadProjectIntelligence(selectedProjectId);
+      }
+    };
+    window.addEventListener('infrapulse_contracts_updated', handleSync);
+    window.addEventListener('infrapulse_requirements_updated', handleSync);
+    return () => {
+      window.removeEventListener('infrapulse_contracts_updated', handleSync);
+      window.removeEventListener('infrapulse_requirements_updated', handleSync);
+    };
   }, [selectedProjectId, activeTab]);
 
   const loadProjects = async () => {
@@ -120,16 +137,44 @@ export const IntelligenceSuitePage: React.FC = () => {
       if (rskDash.status === 'fulfilled') setRiskSummary(rskDash.value);
 
       if (activeTab === 'contracts' || activeTab === 'overview') {
-        const [cntRes, reqRes] = await Promise.all([
-          intelligenceService.listContracts({ projectId: projId, size: 20 }),
-          intelligenceService.listRequirements({ projectId: projId, size: 50 }),
-        ]);
-        setContracts(cntRes.content || []);
-        setRequirements(reqRes.content || []);
-        if (reqRes.content && reqRes.content.length > 0) {
-          const firstReq = reqRes.content[0];
-          setSelectedRequirement(firstReq);
-          loadRequirementEvidence(firstReq.id);
+        let loadedContracts: ProjectContract[] = [];
+        let loadedRequirements: ContractRequirement[] = [];
+
+        try {
+          const [cntRes, reqRes] = await Promise.all([
+            intelligenceService.listContracts({ projectId: projId, size: 20 }),
+            intelligenceService.listRequirements({ projectId: projId, size: 50 }),
+          ]);
+          loadedContracts = cntRes.content || [];
+          loadedRequirements = reqRes.content || [];
+        } catch (err) {
+          console.warn('Backend contracts fetch error, falling back to local store', err);
+        }
+
+        const mergedContracts = getAllMergedContracts(projId);
+        const mergedReqs = getAllMergedRequirements(projId);
+
+        // Combine backend with client storage, de-duplicating by ID
+        const contractMap = new Map<string, ProjectContract>();
+        mergedContracts.forEach(c => contractMap.set(c.id, c));
+        loadedContracts.forEach(c => contractMap.set(c.id, c));
+
+        const reqMap = new Map<string, ContractRequirement>();
+        mergedReqs.forEach(r => reqMap.set(r.id, r));
+        loadedRequirements.forEach(r => reqMap.set(r.id, r));
+
+        const finalContracts = Array.from(contractMap.values());
+        const finalReqs = Array.from(reqMap.values());
+
+        setContracts(finalContracts);
+        setRequirements(finalReqs);
+
+        if (finalReqs.length > 0) {
+          const matched = selectedRequirement && finalReqs.some(r => r.id === selectedRequirement.id)
+            ? finalReqs.find(r => r.id === selectedRequirement.id)!
+            : finalReqs[0];
+          setSelectedRequirement(matched);
+          loadRequirementEvidence(matched.id);
         }
       }
 
@@ -188,21 +233,27 @@ export const IntelligenceSuitePage: React.FC = () => {
   };
 
   const handleApproveRequirement = async (reqId: string) => {
+    // 1. Update persistent local storage immediately
+    updateRequirementApprovalStatus(reqId, 'APPROVED', 'Approved by Project Manager via Intelligence Suite');
+    // 2. Call backend if available
     try {
       await intelligenceService.approveRequirement(reqId, 'Approved by Project Manager via Intelligence Suite');
-      await loadProjectIntelligence(selectedProjectId);
     } catch (e: any) {
-      alert('Failed to approve requirement: ' + (e?.message || 'Error'));
+      console.warn('Backend requirement approval fallback to local store', e);
     }
+    await loadProjectIntelligence(selectedProjectId);
   };
 
   const handleRejectRequirement = async (reqId: string) => {
+    // 1. Update persistent local storage immediately
+    updateRequirementApprovalStatus(reqId, 'REJECTED', 'Rejected: Does not meet tender technical requirements');
+    // 2. Call backend if available
     try {
       await intelligenceService.rejectRequirement(reqId, 'Rejected: Does not meet tender technical requirements');
-      await loadProjectIntelligence(selectedProjectId);
     } catch (e: any) {
-      alert('Failed to reject requirement: ' + (e?.message || 'Error'));
+      console.warn('Backend requirement rejection fallback to local store', e);
     }
+    await loadProjectIntelligence(selectedProjectId);
   };
 
   const riskBadge = (lvl?: string) => {
@@ -330,16 +381,24 @@ export const IntelligenceSuitePage: React.FC = () => {
               <div>
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl sm:text-3xl font-black text-[#10243A] tracking-tight">
-                    {complianceSummary ? `${complianceSummary.overallCompliancePercentage.toFixed(1)}%` : '85.0%'}
+                    {requirements.length > 0 
+                      ? `${(Math.round((requirements.filter(r => r.approvalStatus === 'APPROVED').length / requirements.length) * 100 * 10) / 10).toFixed(1)}%` 
+                      : (complianceSummary ? `${complianceSummary.overallCompliancePercentage.toFixed(1)}%` : '85.0%')}
                   </span>
                   <span className="text-[11px] text-teal-700 font-bold px-2 py-0.5 rounded-md bg-teal-50 border border-teal-200">
-                    {complianceSummary ? `${complianceSummary.verifiedEvidenceRequirements}/${complianceSummary.totalRequirements} Verified` : 'Active'}
+                    {requirements.length > 0 
+                      ? `${requirements.filter(r => r.approvalStatus === 'APPROVED').length}/${requirements.length} Approved` 
+                      : (complianceSummary ? `${complianceSummary.verifiedEvidenceRequirements}/${complianceSummary.totalRequirements} Verified` : 'Active')}
                   </span>
                 </div>
                 <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-3">
                   <div
                     className="bg-gradient-to-r from-teal-500 to-emerald-500 h-full rounded-full transition-all duration-500"
-                    style={{ width: `${complianceSummary?.overallCompliancePercentage || 85}%` }}
+                    style={{ 
+                      width: `${requirements.length > 0 
+                        ? Math.round((requirements.filter(r => r.approvalStatus === 'APPROVED').length / requirements.length) * 100) 
+                        : (complianceSummary?.overallCompliancePercentage || 85)}%` 
+                    }}
                   />
                 </div>
               </div>

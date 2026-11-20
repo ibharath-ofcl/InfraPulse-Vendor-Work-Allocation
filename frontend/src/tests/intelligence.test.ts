@@ -1,6 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { intelligenceService } from '../services/intelligenceService';
 import { backendClient } from '../services/api';
+import { 
+  parseAndExtractContractDocument,
+  saveStoredContract,
+  getAllMergedContracts,
+  saveStoredRequirements,
+  getAllMergedRequirements,
+  updateRequirementApprovalStatus
+} from '../data/mockIntelligence';
 
 vi.mock('../services/api', () => ({
   backendClient: {
@@ -164,6 +172,65 @@ describe('InfraPulse Intelligence Suite Service Tests', () => {
         }
       );
       expect(res.status).toBe('WAIVED_WITH_AUTHORIZATION');
+    });
+
+    it('accurately parses uploaded contract documents, understands clauses, and extracts quality specifications', () => {
+      const sampleText = `CONTRACT TENDER SPECIFICATION & BOQ SCHEDULE A
+Project: Smart City Optical Fiber & Underground Ducting
+Clause 1.1 — Trench Depth: Optical conduit trenching must maintain a minimum depth of 1.20 meters below curb datum (tolerance: ± 0.05m).
+Clause 2.3 — Warning Ribbon: Continuous caution warning tape must be installed 300mm above conduit.
+Clause 3.1 — Bedding Layer: 100mm uniform screened river sand bedding cushion required under ducts.
+Clause 4.2 — Backfill Compaction: Backfilling compacted in 150mm lifts achieving >= 95% Modified Proctor Density.
+Clause 5.4 — Carriageway Reinstatement: Pavement trench cut flushness must meet IRC:SP:84 within ±3.0mm tolerance.`;
+
+      const result = parseAndExtractContractDocument(
+        'Tender_Schedule_A.pdf',
+        sampleText,
+        { id: 'PRJ-BLR-101', name: 'Smart City Optical Fiber & Underground Ducting' }
+      );
+
+      expect(result.contract).toBeDefined();
+      expect(result.contract.projectId).toBe('PRJ-BLR-101');
+      expect(result.requirements.length).toBeGreaterThanOrEqual(5);
+
+      // Verify depth clause extracted
+      const depthReq = result.requirements.find(r => r.workPackage.includes('Trenching'));
+      expect(depthReq).toBeDefined();
+      expect(depthReq?.requiredValue).toBe('1.20');
+      expect(depthReq?.permittedTolerance).toBe('± 0.05m');
+      expect(depthReq?.mandatory).toBe(true);
+
+      // Verify compaction clause extracted
+      const compactionReq = result.requirements.find(r => r.title.includes('Compaction'));
+      expect(compactionReq).toBeDefined();
+      expect(compactionReq?.requiredValue).toBe('95');
+      expect(compactionReq?.verificationMethod).toBe('LAB_REPORT');
+
+      // Verify detected standards
+      expect(result.summary.detectedStandards.some(s => s.includes('IRC:SP:84'))).toBe(true);
+    });
+
+    it('persists extracted contract and requirements and replicates across platform', () => {
+      const mockResult = parseAndExtractContractDocument(
+        'Municipal_Pavement_Spec.docx',
+        'Section 500 Dense Bituminous Macadam IRC:SP:84 50mm wearing course tolerance <= 3.0mm',
+        { id: 'PRJ-BLR-101', name: 'Smart City Optical Fiber' }
+      );
+
+      saveStoredContract(mockResult.contract);
+      saveStoredRequirements(mockResult.requirements);
+
+      const contracts = getAllMergedContracts('PRJ-BLR-101');
+      expect(contracts.some(c => c.id === mockResult.contract.id)).toBe(true);
+
+      const reqs = getAllMergedRequirements('PRJ-BLR-101');
+      expect(reqs.some(r => r.contractId === mockResult.contract.id)).toBe(true);
+
+      // Test approving requirement
+      const firstReqId = mockResult.requirements[0].id;
+      const approved = updateRequirementApprovalStatus(firstReqId, 'APPROVED', 'Verified by PM');
+      expect(approved?.approvalStatus).toBe('APPROVED');
+      expect(approved?.approvedByName).toContain('Verified');
     });
   });
 

@@ -162,3 +162,51 @@ export const mockEvidenceItems: EvidenceItem[] = [
     physicalMeasurementStatus: 'VERIFIED_PASS (3-meter straight edge surface depression < 3mm: Meets IRC:SP:84)',
   },
 ];
+
+const LOCAL_STORAGE_EVIDENCE_KEY = 'infrapulse_stored_evidence';
+
+let memoryStoredEvidence: EvidenceItem[] = [];
+
+/**
+ * Retrieve user-uploaded evidence records stored in localStorage.
+ */
+export function getStoredEvidence(): EvidenceItem[] {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      const raw = window.localStorage.getItem(LOCAL_STORAGE_EVIDENCE_KEY);
+      if (!raw) return memoryStoredEvidence;
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : memoryStoredEvidence;
+    } catch (err) {
+      console.error('Failed to read stored evidence from localStorage', err);
+      return memoryStoredEvidence;
+    }
+  }
+  return memoryStoredEvidence;
+}
+
+/**
+ * Save newly uploaded evidence to localStorage and dispatch event.
+ */
+export function saveStoredEvidence(item: EvidenceItem): void {
+  memoryStoredEvidence = [item, ...memoryStoredEvidence.filter(e => e.id !== item.id)];
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      window.localStorage.setItem(LOCAL_STORAGE_EVIDENCE_KEY, JSON.stringify(memoryStoredEvidence));
+      window.dispatchEvent(new CustomEvent('infrapulse_evidence_updated', { detail: item }));
+    } catch (err) {
+      console.error('Failed to save evidence to localStorage', err);
+    }
+  }
+}
+
+/**
+ * Get all available evidence merging locally stored user uploads with mock dataset.
+ */
+export function getAllMergedEvidence(): EvidenceItem[] {
+  const stored = getStoredEvidence();
+  const storedIds = new Set(stored.map(s => s.id));
+  const fallbackFiltered = mockEvidenceItems.filter(f => !storedIds.has(f.id));
+  return [...stored, ...fallbackFiltered];
+}
+

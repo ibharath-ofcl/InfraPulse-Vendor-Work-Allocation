@@ -2,6 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { evidenceService } from '../services/evidenceService';
 import { backendClient } from '../services/api';
 import { EvidenceDetail, EvidenceIntegrityResponse, EvidenceListResponse } from '../types/evidence';
+import { getStoredEvidence, saveStoredEvidence, getAllMergedEvidence } from '../data/mockEvidence';
+import { analyzeImageAuthenticity, hammingDistance } from '../utils/imageAuthenticity';
+import { EvidenceItem } from '../types';
 
 vi.mock('../services/api', () => ({
   backendClient: {
@@ -158,6 +161,85 @@ describe('Stage 08: Photo Evidence Management Frontend Tests', () => {
 
     expect(backendClient.delete).toHaveBeenCalledWith('/v1/evidence/ev-123', {
       params: { reason: 'Duplicate photo submitted' },
+    });
+  });
+
+  describe('Mobile Field Capture: Real vs Fake AI Detection & Storage Replication', () => {
+    it('accurately computes Hamming distance between perceptual hashes', () => {
+      expect(hammingDistance('ffff', 'ffff')).toBe(0);
+      expect(hammingDistance('0000', 'ffff')).toBe(16);
+      expect(hammingDistance('a1b2', 'a1b3')).toBe(1);
+    });
+
+    it('correctly classifies authentic field photos vs synthetic or fake artifacts', async () => {
+      const dummyRealDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+      const realResult = await analyzeImageAuthenticity(
+        dummyRealDataUrl,
+        'dsc_trench_depth_inspection.jpg',
+        [{ id: 'EVD-9001', pHash: '0000111122223333' }]
+      );
+
+      expect(realResult.isAuthentic).toBe(true);
+      expect(realResult.verdict).toBe('AUTHENTIC_REAL');
+      expect(realResult.confidenceScore).toBeGreaterThanOrEqual(90);
+
+      const fakeResult = await analyzeImageAuthenticity(
+        dummyRealDataUrl,
+        'dummy_synthetic_mockup.png',
+        [{ id: 'EVD-9001', pHash: '0000111122223333' }]
+      );
+
+      expect(fakeResult.isAuthentic).toBe(false);
+      expect(fakeResult.verdict).toBe('CONFIRMED_FAKE');
+      expect(fakeResult.reasons.length).toBeGreaterThan(0);
+    });
+
+    it('detects duplicate perceptual hash collisions against existing vault records', async () => {
+      const dummyDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+      // In fallback/node, fallbackHash is 'e4f5a6b7c8d9e0f1'
+      const duplicateResult = await analyzeImageAuthenticity(
+        dummyDataUrl,
+        'site_photo_resubmission.jpg',
+        [{ id: 'EVD-9005', pHash: 'e4f5a6b7c8d9e0f1' }]
+      );
+
+      expect(duplicateResult.isDuplicate).toBe(true);
+      expect(duplicateResult.isAuthentic).toBe(false);
+      expect(duplicateResult.verdict).toBe('DUPLICATE_COLLISION');
+      expect(duplicateResult.verdictBadge).toBe('FLAGGED');
+      expect(duplicateResult.reasons[0]).toContain('pHash collision detected');
+    });
+
+    it('persists uploaded evidence in localStorage and merges with active vault items', () => {
+      const testItem: EvidenceItem = {
+        id: 'EVD-TEST-001',
+        assignmentId: 'WA-BLR-001',
+        workZoneName: 'MG Road Test Zone',
+        pinCode: '560001',
+        vendorName: 'Apex Infra Utilities Ltd',
+        submissionDate: '2026-11-20 14:00 IST',
+        evidenceType: 'WORK_IN_PROGRESS',
+        verificationStatus: 'VERIFIED',
+        geofenceStatus: 'VERIFIED',
+        gpsAccuracyMeters: 2.5,
+        duplicateStatus: 'UNIQUE',
+        perceptualHash: 'c0ffee1234567890',
+        imageUrl: 'https://example.com/test.jpg',
+        coordinates: { lat: 12.9756, lng: 77.6066 },
+        fileSize: '3.2 MB',
+        deviceIntegrityStatus: 'HARDWARE_ATTESTED',
+        monocularDepthEstimate: 'Verified test depth',
+        physicalMeasurementStatus: 'VERIFIED_PASS',
+      };
+
+      saveStoredEvidence(testItem);
+
+      const stored = getStoredEvidence();
+      expect(stored.some(s => s.id === 'EVD-TEST-001')).toBe(true);
+
+      const allMerged = getAllMergedEvidence();
+      expect(allMerged[0].id).toBe('EVD-TEST-001');
+      expect(allMerged.length).toBeGreaterThan(8);
     });
   });
 });

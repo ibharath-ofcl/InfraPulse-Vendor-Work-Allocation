@@ -12,6 +12,13 @@ import {
   ScoringConfiguration,
   ReportJobResponse,
 } from '../types/analytics';
+import { 
+  initialAuditEvents, 
+  recordAuditEvent, 
+  verifyAuditChainIntegrity, 
+  verifySingleAuditEvent, 
+  filterAuditEvents 
+} from '../data/mockAuditEvents';
 
 vi.mock('../services/api', () => ({
   backendClient: {
@@ -142,6 +149,60 @@ describe('Stage 13: Enterprise Audit Trail & Analytics Frontend Tests', () => {
       expect(backendClient.get).toHaveBeenCalledWith('/v1/vendors/ven-555/activity', {
         params: { page: 0, size: 20 },
       });
+    });
+
+    it('validates seed audit events cryptographic chain integrity', async () => {
+      expect(initialAuditEvents.length).toBeGreaterThanOrEqual(18);
+      const report = await verifyAuditChainIntegrity(initialAuditEvents);
+      if (report.violations.length > 0) {
+        console.log('VIOLATIONS:', report.violations);
+      }
+      expect(report.status).toBe('VALID');
+      expect(report.invalidEventsCount).toBe(0);
+      expect(report.validEventsCount).toBe(initialAuditEvents.length);
+      expect(report.violations).toHaveLength(0);
+    });
+
+    it('filters audit events accurately for today (2026-11-20)', () => {
+      const todayEvents = filterAuditEvents(initialAuditEvents, {
+        startDate: '2026-11-20',
+        endDate: '2026-11-20',
+      });
+
+      expect(todayEvents.length).toBeGreaterThanOrEqual(7);
+      todayEvents.forEach(e => {
+        expect(e.createdAt.startsWith('2026-11-20')).toBe(true);
+      });
+    });
+
+    it('detects tampering when an event hash or payload is modified', async () => {
+      const genuine = initialAuditEvents[0];
+      const isValid = await verifySingleAuditEvent(genuine);
+      expect(isValid).toBe(true);
+
+      const tampered: AuditEventItem = {
+        ...genuine,
+        eventPayload: '{"tampered":true}',
+      };
+      const isTamperedValid = await verifySingleAuditEvent(tampered);
+      expect(isTamperedValid).toBe(false);
+    });
+
+    it('dynamically records an audit event and maintains valid chain linkage', async () => {
+      const novel = await recordAuditEvent({
+        eventCategory: 'WORK_ALLOCATION',
+        eventType: 'DYNAMIC_ALLOCATION_TEST',
+        entityType: 'ASSIGNMENT',
+        entityId: 'ASN-TEST-999',
+        action: 'TEST_ACTION',
+        outcome: 'SUCCESS',
+        description: 'Dynamic assignment unit test execution',
+      });
+
+      expect(novel.eventCode).toMatch(/^AUD-2026-\d{3}$/);
+      expect(novel.eventHash).toHaveLength(64);
+      const isValid = await verifySingleAuditEvent(novel);
+      expect(isValid).toBe(true);
     });
   });
 

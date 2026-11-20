@@ -37,6 +37,7 @@ import {
   saveStoredProject, 
   getAllMergedProjects 
 } from '../data/fallbackProjects';
+import { recordAuditEvent } from '../data/mockAuditEvents';
 
 // Helper to extract day name and formatted display date from YYYY-MM-DD
 function getDayDetails(dateStr: string) {
@@ -307,6 +308,22 @@ export const ProjectsPage: React.FC = () => {
 
       // Persist to localStorage and replicate in website state
       saveStoredProject(createdProject);
+
+      // Replicate to Centralized Enterprise Audit Trail
+      recordAuditEvent({
+        eventCategory: 'PROJECT_MANAGEMENT',
+        eventType: 'PROJECT_REGISTERED',
+        entityType: 'PROJECT',
+        entityId: createdProject.id,
+        entityReference: `${createdProject.projectCode} - ${createdProject.projectName}`,
+        action: 'REGISTER_INFRASTRUCTURE_PROJECT',
+        outcome: 'SUCCESS',
+        description: `Registered municipal infrastructure initiative ${createdProject.projectCode} (${createdProject.projectName}) with budget ₹${Number(createdProject.budget).toLocaleString('en-IN')}.`,
+        actorName: user?.fullName || 'Platform Administrator',
+        actorRole: user?.role || 'PLATFORM_ADMIN',
+        projectId: createdProject.id,
+        eventPayload: JSON.stringify(createdProject),
+      }).catch(err => console.warn('Audit recording warning', err));
       setNewProjectModal(false);
 
       setSuccessToast({

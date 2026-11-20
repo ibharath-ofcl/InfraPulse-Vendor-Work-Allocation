@@ -15,6 +15,7 @@ import {
   saveStoredContract, 
   saveStoredRequirements 
 } from '../../../data/mockIntelligence';
+import { recordAuditEvent } from '../../../data/mockAuditEvents';
 import { ContractType, ContractRequirement } from '../../../types/intelligence';
 
 interface ContractUploadModalProps {
@@ -176,6 +177,21 @@ export const ContractUploadModal: React.FC<ContractUploadModalProps> = ({
       // 2. Persist in local storage
       saveStoredContract(contract);
       saveStoredRequirements(requirements);
+
+      // Replicate to Centralized Enterprise Audit Trail
+      recordAuditEvent({
+        eventCategory: 'PROJECT_MANAGEMENT',
+        eventType: 'CONTRACT_EXTRACTED_BOQ',
+        entityType: 'CONTRACT',
+        entityId: contract.id,
+        entityReference: `${contract.contractCode} (${contract.title})`,
+        action: 'PARSE_DOCUMENT_REQUIREMENTS',
+        outcome: 'SUCCESS',
+        description: `InfraPulse Intelligence Suite parsed master contract ${contract.contractCode}. Extracted ${requirements.length} clauses for project ${projectName}.`,
+        actorName: 'Platform Administrator',
+        actorRole: 'PLATFORM_ADMIN',
+        eventPayload: JSON.stringify(contract),
+      }).catch(err => console.warn('Audit recording warning', err));
 
       // 3. Attempt backend registration
       try {

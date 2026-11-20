@@ -34,6 +34,7 @@ import { useAuth } from '../auth/useAuth';
 import { FALLBACK_PROJECTS, getFallbackProjectDetail } from '../data/fallbackProjects';
 import { FALLBACK_WORK_ZONES } from '../data/fallbackWorkZones';
 import { getAllMergedAssignments, saveStoredAssignment, getStoredAssignments } from '../data/fallbackAssignments';
+import { recordAuditEvent } from '../data/mockAuditEvents';
 
 const WORK_TYPE_OPTIONS: Array<{ code: WorkTypeEnum; label: string; desc: string }> = [
   { code: 'TRENCHING', label: 'Trenching', desc: 'Excavation and trench preparation' },
@@ -601,6 +602,23 @@ export const WorkAllocationPage: React.FC = () => {
 
       // 1. Save to persistent localStorage
       saveStoredAssignment(createdItem);
+
+      // Replicate to Centralized Enterprise Audit Trail
+      recordAuditEvent({
+        eventCategory: 'WORK_ALLOCATION',
+        eventType: 'WORK_PACKAGE_ALLOCATED',
+        entityType: 'ASSIGNMENT',
+        entityId: createdItem.id,
+        entityReference: `${createdItem.assignmentCode} (${createdItem.zoneName || createdItem.pincode})`,
+        action: 'ISSUE_WORK_ASSIGNMENT',
+        outcome: 'SUCCESS',
+        description: `Issued infrastructure work package ${createdItem.assignmentCode} (${createdItem.workType}) to vendor ${createdItem.vendorName} in PIN ${createdItem.pincode}.`,
+        actorName: user?.fullName || 'Platform Administrator',
+        actorRole: user?.role || 'PLATFORM_ADMIN',
+        projectId: createdItem.projectId,
+        vendorId: createdItem.vendorId,
+        eventPayload: JSON.stringify(createdItem),
+      }).catch(err => console.warn('Audit recording warning', err));
 
       // 2. Prepend to assignments state immediately (replicates data on website)
       setAssignments(prev => [createdItem, ...prev.filter(a => a.id !== createdItem.id)]);

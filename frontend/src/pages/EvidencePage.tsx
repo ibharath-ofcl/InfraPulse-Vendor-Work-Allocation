@@ -28,6 +28,7 @@ import { SearchInput } from '../components/common/SearchInput';
 import { StatusBadge } from '../components/common/StatusBadge';
 import { Modal } from '../components/common/Modal';
 import { getAllMergedEvidence, saveStoredEvidence } from '../data/mockEvidence';
+import { recordAuditEvent } from '../data/mockAuditEvents';
 import { EvidenceItem, EvidenceStageCategory, GeofenceStatus } from '../types';
 import { analyzeImageAuthenticity, AuthenticityScanResult } from '../utils/imageAuthenticity';
 
@@ -266,6 +267,26 @@ export const EvidencePage: React.FC = () => {
 
       // 1. Save to persistent localStorage
       saveStoredEvidence(newItem);
+
+      // Replicate to Centralized Enterprise Audit Trail
+      recordAuditEvent({
+        eventCategory: 'EVIDENCE_AI',
+        eventType: 'EVIDENCE_SUBMITTED',
+        entityType: 'EVIDENCE',
+        entityId: newItem.id,
+        entityReference: `${newItem.id} (${newItem.assignmentId})`,
+        action: 'MOBILE_FIELD_CAPTURE',
+        outcome: newItem.verificationStatus === 'REJECTED' ? 'FAILURE' : newItem.verificationStatus === 'FLAGGED' ? 'WARNING' : 'SUCCESS',
+        description: `Field photo uploaded via Mobile Field Capture for ${newItem.workZoneName}. Geofence status: ${newItem.geofenceStatus || 'VERIFIED'}. Forensic scan: ${newItem.verificationStatus}.`,
+        actorName: 'Mobile Field Officer',
+        actorRole: 'FIELD_AGENT',
+        eventPayload: JSON.stringify({
+          evidenceId: newItem.id,
+          geofenceStatus: newItem.geofenceStatus,
+          verificationStatus: newItem.verificationStatus,
+          workZoneName: newItem.workZoneName,
+        }),
+      }).catch(err => console.warn('Audit recording warning', err));
 
       // 2. Prepend to active state list (replicates across page)
       setEvidenceList([newItem, ...evidenceList]);

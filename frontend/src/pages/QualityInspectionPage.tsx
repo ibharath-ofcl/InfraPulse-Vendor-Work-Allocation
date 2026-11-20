@@ -23,6 +23,7 @@ import {
   CIVIL_FALLBACK_SVGS 
 } from '../data/mockInspections';
 import { updateMilestoneInspectionGate } from '../data/mockMilestones';
+import { recordAuditEvent } from '../data/mockAuditEvents';
 import { QualityInspection, InspectionStatus, InspectionChecklist } from '../types';
 
 export const QualityInspectionPage: React.FC = () => {
@@ -147,6 +148,26 @@ export const QualityInspectionPage: React.FC = () => {
         detail: `Material core sample test order dispatched for ${selectedInspection.workZoneName}.`,
       });
     }
+
+    // Replicate to Centralized Enterprise Audit Trail
+    recordAuditEvent({
+      eventCategory: 'QUALITY_INSPECTION',
+      eventType: newStatus === 'PASS' ? 'INSPECTION_AUTHORIZED_PASS' : newStatus === 'FAIL' ? 'INSPECTION_REWORK_ISSUED' : 'INSPECTION_HELD_FOR_LAB',
+      entityType: 'INSPECTION',
+      entityId: selectedInspection.id,
+      entityReference: `${selectedInspection.id} (${selectedInspection.workZoneName})`,
+      action: newStatus === 'PASS' ? 'AUTHORIZE_MILESTONE_PASS' : newStatus === 'FAIL' ? 'ISSUE_REWORK_NOTICE' : 'HOLD_FOR_LAB_TEST',
+      outcome: newStatus === 'PASS' ? 'SUCCESS' : newStatus === 'FAIL' ? 'FAILURE' : 'WARNING',
+      description: `Chief Quality Auditor evaluated inspection ${selectedInspection.id} for ${selectedInspection.workType}. Decision: ${newStatus}. ${inspectorNotes || ''}`,
+      actorName: 'Chief Quality Auditor',
+      actorRole: 'SENIOR_QA_AUDITOR',
+      eventPayload: JSON.stringify({
+        inspectionId: selectedInspection.id,
+        decision: newStatus,
+        vendorName: selectedInspection.vendorName,
+        remarks: inspectorNotes,
+      }),
+    }).catch(err => console.warn('Audit recording warning', err));
 
     setTimeout(() => {
       setHumanActionNotice(null);

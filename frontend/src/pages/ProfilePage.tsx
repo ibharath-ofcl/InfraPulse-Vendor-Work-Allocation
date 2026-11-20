@@ -542,8 +542,8 @@ export const ProfilePage: React.FC = () => {
             {/* Identity Header */}
             <div className="flex items-start justify-between gap-4 pb-6 border-b border-[#DCE3E8]">
               <div className="flex items-start gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-[#10243A] text-[#F5A623] border border-[#24445F] flex items-center justify-center text-2xl font-black shadow-inner shrink-0">
-                  {user?.fullName?.charAt(0) || 'U'}
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#13A89E] to-emerald-500 text-white border border-teal-300/40 flex items-center justify-center text-2xl font-black shadow-md shrink-0">
+                  {user?.fullName?.charAt(0) || 'K'}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -551,8 +551,8 @@ export const ProfilePage: React.FC = () => {
                     <StatusBadge status={user?.status || 'ACTIVE'} />
                   </div>
                   <p className="text-xs text-[#718096] truncate mt-0.5">{user?.email || 'N/A'}</p>
-                  <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-0.5 rounded text-[11px] font-bold bg-[#10243A] text-[#F5A623] border border-[#F5A623]/30">
-                    <RoleIcon className="w-3.5 h-3.5" />
+                  <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-0.5 rounded text-[11px] font-bold bg-[#13A89E]/15 text-[#0E827B] border border-[#13A89E]/30">
+                    <RoleIcon className="w-3.5 h-3.5 text-[#13A89E]" />
                     <span>{user?.role || 'OPERATOR'}</span>
                   </div>
                 </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Landmark, 
   CheckCircle2, 
@@ -12,15 +12,23 @@ import { MetricCard } from '../components/dashboard/MetricCard';
 import { StatusBadge } from '../components/common/StatusBadge';
 import { SearchInput } from '../components/common/SearchInput';
 import { Modal } from '../components/common/Modal';
-import { mockMilestones } from '../data/mockMilestones';
+import { getAllMergedMilestones, saveStoredMilestones } from '../data/mockMilestones';
 import { Milestone } from '../types';
 
 export const MilestonesPage: React.FC = () => {
-  const [milestones, setMilestones] = useState<Milestone[]>(mockMilestones);
+  const [milestones, setMilestones] = useState<Milestone[]>(() => getAllMergedMilestones());
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [authSuccess, setAuthSuccess] = useState<string | null>(null);
   const [confirmModalMilestone, setConfirmModalMilestone] = useState<Milestone | null>(null);
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setMilestones(getAllMergedMilestones());
+    };
+    window.addEventListener('infrapulse_milestones_updated', handleUpdate);
+    return () => window.removeEventListener('infrapulse_milestones_updated', handleUpdate);
+  }, []);
 
   const totalAmount = milestones.reduce((sum, m) => sum + m.amount, 0);
   const disbursedAmount = milestones
@@ -46,6 +54,7 @@ export const MilestonesPage: React.FC = () => {
         : m
     );
     setMilestones(updated);
+    saveStoredMilestones(updated);
     setAuthSuccess(`Payment of ${formatCurrency(confirmModalMilestone.amount)} authorized for ${confirmModalMilestone.vendorName}!`);
     setConfirmModalMilestone(null);
     setTimeout(() => setAuthSuccess(null), 4000);

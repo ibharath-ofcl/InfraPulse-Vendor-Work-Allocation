@@ -274,6 +274,8 @@ export interface AuthUser {
   phoneNumber?: string;
   role: UserRole;
   status: UserStatus;
+  department?: string;
+  dutyStation?: string;
   createdAt?: string;
   lastLoginAt?: string;
 }

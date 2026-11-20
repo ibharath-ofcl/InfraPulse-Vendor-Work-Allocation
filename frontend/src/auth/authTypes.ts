@@ -1,4 +1,4 @@
-import { AuthUser, Permission } from '../types';
+import { AuthUser, Permission, UserRole } from '../types';
 import { LoginPayload } from '../services/authService';
 
 export interface AuthContextType {
@@ -10,4 +10,6 @@ export interface AuthContextType {
   logout: () => Promise<void>;
   refreshSession: () => Promise<boolean>;
   hasPermission: (permission: Permission) => boolean;
+  updateUser: (updated: Partial<AuthUser>) => void;
+  switchRole: (role: UserRole, customName?: string, customEmail?: string) => void;
 }

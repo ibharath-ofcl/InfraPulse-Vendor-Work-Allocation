@@ -20,7 +20,7 @@ export interface ApiResponseWrapper<T> {
   timestamp?: string;
 }
 
-const rolePermissionsMap: Record<UserRole, Permission[]> = {
+export const rolePermissionsMap: Record<UserRole, Permission[]> = {
   PLATFORM_ADMIN: [
     'VIEW_OVERVIEW', 'MANAGE_USERS', 'MANAGE_PROJECTS', 'VIEW_PROJECTS',
     'VIEW_WORK_ZONES', 'ALLOCATE_WORK', 'VIEW_ASSIGNED_WORK', 'SUBMIT_EVIDENCE',

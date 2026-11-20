@@ -94,7 +94,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
             >
               InfraPulse
             </span>
-            <span className="font-bold text-[#F5A623] px-1 py-0.2 rounded text-[10px] bg-amber-500/10 border border-amber-500/30 font-mono">
+            <span className="font-extrabold text-[10px] tracking-wider px-1.5 py-0.5 rounded-md font-mono bg-gradient-to-r from-teal-500/20 to-emerald-500/20 text-teal-300 border border-teal-500/30 shadow-[0_0_8px_rgba(20,184,166,0.25)]">
               AI
             </span>
           </div>
